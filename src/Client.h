@@ -21,15 +21,22 @@ class Client : public User {
 	std::map <std::string, std::vector <User> > groups;
 	// Map <user, offline message>
 	std::map <std::string, std::string> offline_messages;
+	// Server socket
+	int server_socket;
+	// Map <sockfd, username>
+	std::map <int, std::string> connected_users;
 
 public:
-	Client();
+	Client(int server_socket);
 	virtual ~Client();
 
+	// Getter
 	std::map <std::string, std::vector <User> > get_groups();
 	std::map <std::string, std::string> get_offline_messages();
 
-	// Communication client-server
+	/**
+	 * Communication client-server
+	 */
 	bool register_client(std::string username, std::string pass, std::string email);
 	bool authentication(std::string username, std::string pass);
 
@@ -37,24 +44,31 @@ public:
 	bool update_profile(std::string name, std::string surname, std::string phone,
 		std::string email, std::string hobbies);
 
+	// Add/Remove/Search a user
 	bool add_user(std::string username);
 	bool remove_user(std::string username);
 	std::string search_user(Profile profile);
 
+	// Add/Remove/Edit a group
 	bool add_group(std::string group);
 	bool remove_group(std::string group);
 	bool move_user_to_group(std::string username, std::string group);
 
+	// Status/State
 	bool send_status(std::string status);
 	bool send_state(State state);
 
-	// Communication server-client
-	bool update(Client client);
+	// Refresh a user (message sent by server when another user changes status/state)
+	bool refresh_user(User user);
 
-	// Communication client-client
-	bool connect_with_user(std::string username);
-	bool send_message(std::string message);
-	std::string recv_message();
+	// Returns socket file descriptor of the other user
+	int connect_with_user(std::string username);
+
+	/**
+	 * Communication client-client
+	 */
+	bool send_message(int sockfd, std::string message);
+	std::string recv_message(int sockfd);
 };
 
 
