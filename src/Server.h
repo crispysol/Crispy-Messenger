@@ -10,7 +10,7 @@
 
 #include <mysql_connection.h>
 
-enum State {AVAILABLE, AWAY, BUSY, OFFLINE};
+#include "User.h"
 
 class ClientInfo: public User {
 	std::string ip;
@@ -20,7 +20,7 @@ public:
 	ClientInfo();
 	virtual ~ClientInfo();
 
-	Profile get_profile() {}
+	Profile get_profile();
 
 	// Setter-Getter
 	void set_sockfd(int sockfd);
@@ -38,6 +38,7 @@ class Server {
 	std::map <int, ClientInfo> clients;
 
 	// TODO baza de date
+
 
 public:
 	Server();

@@ -2,3 +2,9 @@
 * Instant Messenger		*
 * - development stage 0.3 - 	*
 *********************************
+
+1. MYSQL
+	- Pentru a putea folosi baza de date MYSQL, se instaleaza primele 2 pachete rezultate in urma cautarii mysql c++ in Synaptic Package Manager din Ubuntu (contin "cppcon" in nume).
+	- Compilarea cu "g++" se face cu parametrul: "-l mysqlcppconn".
+	- Pentru exemplu vezi: mysql_example.c.
+	- Pentru mai mute detalii: http://forge.mysql.com/wiki/Connector_C%2B%2B
