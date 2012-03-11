@@ -4,7 +4,22 @@
 *********************************
 
 1. MYSQL
-	- Pentru a putea folosi baza de date MYSQL, se instaleaza primele 2 pachete rezultate in urma cautarii mysql c++ in Synaptic Package Manager din Ubuntu (contin "cppcon" in nume).
+	- Pentru a putea folosi baza de date MYSQL, se instaleaza primele 2 pachete rezultate in urma cautarii mysql c++ 
+	in Synaptic Package Manager din Ubuntu (contin "cppcon" in nume).
 	- Compilarea cu "g++" se face cu parametrul: "-l mysqlcppconn".
 	- Pentru exemplu vezi: mysql_example.c.
 	- Pentru mai mute detalii: http://forge.mysql.com/wiki/Connector_C%2B%2B
+	- in linia de comanda: mysql -uroot -p -hlocalhost
+						> introducere parola
+						mysql> create user 'crispy'@'localhost' identified by 'M3$$enger';
+						mysql> grant all privileges on *.* to 'crispy'@'localhost' with grant option;
+						mysql> exit
+						> make CreateDatabase; ./CreateDatabase
+	
+2. TODOs - propuneri impartire, eventual teste pana la urmatoarea intalnire:
+	- implementari interfete: getters+setters+constructori
+	- process_protocol (server.cpp si client.cpp - switch(comanda_fisier_protocol)) (andreea si radu)
+	- interfata grafica c++ (mihail - familiarizare gtk)
+	- run_server implementare atat in ClientMain, cat si ServerMain - cele doua TODO, adica comunicatie cu server, 
+	respectiv cu ceilalti clienti (andreeea si radu)
+	- interfata command line (liviu)

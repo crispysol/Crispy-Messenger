@@ -71,7 +71,7 @@ int run_server(char * server_ip, int server_port) {
 
 				// Receive data from server
 				if (i == server_port) {
-					// TODO;
+					// TODO if (i == server_port) => quit application and free all resource (sockets + etc)
 					cout << "RECEIVED" << endl;
 					continue;
 				}
@@ -80,10 +80,10 @@ int run_server(char * server_ip, int server_port) {
 				if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
 					assert(n == 0);
 					end_connection(i, &read_fds);
-					// TODO if (i == server_port) => quit application and free all resource (sockets + etc)
+					//TODO remove connection from connected_users list
 				} else {
 					//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),
-						//	&database, result);
+						//	&database, result); TODO
 					cout << "TODO" << endl; //
 				}
 			}
