@@ -13,8 +13,7 @@
 #include <map>
 
 #include "Profile.h"
-
-enum State {AVAILABLE, AWAY, BUSY, OFFLINE};
+#include "User.h"
 
 class Client : public User {
 	// Map <group, list of friends>
@@ -68,7 +67,7 @@ public:
 	 * Communication client-client
 	 */
 	bool send_message(int sockfd, std::string message);
-	std::string recv_message(int sockfd, std::string message);
+	//TODO not needed recv_message(int sockfd, std::string message); not needed
 };
 
 

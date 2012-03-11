@@ -10,6 +10,8 @@
 
 #include "Profile.h"
 
+enum State {AVAILABLE, AWAY, BUSY, OFFLINE};
+
 class User {
 	Profile profile;
 	std::string username;

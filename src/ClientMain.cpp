@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 
 #include "ServerFunctions.h"
+#include "Client.h"
 
 // Defines
 #define BUFFER_LENGTH	256
