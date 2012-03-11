@@ -73,7 +73,7 @@ public:
 	bool send_user_ip(int sockfd, std::string username);
 
 	// Receive message for an offline user so it can be sent at login
-	bool recv_offline_message(int sockfd, std::string username);
+	bool recv_offline_message(int sockfd, std::string username, std::string message);
 };
 
 #endif /* SERVER_H_ */

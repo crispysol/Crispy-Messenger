@@ -68,7 +68,7 @@ public:
 	 * Communication client-client
 	 */
 	bool send_message(int sockfd, std::string message);
-	std::string recv_message(int sockfd);
+	std::string recv_message(int sockfd, std::string message);
 };
 
 
