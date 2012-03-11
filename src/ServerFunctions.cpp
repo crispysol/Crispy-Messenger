@@ -63,8 +63,8 @@ void end_connection(int sockfd, fd_set * read_fds) {
 	//delete_client(i, &database); TODO
 
 	// Delete client
-	close(sockfd);
 	FD_CLR(sockfd, read_fds);
+	close(sockfd);
 }
 
 /**
