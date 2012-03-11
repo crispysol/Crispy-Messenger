@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <string>
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
@@ -26,14 +27,11 @@ using namespace std;
  * Execute command received from STDIN
  */
 void stdin_command() {
-	char buffer[BUFFER_LENGTH];
-	assert(read(STDIN_FILENO, buffer, BUFFER_LENGTH) > 0);
-
-	char *s = strchr(buffer, '\n');
-	buffer[s - buffer] = '\0';
+	string line;
+	getline(cin, line);
 
 	// Tratarea comenzii de la tastatura TODO
-	cout << buffer << endl; // TODO delete
+	cout << line << endl; // TODO delete
 }
 
 /**
