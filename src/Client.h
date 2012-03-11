@@ -18,7 +18,7 @@ enum State {AVAILABLE, AWAY, BUSY, OFFLINE};
 
 class Client : public User {
 	// Map <group, list of friends>
-	std::map <std::string, std::vector <Client> > groups;
+	std::map <std::string, std::vector <User> > groups;
 	// Map <user, offline message>
 	std::map <std::string, std::string> offline_messages;
 
@@ -26,7 +26,7 @@ public:
 	Client();
 	virtual ~Client();
 
-	std::map <std::string, std::vector <Client> > get_groups();
+	std::map <std::string, std::vector <User> > get_groups();
 	std::map <std::string, std::string> get_offline_messages();
 
 	// Communication client-server
