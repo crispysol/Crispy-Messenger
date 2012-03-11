@@ -9,8 +9,18 @@
 #define SERVER_H_
 
 #include <mysql_connection.h>
+#include <mysql_driver.h>
+#include <cppconn/driver.h>
+#include <cppconn/connection.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
 
 #include "User.h"
+
+#define DATABASE_HOST "localhost"
+#define DATABASE_USER "crispy"
+#define DATABASE_PASS "M3$$enger"
+#define DATABASE_NAME "CrispyDatabase"
 
 class ClientInfo: public User {
 	std::string ip;
@@ -36,9 +46,8 @@ public:
 class Server {
 	// Map <sockfd, client info>
 	std::map <int, ClientInfo> clients;
-
-	// TODO baza de date
-
+	// Database (initialized in constructor) TODO
+	sql::Connection	*con;
 
 public:
 	Server();
