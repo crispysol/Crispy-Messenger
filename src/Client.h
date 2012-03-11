@@ -26,6 +26,9 @@ public:
 	Client();
 	virtual ~Client();
 
+	std::map <std::string, std::vector <Client> > get_groups();
+	std::map <std::string, std::string> get_offline_messages();
+
 	// Communication client-server
 	bool register_client(std::string username, std::string pass, std::string email);
 	bool authentication(std::string username, std::string pass);
