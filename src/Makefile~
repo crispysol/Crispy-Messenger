@@ -8,4 +8,4 @@ ServerMain: ServerMain.o ServerFunctions.o
 ClientMain: ClientMain.o ServerFunctions.o
 
 clean: 
-	rm -rf *.o ServerMain ClientMain
+	rm -rf *.o Server Client

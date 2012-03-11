@@ -9,7 +9,7 @@ C: login user pass
 S: OK -> send more info :
 	{
 		groups:[ 
-			group_name_1:[ user_1:status_1, user_2:status_2 ... ],
+			group_name_1:[ user_1:[state_1, status_1], user_2:[state_2, status_2] ... ],
 			group_name_2:[ ... ],
 			...
 		],
