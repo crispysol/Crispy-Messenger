@@ -5,11 +5,11 @@ C: register user pass email
 S: OK | USEDUSER | USEDMAIL | ERR
 
 #2 autentificarea pe server
-C: login user pass
+C: login user pass ip port
 S: OK -> send more info :
 	{
 		groups:[ 
-			group_name_1:[ user_1:status_1, user_2:status_2 ... ],
+			group_name_1:[ user_1:[state_1, status_1], user_2:[state_2, status_2] ... ],
 			group_name_2:[ ... ],
 			...
 		],
@@ -24,15 +24,26 @@ S: FAIL
 C: view_profile user
 S: OK -> send profile info:
 	{
+		name:name,
+		surname:surname,
 		phone:number,
-		nume:nume,
-		prenume:prenume
+		email:email,
+		hobbies:hobbies
 	}
 	END
 
 #4 update profil utilizator 
-C: update_profile name "Name" surname "Surname" phone 10912323 ...?
-S: OK | ERR
+C: update_profile 
+S: OK -> 	
+	{
+		name:name,
+		surname:surname,
+		phone:number,
+		email:email,
+		hobbies:hobbies
+	}
+	END
+S: ERR
 
 -> in client: update_profile(name / surname / phone .., "Radu");
 
@@ -45,21 +56,23 @@ S: OK	-> online/offline | ERR
 C: remove_user user
 S: OK | ERR
 
-#7 creare grup nou
+#7 cautare utilizator dupa profil
+C: search_user /* TODO */
+S: OK -> user | ERR
+
+#8 creare grup nou
 C: add_group group_name
 S: OK | ERR
 
-#8 stergere grup (exceptie default, userii merg in default)
+#9 stergere grup (exceptie default, userii merg in default)
 C: del_group group_name
 S: OK | ERR
 
-#9 plasare prieten intr-un grup
+#10 plasare prieten intr-un grup
 C: move_user_to_group user
 S: OK | ERR
 
-#10 cautare utilizator dupa profil
-C: search_user /* TODO */
-S: OK -> user | ERR
+
 
 #11 setare status
 C: set_status status_nou
@@ -76,8 +89,9 @@ C: connect_with_user user
 S: OK -> { ip:port } | ERR
 
 #14 send message
-C: send_msg msg
+-> atentie, incercare apelare connect_with_user if online
+C: send_msg username msg
 
 #15 receive message (server receives if client offline)
 C: recv_msg msg
-S: recv_msg 
+S: recv_msg msg
