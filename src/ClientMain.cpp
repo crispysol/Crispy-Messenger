@@ -70,7 +70,7 @@ int run_server(char * server_ip, int server_port) {
 				}
 
 				// Receive data from server
-				if (i == server_port) {
+				if (i == socket_server) {
 					// TODO if (i == server_port) => quit application and free all resource (sockets + etc)
 					cout << "RECEIVED" << endl;
 					continue;

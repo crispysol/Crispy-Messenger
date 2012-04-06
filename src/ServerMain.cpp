@@ -58,6 +58,7 @@ int run_server(int server_port) {
 				// New connection
 				if (i == sockfd) {
 					new_connection(sockfd, fdmax, &read_fds);
+					//send(i, "TEST", strlen("TEST"), 0); // TODO delete
 					continue;
 				}
 
@@ -69,11 +70,11 @@ int run_server(int server_port) {
 
 				// Received data from client
 				if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
-					assert(n == 0);
+					//assert(n == 0); TODO
 					end_connection(i, &read_fds);
 				} else {
 					//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),
-						//	&database, result);
+						//	&database, result);TODO
 					cout << "TODO" << endl; //
 				}
 			}
