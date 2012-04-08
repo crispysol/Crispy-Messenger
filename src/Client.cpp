@@ -50,7 +50,7 @@ bool Client::register_client(std::string username, std::string pass, std::string
 	//receive response from server_socket
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
-	dprintf("received from server: %s\n", buffer);
+	dprintf("[CLIENT]received from server: %s\n", buffer);
 	if (rc == 0 || strcmp(buffer, USEDUSER_ERR) == 0 || strcmp(buffer, USEDEMAIL_ERR) == 0 ||
 			strcmp(buffer, ERR_MSG) == 0)
 		return false;

@@ -2,7 +2,7 @@
  * server.cpp
  *
  *  Created on: Mar 10, 2012
- *      Author: mihail
+ *      Author: mihail, andreea
  */
 
 #include <iostream>
@@ -19,7 +19,6 @@
 #include "Server.h"
 
 // Defines
-#define BUFFER_LENGTH	256
 #define BANNER			"OK"
 
 using namespace std;
@@ -32,7 +31,37 @@ void stdin_command() {
 	getline(cin, line);
 
 	// Tratarea comenzii de la tastatura TODO
-	cout << line << endl; // TODO delete
+		if (line.find(EXIT_MSG) == 0) {
+			//TODO end all connections
+			exit(EXIT_SUCCESS);
+		}
+}
+
+void client_command(string line, int sockfd, Server server) {
+
+	if (line.find(CMD_REGISTER) == 0) {
+			int user_pos = line.find(" ") + 1,
+				pass_pos = line.find(" ", user_pos) + 1,
+				email_pos = line.find(" ", pass_pos) + 1;
+			server.register_client(sockfd,
+					line.substr(user_pos, pass_pos -1 - user_pos),
+					line.substr(pass_pos, email_pos - 1 - pass_pos),
+					line.substr(email_pos));
+			return;
+		}
+		if (line.find(CMD_AUTH) == 0) {
+			int user_pos = line.find(" ") + 1,
+				pass_pos = line.find(" ", user_pos) + 1,
+				ip_pos = line.find(" ", pass_pos) + 1,
+				port_pos = line.find(" ", ip_pos);
+			server.authentication(sockfd,
+					line.substr(user_pos, pass_pos -1 - user_pos),
+					line.substr(pass_pos, ip_pos - 1 - pass_pos),
+					line.substr(ip_pos, port_pos - 1 - ip_pos),
+					atoi(line.substr(port_pos).c_str()));
+			return;
+		}
+
 }
 
 /**
@@ -46,6 +75,8 @@ int run_server(int server_port) {
 
 	// Init server
 	init_server(server_port, sockfd, fdmax, &read_fds);
+
+	Server server = Server();
 
 	// Main loop
 	for (;;) {
@@ -75,7 +106,7 @@ int run_server(int server_port) {
 				} else {
 					//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),
 						//	&database, result);TODO
-					cout << "TODO" << endl; //
+					client_command(string(buffer), i, server);
 				}
 			}
 		}
@@ -92,7 +123,7 @@ int main(int argc, char **argv) {
 	int server_port;
 
 	// Check if number of arguments is correct
-	if (argc != 2) {
+	if (argc < 2) {
 		cerr << "Usage: ./server.cpp port" << endl;
 		exit(EXIT_FAILURE);
 	}

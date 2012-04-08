@@ -43,8 +43,6 @@ Server::Server() {
 		driver = sql::mysql::get_mysql_driver_instance();
 		con = driver->connect(DATABASE_HOST, DATABASE_USER, DATABASE_PASS);
 		con->setSchema(DATABASE_NAME);
-
-		delete driver;
 	}catch (sql::SQLException &e) {
 		cout << "# ERR: SQLException in " << __FILE__;
 		cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
@@ -58,43 +56,51 @@ Server::Server() {
 Server::~Server() {
 	if (con)
 		delete con;
+
 }
 
 bool Server::register_client(int sockfd, std::string username, std::string pass, std::string email) {
+
+	dprintf("[SERVER]received register command\n");
 	int rc = true;
 	sql::Statement	*stmt;
 	//1)query database and check for username
 	string query = string("SELECT username, email "
 						"FROM users "
-						"WHERE username == ").append(username);
+						"WHERE username = '").append(username).
+						append("' OR email = '").append(email).
+						append("';");
+	cout << query << endl;
 	stmt = con->createStatement();
 	
 	try {
-		sql::ResultSet * res = stmt->executeQuery(query);	
+		sql::ResultSet * res = stmt->executeQuery(query);
 		//2)if username or email exists, send USEDUSER | USEDMAIL | ERR on sockfd
-		if (res != NULL) {
-			if (res->getString("username") != NULL) {
+		if (res->next()) {
+			dprintf("[SERVER]invalid client info %s %s\n", username.c_str(), email.c_str());
+			if (username.compare(res->getString("username")) == 0) {
 				assert(send(sockfd, USEDUSER_ERR, strlen(USEDUSER_ERR), 0) >= 0);
 				rc = false;
 			}
-			else if (res->getString("email") != NULL) {
+			else if (email.compare(res->getString("email")) == 0) {
 				assert(send(sockfd, USEDEMAIL_ERR, strlen(USEDEMAIL_ERR), 0) >= 0);
 				rc = false;
 			}
-			else {
-				//3)if username is valid, add to db and send OK on sockfd
-				query = string("INSERT INTO ").append("users(username, pass, email)").append(" VALUES (").
-					append(username).append(", ").append(pass).append(", ").append(email + ")");
-				stmt->execute(query);
-				assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG), 0) >= 0);
-			}
-
-			delete res;
 		}
 		else {
-			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG), 0) >= 0);
-			rc = false;
+			//3)if username is valid, add to db and send OK on sockfd
+			dprintf("[SERVER]adding %s\n", username.c_str());
+			query = string("INSERT INTO users(username, ").append(PASS_FIELD).append(", email)")
+					.append(" VALUES ('").append(username).append("', '").
+					append(pass).append("', '").append(email + "');");
+			cout << query << endl;
+			stmt->executeQuery(query);
+			dprintf("[SERVER]added %s\n", username.c_str());
+			fflush(stdout);
+			assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG), 0) >= 0);
 		}
+
+		delete res;
 	}catch (sql::SQLException &e) {
 		rc = false;
 	}

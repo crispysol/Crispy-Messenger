@@ -1,12 +1,13 @@
 CC = g++
 CFLAGS = -Wall -g
+CPPFLAGS = -D_DEBUG
  
 all: ServerMain ClientMain ClientGTK
 
-ServerMain: ServerMain.o ServerFunctions.o
+ServerMain: ServerMain.o ServerFunctions.o Server.o
 	$(CC) $(CFLAGS) $^ -l mysqlcppconn -o $@
 
-ClientMain: ClientMain.o ServerFunctions.o
+ClientMain: ClientMain.o ServerFunctions.o Client.o
 
 ClientGTK: ClientGTK.o ClientGTKFunctions.o ServerFunctions.o
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -o $@ `pkg-config --libs gtk+-3.0`
@@ -19,6 +20,10 @@ ClientGTKFunctions.o: ClientGTKFunctions.cpp
 
 CreateDatabase: CreateDatabase.o
 	$(CC) $(CFLAGS) $^ -l mysqlcppconn -o $@
+
+ServerMain.o: ServerMain.cpp
+
+Server.o: Server.cpp
 
 clean: 
 	rm -rf *.o ServerMain ClientMain CreateDatabase
