@@ -2,7 +2,7 @@
  * Server.h
  *
  *  Created on: Mar 11, 2012
- *      Author: mihail
+ *      Author: mihail, andreea
  */
 
 #ifndef SERVER_H_
@@ -27,14 +27,8 @@ class ClientInfo: public User {
 	int port;
 
 public:
-	ClientInfo();
+	ClientInfo(std::string ip, int port);
 	virtual ~ClientInfo();
-
-	Profile get_profile();
-
-	// Setter-Getter
-	void set_sockfd(int sockfd);
-	int get_sockfd();
 
 	void set_ip(std::string ip);
 	std::string get_ip();
@@ -58,7 +52,7 @@ public:
 	 * Communication client-server
 	 */
 	bool register_client(int sockfd, std::string username, std::string pass, std::string email);
-	bool authentication(int sockfd, std::string username, std::string pass);
+	bool authentication(int sockfd, std::string username, std::string pass, std::string ip, int port);
 
 	bool send_profile(int sockfd, std::string username);
 	bool update_profile(int sockfd, std::string name, std::string surname,

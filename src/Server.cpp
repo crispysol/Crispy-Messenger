@@ -43,6 +43,8 @@ Server::Server() {
 		driver = sql::mysql::get_mysql_driver_instance();
 		con = driver->connect(DATABASE_HOST, DATABASE_USER, DATABASE_PASS);
 		con->setSchema(DATABASE_NAME);
+
+		delete driver;
 	}catch (sql::SQLException &e) {
 		cout << "# ERR: SQLException in " << __FILE__;
 		cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
@@ -51,13 +53,11 @@ Server::Server() {
 		cout << ", SQLState: " << e.getSQLState() << " )" << endl;
 		exit(EXIT_FAILURE);
 	}
-	
-	delete driver;
 }
 
 Server::~Server() {
-	//if (con)
-		//delete con;
+	if (con)
+		delete con;
 }
 
 bool Server::register_client(int sockfd, std::string username, std::string pass, std::string email) {
@@ -71,7 +71,7 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 	
 	try {
 		sql::ResultSet * res = stmt->executeQuery(query);	
-		//TODO 2)if username or email exists, send USEDUSER | USEDMAIL | ERR on sockfd
+		//2)if username or email exists, send USEDUSER | USEDMAIL | ERR on sockfd
 		if (res != NULL) {
 			if (res->getString("username") != NULL) {
 				assert(send(sockfd, USEDUSER_ERR, strlen(USEDUSER_ERR), 0) >= 0);
@@ -82,8 +82,8 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 				rc = false;
 			}
 			else {
-				//TODO 3)if username is valid, add to db and send OK on sockfd
-				query = string("INSERT INTO ").append(DATABASE_NAME).append("(username, pass, email)").append(" VALUES (").
+				//3)if username is valid, add to db and send OK on sockfd
+				query = string("INSERT INTO ").append("users(username, pass, email)").append(" VALUES (").
 					append(username).append(", ").append(pass).append(", ").append(email + ")");
 				stmt->execute(query);
 				assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG), 0) >= 0);
@@ -114,24 +114,24 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 	//query db and compare pass
 	//send FAIL/(more info<groups and users, offline messages> + END) on sockfd
 	try {
-			sql::ResultSet * res = stmt->executeQuery(query);
-			if (res != NULL && string(res->getString("pass")).compare(pass) == 0) {
-					//save client info (ip and port) to session
-					ClientInfo ci = ClientInfo(ip, port);
-					clients.insert(pair<int, ClientInfo>(sockfd, ci));
-					//query db for client' friends and offline msg and send to client
-					assert(send(sockfd, "END", 3, 0) >= 0);
-			}
-			else {
-				assert(send(sockfd, ERR_MSG, strlen(ERR_MSG), 0) >= 0);
-				rc = false;
-			}
-			if (res)
-				delete res;
-		}catch (sql::SQLException &e) {
+		sql::ResultSet * res = stmt->executeQuery(query);
+		if (res != NULL && string(res->getString("pass")).compare(pass) == 0) {
+				//save client info (ip and port) to session
+				ClientInfo ci = ClientInfo(ip, port);
+				clients.insert(pair<int, ClientInfo>(sockfd, ci));
+				//query db for client' friends and offline msg and send to client
+				assert(send(sockfd, "END", 3, 0) >= 0);
+		}
+		else {
 			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG), 0) >= 0);
 			rc = false;
 		}
+		if (res)
+			delete res;
+	}catch (sql::SQLException &e) {
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG), 0) >= 0);
+		rc = false;
+	}
 	
 	delete stmt;
 

@@ -2,7 +2,7 @@
  * ClientImpl.h
  *
  *  Created on: Mar 11, 2012
- *      Author: mihail
+ *      Author: mihail, andreea
  */
 
 #ifndef CLIENTIMPL_H_
@@ -24,14 +24,21 @@ class Client : public User {
 	int server_socket;
 	// Map <sockfd, username>
 	std::map <int, std::string> connected_users;
+	// Ip
+	std::string ip;
+	// Port
+	int port;
 
 public:
-	Client(int server_socket);
+	Client(int server_socket, std::string ip);//, int port);
 	virtual ~Client();
 
 	// Getter
 	std::map <std::string, std::vector <User> > get_groups();
 	std::map <std::string, std::string> get_offline_messages();
+	int get_server_socket();
+	std::string get_ip();
+	int get_port();
 
 	/**
 	 * Communication client-server
