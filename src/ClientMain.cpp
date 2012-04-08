@@ -26,12 +26,35 @@ using namespace std;
 /**
  * Execute command received from STDIN
  */
-void stdin_command() {
+void stdin_command(Client client, fd_set * read_fds) {
 	string line;
 	getline(cin, line);
 
 	// Tratarea comenzii de la tastatura TODO
-	cout << line << endl; // TODO delete
+	if (line.find(CMD_REGISTER) == 0) {
+		int user_pos = line.find(" ") + 1,
+			pass_pos = line.find(" ", user_pos) + 1,
+			email_pos = line.find(" ", pass_pos) + 1;
+		client.register_client(
+				line.substr(user_pos, pass_pos -1 - user_pos),
+				line.substr(pass_pos, email_pos - 1 - pass_pos),
+				line.substr(email_pos));
+		return;
+	}
+	if (line.find(CMD_AUTH) == 0) {
+		int user_pos = line.find(" ") + 1,
+			pass_pos = line.find(" ", user_pos) + 1;
+		client.authentication(
+				line.substr(user_pos, pass_pos -1 - user_pos),
+				line.substr(pass_pos));
+		return;
+	}
+	if (line.find(EXIT_MSG) == 0) {
+		//TODO end all connections
+		//end connection to server
+		end_connection(client.get_server_socket(), read_fds);
+		exit(EXIT_SUCCESS);
+	}
 }
 
 /**
@@ -49,6 +72,9 @@ int run_server(char * server_ip, int server_port) {
 	// Connect to main server
 	connect_to_server(server_ip, server_port, socket_server, fdmax, &read_fds);
 
+	// Client instance
+	Client client = Client(socket_server, "127.0.0.0");//TODO obtain client's port
+
 	// Main loop
 	for (;;) {
 		tmp_fds = read_fds;
@@ -65,26 +91,27 @@ int run_server(char * server_ip, int server_port) {
 
 				// Execute command from STDIN
 				if (i == STDIN_FILENO) {
-					stdin_command();
+					stdin_command(client, &read_fds);
 					continue;
 				}
 
 				// Receive data from server
 				if (i == socket_server) {
-					// TODO if (i == server_port) => quit application and free all resource (sockets + etc)
-					cout << "RECEIVED" << endl;
+					n = recv(i, buffer, sizeof(buffer), 0);
+					assert(n >= 0); // TODO test if we have to exit
+					dprintf("[CLIENT]received from SERVER: %s\n", buffer);
 					continue;
 				}
 
 				// Received data from another client
 				if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
-					assert(n == 0);
+					assert(n == -1);
 					end_connection(i, &read_fds);
 					//TODO remove connection from connected_users list
 				} else {
 					//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),
 						//	&database, result); TODO
-					cout << "TODO" << endl; //
+					cout << "TODO" << buffer << endl; //
 				}
 			}
 		}

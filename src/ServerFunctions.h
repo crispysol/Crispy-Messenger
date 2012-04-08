@@ -2,8 +2,25 @@
  * Functions.h
  *
  *  Created on: May 5, 2011
- *      Author: cmihail
+ *      Author: cmihail, andreea
  */
+
+#include <stdio.h>
+
+#define BUFFER_LENGTH		256
+#define SUCCESS_MSG			"OK"
+#define USEDUSER_ERR		"USEDUSER"
+#define USEDEMAIL_ERR		"USEDMAIL"
+#define ERR_MSG				"FAIL"
+#define CMD_REGISTER		"register"
+#define CMD_AUTH			"login"
+#define EXIT_MSG			"exit"
+
+#ifdef _DEBUG
+# define dprintf(...) printf(__VA_ARGS__)
+#else
+# define dprintf(...) do {} while(0)
+#endif
 
 /**
  * Receive a new connection and add it to read_fds

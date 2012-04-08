@@ -17,10 +17,11 @@
 
 #include "User.h"
 
-#define DATABASE_HOST "localhost"
-#define DATABASE_USER "crispy"
-#define DATABASE_PASS "M3$$enger"
-#define DATABASE_NAME "CrispyDatabase"
+#define DATABASE_HOST 	"localhost"
+#define DATABASE_USER 	"crispy"
+#define DATABASE_PASS 	"M3$$enger"
+#define DATABASE_NAME 	"CrispyDatabase"
+#define PASS_FIELD		"password_hash"
 
 class ClientInfo: public User {
 	std::string ip;
