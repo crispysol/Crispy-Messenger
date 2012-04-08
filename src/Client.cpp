@@ -45,7 +45,7 @@ bool Client::register_client(std::string username, std::string pass, std::string
 	//send username, pass, email to server_socket
 	char msg[BUFFER_LENGTH];
 	sprintf(msg, "%s %s %s %s", CMD_REGISTER, username.c_str(), pass.c_str(), email.c_str());
-	assert(send(server_socket, msg, strlen(msg), 0) >= 0);
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
 
 	//receive response from server_socket
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
@@ -65,7 +65,7 @@ bool Client::authentication(std::string username, std::string pass) {
 	//send username, pass, ip, port to server_socket
 	char msg[BUFFER_LENGTH];
 	sprintf(msg, "%s %s %s %s %i", CMD_AUTH, username.c_str(), pass.c_str(), ip.c_str(), 8080);//, port);
-	assert(send(server_socket, msg, strlen(msg), 0) >= 0);
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
 
 	//receive response from server_socket
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);

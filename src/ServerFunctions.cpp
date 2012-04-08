@@ -2,7 +2,7 @@
  * Functions.cpp
  *
  *  Created on: May 5, 2011
- *      Author: cmihail
+ *      Author: cmihail, andreea
  */
 
 #include <iostream>
@@ -63,7 +63,7 @@ void new_connection(int sockfd, int & fdmax, fd_set * read_fds) {
 	cout << "[SERVER] New connection from: " << inet_ntoa(cli_addr.sin_addr) << endl;
 
 	// Send 'welcome' message
-	assert(send(newsockfd, BANNER, strlen(BANNER), 0) >= 0);
+	assert(send(newsockfd, BANNER, strlen(BANNER) + 1, 0) >= 0);
 }
 
 /**
