@@ -5,25 +5,23 @@
  *      Author: mihail
  */
 
-#include <iostream>
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
+#include <iostream>
 
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms-compat.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "ClientGTKFunctions.h"
 #include "ServerFunctions.h"
 #include "Client.h"
 
 // Defines
 #define BUFFER_LENGTH	256
-#define WINDOW_TITLE	"Crispy Messenger"
-#define WINDOW_WIDTH	350
-#define WINDOW_HEIGHT	600
-#define WINDOW_BG_COLOR	"white"
 
 using namespace std;
 
@@ -35,11 +33,68 @@ static int fdmax;
 // Server socket
 static int socket_server;
 
-// Top level window
-GtkWidget * window_top_level;
+/**
+ * Check login values and execute create main interface if everything is ok
+ */
+void check_login(struct _login_info * l_info) {
+	// Save window top level
+	GtkWidget * window_top_level = l_info->window_top_level;
 
-// TODO
-int check = 0;
+	// Save username and password
+	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(l_info->username_entry)));
+	gchar * password = strdup(gtk_entry_get_text(GTK_ENTRY(l_info->password_entry)));
+
+	// Retrieve users -> communicate with server // TODO
+	cout << "username: " << username << endl << "password: " << password << endl;
+
+	// Delete username and password
+	free(username);
+	free(password);
+
+	// Delete login interface
+	gtk_widget_destroy(l_info->login_vbox_align);
+
+	// Free space used by login interface
+	free(l_info);
+
+	// Create main interface
+	clientgtk_create_main_vbox(window_top_level);
+}
+
+/**
+ * Send text to friend and save it in conversation text view
+ */
+gboolean send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer g_conversation_chat) {
+	if (event->keyval == GDK_Return || event->keyval == GDK_KP_Enter) {
+		// Get text from input
+		GtkTextBuffer * buffer1 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(entry_chat));
+		GtkTextIter start, end;
+		gtk_text_buffer_get_bounds(buffer1, &start, &end);
+		gchar * new_text = gtk_text_buffer_get_text(buffer1, &start, &end, FALSE);
+
+		// Set text to conversation box
+		GtkWidget * conversation_chat = (GtkWidget *) g_conversation_chat;
+		GtkTextBuffer * buffer2 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(conversation_chat));
+		gtk_text_buffer_get_bounds(buffer2, &start, &end);
+		gchar * old_text = gtk_text_buffer_get_text(buffer2, &start, &end, FALSE);
+		string text;
+		if (strcmp(old_text, "") == 0) {
+			text = string(new_text);
+		} else {
+			text = string(old_text) + "\n" + string(new_text);
+		}
+		gtk_text_buffer_set_text(buffer2, text.c_str(), -1);
+
+		// Free space
+		free(old_text);
+		free(new_text);
+
+		// Delete all text from input
+		gtk_text_buffer_set_text(buffer1, "", -1);
+		return TRUE;
+	}
+	return FALSE;
+}
 
 /**
  * Function that runs in gtk main loop
@@ -93,97 +148,11 @@ void idle(gpointer data) {
 }
 
 /**
- * Add a entry/button to a vbox and center it
- */
-static void create_vbox_entry(GtkWidget * vbox, GtkWidget * entry, gint width, gint height) {
-	GtkWidget * align = gtk_alignment_new(0.5, 0.5, 0, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), align, FALSE, FALSE, 0);
-	gtk_widget_show(align);
-
-	GtkWidget * hbox = gtk_hbox_new(TRUE, 0);
-	gtk_container_add(GTK_CONTAINER(align), hbox);
-	gtk_widget_show(hbox);
-
-	gtk_widget_set_size_request(entry, width, height);
-	gtk_container_add(GTK_CONTAINER(hbox), entry);
-	gtk_widget_show(entry);
-}
-
-/**
- * Create main interface which contains friends
- */
-static void create_main_vbox(GtkWidget * login_vbox_align) {
-	gtk_widget_destroy(login_vbox_align);
-	// Retrieve users // TODO
-
-	// Create vbox
-	GtkWidget * main_vbox = gtk_vbox_new(FALSE, 5);
-	gtk_container_add(GTK_CONTAINER(window_top_level), main_vbox);
-	gtk_widget_show(main_vbox);
-
-	// Example TODO delete
-	GtkWidget * button;
-	for (int i = 0; i < 20; i++) {
-		button = gtk_button_new_with_label("Test");
-		//g_signal_connect(button, "clicked", G_CALLBACK(test), NULL); // TODO change function
-		//gtk_widget_set_size_request(button, WINDOW_WIDTH, 50); // TODO
-		gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
-		//gtk_box_pack_start(GTK_BOX(main_vbox), button, FALSE, FALSE, 0);
-		create_vbox_entry(main_vbox, button, WINDOW_WIDTH, 50);
-	}
-}
-
-/**
- * Create a vbox used for login interface
- */
-static void create_login_vbox() {
-    // Create vbox and it's alignment
-	GtkWidget * login_vbox_align = gtk_alignment_new(0.5, 0.25, 0, 0);
-	gtk_container_add(GTK_CONTAINER(window_top_level), login_vbox_align);
-	gtk_widget_show(login_vbox_align);
-	GtkWidget * login_vbox = gtk_vbox_new(FALSE, 5);
-	gtk_container_add(GTK_CONTAINER(login_vbox_align), login_vbox);
-	gtk_widget_show(login_vbox);
-
-	// Create username field and add it to the vbox
-	GtkWidget * username_label = gtk_label_new("Enter username:");
-	gtk_box_pack_start(GTK_BOX(login_vbox), username_label, FALSE, FALSE, 0);
-	gtk_widget_show(username_label);
-	GtkWidget * username_entry = gtk_entry_new();
-	create_vbox_entry(login_vbox, username_entry, WINDOW_WIDTH / 3, 0);
-
-	// Create password field and add it to the vbox
-	GtkWidget * password_label = gtk_label_new("Enter password:");
-	gtk_box_pack_start(GTK_BOX(login_vbox), password_label, FALSE, FALSE, 0);
-	gtk_widget_show(password_label);
-	GtkWidget * password_entry = gtk_entry_new();
-	gtk_entry_set_visibility((GtkEntry *) password_entry, FALSE);
-	create_vbox_entry(login_vbox, password_entry, WINDOW_WIDTH / 3, 0);
-
-	// Create login button
-	GtkWidget * login_button = gtk_button_new_with_label("Login");
-	create_vbox_entry(login_vbox, login_button, 0, 0);
-
-	// Action on login
-	g_signal_connect_swapped(login_button, "clicked", G_CALLBACK(create_main_vbox), login_vbox_align);
-
-	// Create account/password recovery button and new account button
-	GtkWidget * recovery_button = gtk_button_new_with_label("Forgot account/password?");
-	gtk_button_set_relief(GTK_BUTTON(recovery_button), GTK_RELIEF_NONE);
-	create_vbox_entry(login_vbox, recovery_button, 0, 0);
-	GtkWidget * new_account_button = gtk_button_new_with_label("New account");
-	gtk_button_set_relief(GTK_BUTTON(new_account_button), GTK_RELIEF_NONE);
-	create_vbox_entry(login_vbox, new_account_button, 0, 0);
-
-
-}
-
-/**
  * Main function
  */
 int main(int argc, char *argv[]) {
 	// Check if number of arguments is correct
-	if (argc != 3) {
+	if (argc != 3) { // TODO default values
 		cerr << "Usage: ./server.cpp server_ip port" << endl;
 		exit(EXIT_FAILURE);
 	}
@@ -192,50 +161,34 @@ int main(int argc, char *argv[]) {
 	gtk_init(&argc, &argv);
 
 	// Create main window
-	window_top_level = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	GtkWidget * window_top_level = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window_top_level), WINDOW_TITLE);
 	gtk_window_set_default_size(GTK_WINDOW(window_top_level), WINDOW_WIDTH, WINDOW_HEIGHT);
 	//gtk_window_set_position(GTK_WINDOW(window_top_level), GTK_WIN_POS_CENTER); TODO uncomment
 
 	// Set main window bg color
-	GdkRGBA color;
-	gdk_rgba_parse(&color, WINDOW_BG_COLOR);
-	gtk_widget_override_background_color(window_top_level, (GtkStateFlags) GTK_STATE_FLAG_NORMAL, &color);
+	GdkRGBA window_color;
+	gdk_rgba_parse(&window_color, WINDOW_BG_COLOR);
+	gtk_widget_override_background_color(window_top_level,
+			(GtkStateFlags) GTK_STATE_FLAG_NORMAL, &window_color);
+
+	// Show top level window
 	gtk_widget_show(window_top_level);
 
 	// Signal to kill main gtk loop
 	g_signal_connect(window_top_level, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
 	// Create login interface
-	create_login_vbox();
+	clientgtk_create_login_vbox(window_top_level);
 
-
-    /********************************************************/
-//	// Create buttons TODO modify
-//	GtkWidget * button;
-//	for (int i = 0; i < 4; i++) {
-//		button = gtk_button_new_with_label("TEST");
-//		g_signal_connect(button, "clicked", G_CALLBACK(test), NULL); // TODO change function
-//		gtk_widget_set_size_request(button, WINDOW_WIDTH, 50); // TODO
-//		gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
-//		gtk_table_attach(GTK_TABLE(table), button, 0, 1, i, i + 1,
-//				(GtkAttachOptions) (GTK_FILL | GTK_SHRINK),
-//				(GtkAttachOptions) (GTK_FILL | GTK_SHRINK), 1, 1);
-//	}
-//
-//	// Add idle function
-//	Settings settings; // TODO create settings for gtk buttons
-//	settings.button = button;
-//	/g_idle_add((GSourceFunc) test_idle, 0); // TODO change function
-
-
-	/********************************************************/
+	// Add idle function
+//	g_idle_add((GSourceFunc) idle, 0); // TODO change function
 
 	// Init localhost server (communication with other clients
-	//init_server(socket_server, sockfd, fdmax, &read_fds); TODO
+//	init_server(socket_server, sockfd, fdmax, &read_fds); // TODO
 
 	// Connect to main server
-	//connect_to_server(argv[1], atoi(argv[2]), socket_server, fdmax, &read_fds); TODO
+//	connect_to_server(argv[1], atoi(argv[2]), socket_server, fdmax, &read_fds); // TODO
 
 	// Main gtk loop
 	gtk_main();
