@@ -20,12 +20,27 @@
 #include <dirent.h>
 #include <netdb.h>
 
+#include "Server.h"
+
 using namespace std;
 
 // Defines
 #define BUFFER_LENGTH	256
 #define MAX_CLIENTS		100
 #define BANNER			"OK"
+
+
+User::User() {}
+
+User::~User() {}
+
+Profile User::get_profile() {
+	return profile;
+}
+
+Profile::Profile() {}
+
+Profile::~Profile() {}
 
 /**
  * Receive a new connection and add it to read_fds

@@ -2,7 +2,7 @@
  * server.cpp
  *
  *  Created on: Mar 10, 2012
- *      Author: mihail
+ *      Author: andreea
  */
 
 #include <iostream>
@@ -15,89 +15,126 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include "ServerFunctions.h"
+#include <mysql_connection.h>
+#include <mysql_driver.h>
 
-// Defines
-#define BUFFER_LENGTH	256
-#define BANNER			"OK"
+#include <cppconn/driver.h>
+#include <cppconn/connection.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/exception.h>
+
+#include "ServerFunctions.h"
+#include "Server.h"
 
 using namespace std;
 
-/**
- * Execute command received from STDIN
- */
-void stdin_command() {
-	string line;
-	getline(cin, line);
-
-	// Tratarea comenzii de la tastatura TODO
-	cout << line << endl; // TODO delete
+ClientInfo::ClientInfo(std::string ip, int port) : ip(ip), port(port)
+{
 }
 
-/**
- * Initialize server
- */
-int run_server(int server_port) {
-	char buffer[BUFFER_LENGTH];
-	int sockfd, fdmax, n;
-	fd_set read_fds, tmp_fds;
-	FD_ZERO(&tmp_fds);
 
-	// Init server
-	init_server(server_port, sockfd, fdmax, &read_fds);
+ClientInfo::~ClientInfo() {}
 
-	// Main loop
-	for (;;) {
-		tmp_fds = read_fds;
-		assert(select(fdmax + 1, &tmp_fds, NULL, NULL, NULL) != -1);
-
-		// Check every socket for new data
-		for (int i = 0; i <= fdmax; i++) {
-			if (FD_ISSET(i, &tmp_fds)) {
-				// New connection
-				if (i == sockfd) {
-					new_connection(sockfd, fdmax, &read_fds);
-					continue;
-				}
-
-				// Execute command from STDIN
-				if (i == STDIN_FILENO) {
-					stdin_command();
-					continue;
-				}
-
-				// Received data from client
-				if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
-					assert(n == 0);
-					end_connection(i, &read_fds);
-				} else {
-					//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),
-						//	&database, result);
-					cout << "TODO" << endl; //
-				}
-			}
-		}
-	}
-
-	close(sockfd);
-	return 0;
-}
-
-/**
- * Functia main.
- */
-int main(int argc, char **argv) {
-	int server_port;
-
-	// Check if number of arguments is correct
-	if (argc != 2) {
-		cerr << "Usage: ./server.cpp port" << endl;
+Server::Server() {
+	sql::mysql::MySQL_Driver *driver;
+	
+	try{
+		driver = sql::mysql::get_mysql_driver_instance();
+		con = driver->connect(DATABASE_HOST, DATABASE_USER, DATABASE_PASS);
+		con->setSchema(DATABASE_NAME);
+	}catch (sql::SQLException &e) {
+		cout << "# ERR: SQLException in " << __FILE__;
+		cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << endl;
 		exit(EXIT_FAILURE);
 	}
-
-	// Get port number
-	server_port = atoi(argv[1]);
-
-	// Initialize server
-	run_server(server_port);
+	
+	delete driver;
 }
+
+Server::~Server() {
+	//if (con)
+		//delete con;
+}
+
+bool Server::register_client(int sockfd, std::string username, std::string pass, std::string email) {
+	int rc = true;
+	sql::Statement	*stmt;
+	//1)query database and check for username
+	string query = string("SELECT username, email "
+						"FROM users "
+						"WHERE username == ").append(username);
+	stmt = con->createStatement();
+	
+	try {
+		sql::ResultSet * res = stmt->executeQuery(query);	
+		//TODO 2)if username or email exists, send USEDUSER | USEDMAIL | ERR on sockfd
+		if (res != NULL) {
+			if (res->getString("username") != NULL) {
+				assert(send(sockfd, USEDUSER_ERR, strlen(USEDUSER_ERR), 0) >= 0);
+				rc = false;
+			}
+			else if (res->getString("email") != NULL) {
+				assert(send(sockfd, USEDEMAIL_ERR, strlen(USEDEMAIL_ERR), 0) >= 0);
+				rc = false;
+			}
+			else {
+				//TODO 3)if username is valid, add to db and send OK on sockfd
+				query = string("INSERT INTO ").append(DATABASE_NAME).append("(username, pass, email)").append(" VALUES (").
+					append(username).append(", ").append(pass).append(", ").append(email + ")");
+				stmt->execute(query);
+				assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG), 0) >= 0);
+			}
+
+			delete res;
+		}
+		else {
+			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG), 0) >= 0);
+			rc = false;
+		}
+	}catch (sql::SQLException &e) {
+		rc = false;
+	}
+		
+	delete stmt;
+
+	return rc;
+}
+
+bool Server::authentication(int sockfd, std::string username, std::string pass, std::string ip, int port) {
+	int rc = true;
+	sql::Statement	*stmt;
+	string query = string("SELECT pass "
+							"FROM users "
+							"WHERE username == ").append(username);
+	stmt = con->createStatement();
+	//query db and compare pass
+	//send FAIL/(more info<groups and users, offline messages> + END) on sockfd
+	try {
+			sql::ResultSet * res = stmt->executeQuery(query);
+			if (res != NULL && string(res->getString("pass")).compare(pass) == 0) {
+					//save client info (ip and port) to session
+					ClientInfo ci = ClientInfo(ip, port);
+					clients.insert(pair<int, ClientInfo>(sockfd, ci));
+					//query db for client' friends and offline msg and send to client
+					assert(send(sockfd, "END", 3, 0) >= 0);
+			}
+			else {
+				assert(send(sockfd, ERR_MSG, strlen(ERR_MSG), 0) >= 0);
+				rc = false;
+			}
+			if (res)
+				delete res;
+		}catch (sql::SQLException &e) {
+			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG), 0) >= 0);
+			rc = false;
+		}
+	
+	delete stmt;
+
+	return rc;
+}
+

@@ -1,8 +1,8 @@
 /*
  * client.cpp
  *
- *  Created on: Mar 10, 2012
- *      Author: mihail
+ *  Created on: Apr 8, 2012
+ *      Author: andreea
  */
 
 #include <iostream>
@@ -11,103 +11,68 @@
 #include <cstring>
 
 #include <fcntl.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
 #include "ServerFunctions.h"
-
-// Defines
-#define BUFFER_LENGTH	256
-#define BANNER			"OK"
+#include "Client.h"
 
 using namespace std;
 
-/**
- * Execute command received from STDIN
- */
-void stdin_command() {
-	string line;
-	getline(cin, line);
+Client::Client(int server_socket, std::string ip) : server_socket(server_socket), ip(ip)
+{}
 
-	// Tratarea comenzii de la tastatura TODO
-	cout << line << endl; // TODO delete
+Client::~Client()
+{}
+
+std::string Client::get_ip() {
+	return ip;
 }
 
-/**
- * Initialize server
- */
-int run_server(char * server_ip, int server_port) {
+int Client::get_port() {
+	return port;
+}
+
+int Client::get_server_socket() {
+	return server_socket;
+}
+
+bool Client::register_client(std::string username, std::string pass, std::string email) {
+	int rc;
 	char buffer[BUFFER_LENGTH];
-	int sockfd, socket_server, fdmax, n;
-	fd_set read_fds, tmp_fds;
-	FD_ZERO(&tmp_fds);
 
-	// Init localhost server (communication with other clients
-	init_server(socket_server, sockfd, fdmax, &read_fds);
+	//send username, pass, email to server_socket
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s %s %s", CMD_REGISTER, username.c_str(), pass.c_str(), email.c_str());
+	assert(send(server_socket, msg, strlen(msg), 0) >= 0);
 
-	// Connect to main server
-	connect_to_server(server_ip, server_port, socket_server, fdmax, &read_fds);
+	//receive response from server_socket
+	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	assert(rc >= 0);
+	dprintf("received from server: %s\n", buffer);
+	if (rc == 0 || strcmp(buffer, USEDUSER_ERR) == 0 || strcmp(buffer, USEDEMAIL_ERR) == 0 ||
+			strcmp(buffer, ERR_MSG) == 0)
+		return false;
 
-	// Main loop
-	for (;;) {
-		tmp_fds = read_fds;
-		assert(select(fdmax + 1, &tmp_fds, NULL, NULL, NULL) != -1);
-
-		// Check every socket for new data
-		for (int i = 0; i <= fdmax; i++) {
-			if (FD_ISSET(i, &tmp_fds)) {
-				// New connection
-				if (i == sockfd) {
-					new_connection(sockfd, fdmax, &read_fds);
-					continue;
-				}
-
-				// Execute command from STDIN
-				if (i == STDIN_FILENO) {
-					stdin_command();
-					continue;
-				}
-
-				// Receive data from server
-				if (i == server_port) {
-					// TODO;
-					cout << "RECEIVED" << endl;
-					continue;
-				}
-
-				// Received data from another client
-				if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
-					assert(n == 0);
-					end_connection(i, &read_fds);
-					// TODO if (i == server_port) => quit application and free all resource (sockets + etc)
-				} else {
-					//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),
-						//	&database, result);
-					cout << "TODO" << endl; //
-				}
-			}
-		}
-	}
-
-	close(sockfd);
-	return 0;
+	return true;
 }
 
-/**
- * Functia main.
- */
-int main(int argc, char **argv) {
-	int server_port;
+bool Client::authentication(std::string username, std::string pass) {
+	int rc;
+	char buffer[BUFFER_LENGTH];
 
-	// Check if number of arguments is correct
-	if (argc != 3) {
-		cerr << "Usage: ./server.cpp server_ip port" << endl;
-		exit(EXIT_FAILURE);
-	}
+	//send username, pass, ip, port to server_socket
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s %s %s %i", CMD_AUTH, username.c_str(), pass.c_str(), ip.c_str(), 8080);//, port);
+	assert(send(server_socket, msg, strlen(msg), 0) >= 0);
 
-	// Get port number
-	server_port = atoi(argv[2]);
-
-	// Initialize server
-	run_server(argv[1], server_port);
+	//receive response from server_socket
+	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	assert(rc >= 0);
+	dprintf("received from server: %s\n", buffer);
+	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+		return false;
+	
+	return true;
 }
