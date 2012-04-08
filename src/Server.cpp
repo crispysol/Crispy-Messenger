@@ -96,8 +96,7 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 			cout << query << endl;
 			stmt->executeQuery(query);
 			dprintf("[SERVER]added %s\n", username.c_str());
-			fflush(stdout);
-			assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG), 0) >= 0);
+			assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 		}
 
 		delete res;
@@ -113,29 +112,31 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 bool Server::authentication(int sockfd, std::string username, std::string pass, std::string ip, int port) {
 	int rc = true;
 	sql::Statement	*stmt;
-	string query = string("SELECT pass "
-							"FROM users "
-							"WHERE username == ").append(username);
+	dprintf("[SERVER]received login request\n");
+	string query = string("SELECT ").append(PASS_FIELD).
+					append(" FROM users "
+					"WHERE username = '").append(username).append("';");
 	stmt = con->createStatement();
 	//query db and compare pass
 	//send FAIL/(more info<groups and users, offline messages> + END) on sockfd
 	try {
 		sql::ResultSet * res = stmt->executeQuery(query);
-		if (res != NULL && string(res->getString("pass")).compare(pass) == 0) {
+		if (res->next() && string(res->getString(PASS_FIELD)).compare(pass) == 0) {
 				//save client info (ip and port) to session
 				ClientInfo ci = ClientInfo(ip, port);
 				clients.insert(pair<int, ClientInfo>(sockfd, ci));
 				//query db for client' friends and offline msg and send to client
-				assert(send(sockfd, "END", 3, 0) >= 0);
+				char end[] = "END";
+				assert(send(sockfd, "END", strlen(end) + 1, 0) >= 0);
 		}
 		else {
-			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG), 0) >= 0);
+			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 			rc = false;
 		}
 		if (res)
 			delete res;
 	}catch (sql::SQLException &e) {
-		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG), 0) >= 0);
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 		rc = false;
 	}
 	

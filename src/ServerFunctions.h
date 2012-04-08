@@ -17,7 +17,7 @@
 #define EXIT_MSG			"exit"
 
 #ifdef _DEBUG
-# define dprintf(...) printf(__VA_ARGS__)
+# define dprintf(...) {printf(__VA_ARGS__); fflush(stdout);}
 #else
 # define dprintf(...) do {} while(0)
 #endif
