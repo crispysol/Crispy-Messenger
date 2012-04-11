@@ -123,8 +123,7 @@ static void check_friend_clicks(GtkWidget *widget, GdkEventButton *event, gpoint
 		if (it == map_chat_windows.end()) {
 			clientgtk_create_chat_window(g_client);
 		} else {
-			gtk_widget_grab_focus(GTK_WIDGET(it->second));
-			// TODO
+			gtk_window_present(GTK_WINDOW(it->second));
 		}
 	}
 }
@@ -216,6 +215,26 @@ static GtkWidget * scrolled_chat_text_view(GtkWidget * vbox, gboolean from_start
 }
 
 /**
+ * Create buttons for a chat window TODO
+ */
+static void create_chat_window_buttons(GtkWidget * vbox) {
+	// Create button
+	GtkWidget * send_button = gtk_button_new();
+	gtk_button_get_focus_on_click(GTK_BUTTON(send_button));
+	gtk_box_pack_start(GTK_BOX(vbox), send_button, FALSE, FALSE, 0);
+	gtk_widget_show(send_button);
+
+	// Send button label and it's alignment
+	GtkWidget * send_align = gtk_alignment_new(1, 0.5, 0, 0);
+	gtk_container_add(GTK_CONTAINER(send_button), send_align);
+	gtk_widget_show(send_align);
+	GtkWidget * send_label = gtk_label_new("");
+	gtk_label_set_markup(GTK_LABEL(send_label), "<big>Send</big>");
+	gtk_container_add(GTK_CONTAINER(send_align), send_label);
+	gtk_widget_show(send_label);
+}
+
+/**
  * Create a chat window // TODO change string parameter
  */
 void clientgtk_create_chat_window(gpointer g_client) {
@@ -236,28 +255,15 @@ void clientgtk_create_chat_window(gpointer g_client) {
 	// Create text view used for conversation
 	GtkWidget * conversation_chat = scrolled_chat_text_view(chat_vbox, TRUE);
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(conversation_chat), FALSE);
+	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(conversation_chat), FALSE);
 	gtk_widget_show(conversation_chat);
 
-	//////////// TODO make function //////////
-	// Send button
-	GtkWidget * send_button = gtk_button_new();
-	//gtk_button_set_relief(GTK_BUTTON(send_button), GTK_RELIEF_NONE);
-	gtk_button_get_focus_on_click(GTK_BUTTON(send_button));
-	gtk_box_pack_start(GTK_BOX(chat_vbox), send_button, FALSE, FALSE, 0);
-	gtk_widget_show(send_button);
-
-	// Send button label and it's alignment
-	GtkWidget * send_align = gtk_alignment_new(1, 0.5, 0, 0);
-	gtk_container_add(GTK_CONTAINER(send_button), send_align);
-	gtk_widget_show(send_align);
-	GtkWidget * send_label = gtk_label_new("");
-	gtk_label_set_markup(GTK_LABEL(send_label), "<big>Send</big>");
-	gtk_container_add(GTK_CONTAINER(send_align), send_label);
-	gtk_widget_show(send_label);
-	//////////// TODO make function //////////
+	// Create buttons
+	create_chat_window_buttons(chat_vbox);
 
 	// Create text view used for input
 	GtkWidget * entry_chat = scrolled_chat_text_view(chat_vbox, FALSE);
+	gtk_widget_grab_focus(entry_chat);
 	gtk_widget_show(entry_chat);
 	g_signal_connect(entry_chat, "key-press-event",
 			G_CALLBACK(send_text), (gpointer) conversation_chat);
