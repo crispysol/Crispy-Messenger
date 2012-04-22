@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cassert>
 #include <iostream>
+#include <string>
 
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms-compat.h>
@@ -16,14 +17,20 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include "ClientGTKFunctions.h"
+#include "ClientGTK.h"
 #include "ServerFunctions.h"
 #include "Client.h"
 
 // Defines
 #define BUFFER_LENGTH	256
+#define DEFAULT_IP		"127.0.0.1"
+#define DEFAULT_PORT	5000
 
 using namespace std;
+
+// Default values for port and ip
+static string ip = DEFAULT_IP;
+static int port = DEFAULT_PORT;
 
 // Local server info
 static int sockfd;
@@ -36,13 +43,13 @@ static int socket_server;
 /**
  * Check login values and execute create main interface if everything is ok
  */
-void check_login(struct _login_info * l_info) {
+void signal_check_login(struct _general_info * g_info) {
 	// Save window top level
-	GtkWidget * window_top_level = l_info->window_top_level;
+	GtkWidget * window_top_level = g_info->window_top_level;
 
 	// Save username and password
-	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(l_info->username_entry)));
-	gchar * password = strdup(gtk_entry_get_text(GTK_ENTRY(l_info->password_entry)));
+	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->username)));
+	gchar * password = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->password1)));
 
 	// Retrieve users -> communicate with server // TODO
 	cout << "username: " << username << endl << "password: " << password << endl;
@@ -52,19 +59,59 @@ void check_login(struct _login_info * l_info) {
 	free(password);
 
 	// Delete login interface
-	gtk_widget_destroy(l_info->login_vbox_align);
+	gtk_widget_destroy(g_info->vbox_align);
 
 	// Free space used by login interface
-	free(l_info);
+	free(g_info);
 
 	// Create main interface
-	clientgtk_create_main_vbox(window_top_level);
+	clientgtk_create_main_window(window_top_level);
+}
+
+/**
+ * Check register values and TODO (do something)
+ */
+void signal_check_register(struct _general_info * g_info) {
+	// Save username and password
+	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->username)));
+	gchar * password1 = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->password1)));
+	gchar * password2 = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->password2)));
+	gchar * email = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->email)));
+
+	// Retrieve users -> communicate with server // TODO
+	cout << "username: " << username << endl << "password: " << password1 << endl
+			<< "password check: " << password2 << endl << "email:" << email << endl;
+
+	// Delete username and password
+	free(username);
+	free(password1);
+	free(password2);
+	free(email);
+
+	// TODO register client and check if everything is ok
+}
+
+/**
+ * Check recovery values and TODO (do something)
+ */
+void signal_check_recovery(struct _general_info * g_info) {
+	// Save username and password
+	gchar * email = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->email)));
+
+	// Retrieve users -> communicate with server // TODO
+	cout << "email:" << email << endl;
+
+	// Delete username and password
+	free(email);
+
+	// TODO recovery
 }
 
 /**
  * Send text to friend and save it in conversation text view
  */
-gboolean send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer g_conversation_chat) {
+gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
+		gpointer g_conversation_chat) {
 	if (event->keyval == GDK_Return || event->keyval == GDK_KP_Enter) {
 		// Get text from input
 		GtkTextBuffer * buffer1 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(entry_chat));
@@ -141,7 +188,7 @@ void idle(gpointer data) {
 			} else {
 				//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),
 				//	&database, result); TODO
-				cout << "TODO" << endl; //
+				cout << "TODO" << endl;
 			}
 		}
 	}
@@ -151,12 +198,6 @@ void idle(gpointer data) {
  * Main function
  */
 int main(int argc, char *argv[]) {
-	// Check if number of arguments is correct
-	if (argc != 3) { // TODO default values
-		cerr << "Usage: ./server.cpp server_ip port" << endl;
-		exit(EXIT_FAILURE);
-	}
-
 	// Init GTK
 	gtk_init(&argc, &argv);
 
@@ -179,7 +220,7 @@ int main(int argc, char *argv[]) {
 	g_signal_connect(window_top_level, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
 	// Create login interface
-	clientgtk_create_login_vbox(window_top_level);
+	clientgtk_create_login_window(window_top_level);
 
 	// Add idle function
 //	g_idle_add((GSourceFunc) idle, 0); // TODO change function
@@ -188,7 +229,7 @@ int main(int argc, char *argv[]) {
 //	init_server(socket_server, sockfd, fdmax, &read_fds); // TODO
 
 	// Connect to main server
-//	connect_to_server(argv[1], atoi(argv[2]), socket_server, fdmax, &read_fds); // TODO
+//	connect_to_server(ip.c_str(), port, socket_server, fdmax, &read_fds); // TODO
 
 	// Main gtk loop
 	gtk_main();
