@@ -22,6 +22,19 @@ using namespace std;
 extern map <string, GtkWidget *> map_chat_windows;
 
 /**
+ * Create a message dialog
+ */
+void clientgtk_create_message_dialog(const gchar * message, const gchar * title,
+		GtkMessageType type) {
+	GtkWidget * dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
+			type, GTK_BUTTONS_OK, "%s", message); // TODO error change
+	gtk_window_set_title(GTK_WINDOW(dialog), title);
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
+}
+
+
+/**
  * Create an aligned vbox
  */
 static GtkWidget * create_aligned_vbox(GtkWidget * window_top_level, GtkWidget * vbox_align) {
@@ -113,18 +126,18 @@ void clientgtk_create_login_window(GtkWidget * window_top_level) {
 	// Create account/password recovery button
 	GtkWidget * recovery_button = create_link_button(login_vbox, "Forgot account/password?");
 	g_signal_connect_swapped(recovery_button, "clicked",
-			G_CALLBACK(client_gtk_create_recovery_window), g_info);
+			G_CALLBACK(clientgtk_create_recovery_window), g_info);
 
 	// Create new account button
 	GtkWidget * new_account_button = create_link_button(login_vbox, "New account");
 	g_signal_connect_swapped(new_account_button, "clicked",
-			G_CALLBACK(client_gtk_create_new_account_window), g_info);
+			G_CALLBACK(clientgtk_create_new_account_window), g_info);
 }
 
 /**
  * Create recovery window
  */
-void client_gtk_create_recovery_window(struct _general_info * g_info) {
+void clientgtk_create_recovery_window(struct _general_info * g_info) {
 	// Save window top level
 	GtkWidget * window_top_level = g_info->window_top_level;
 
@@ -158,7 +171,7 @@ void client_gtk_create_recovery_window(struct _general_info * g_info) {
 /**
  * Create window for new account details
  */
-void client_gtk_create_new_account_window(struct _general_info * g_info) {
+void clientgtk_create_new_account_window(struct _general_info * g_info) {
 	// Save window top level
 	GtkWidget * window_top_level = g_info->window_top_level;
 

@@ -14,6 +14,7 @@
 #define WINDOW_BG_COLOR		"white"
 #define CHAT_WINDOW_WIDTH	400
 #define CHAT_WINDOW_HEIGHT	400
+#define MIN_REGISTER_CHARS	8
 
 /**
  * Structure used to pass login information
@@ -28,6 +29,12 @@ struct _general_info {
 };
 
 /**
+ * Create a message dialog
+ */
+void clientgtk_create_message_dialog(const gchar * message, const gchar * title,
+		GtkMessageType type);
+
+/**
  * Create login interface
  */
 void clientgtk_create_login_window(GtkWidget * window_top_level);
@@ -35,12 +42,12 @@ void clientgtk_create_login_window(GtkWidget * window_top_level);
 /**
  * Create recovery window
  */
-void client_gtk_create_recovery_window(struct _general_info * g_info);
+void clientgtk_create_recovery_window(struct _general_info * g_info);
 
 /**
  * Create window for new account details
  */
-void client_gtk_create_new_account_window(struct _general_info * g_info);
+void clientgtk_create_new_account_window(struct _general_info * g_info);
 
 /**
  * Create main interface which contains friends
@@ -58,7 +65,7 @@ void clientgtk_create_chat_window(GtkWidget * widget, gpointer func_data);
 void signal_check_login(struct _general_info * g_info);
 
 /**
- * Check register values
+ * Check register values and register client
  */
 void signal_check_register(struct _general_info * g_info);
 

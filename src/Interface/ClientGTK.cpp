@@ -10,12 +10,14 @@
 #include <cassert>
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms-compat.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <regex.h>
 
 #include "../ServerFunctions.h"
 #include "../Client.h"
@@ -39,6 +41,9 @@ static fd_set tmp_fds;
 static int fdmax;
 // Server socket
 static int socket_server;
+
+// Client info
+Client * current_client;
 
 // Map used for correspondence between client - chat window
 map <string, GtkWidget *> map_chat_windows;
@@ -72,7 +77,7 @@ void signal_check_login(struct _general_info * g_info) {
 }
 
 /**
- * Check register values and TODO (do something)
+ * Check register values and register client
  */
 void signal_check_register(struct _general_info * g_info) {
 	// Save username and password
@@ -81,11 +86,53 @@ void signal_check_register(struct _general_info * g_info) {
 	gchar * password2 = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->password2)));
 	gchar * email = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->email)));
 
-	// Retrieve users -> communicate with server // TODO
-	cout << "username: " << username << endl << "password: " << password1 << endl
-			<< "password check: " << password2 << endl << "email:" << email << endl;
+	// Variable used for errors
+	bool error = false;
 
-	// TODO register client and check if everything is ok
+	// Check if fields have the necessary length
+	if (strlen(username) < MIN_REGISTER_CHARS || strlen(password1) < MIN_REGISTER_CHARS
+			|| strlen(password2) < MIN_REGISTER_CHARS) {
+		stringstream ss(stringstream::out);
+		ss << "The username/password fields must have at least " << MIN_REGISTER_CHARS <<
+				" characters!";
+		clientgtk_create_message_dialog(ss.str().c_str(), "Error register!", GTK_MESSAGE_ERROR);
+		error = true;
+	}
+
+	// Check if passwords are the same
+	if (!error && memcmp(password1, password2, strlen(password1))) {
+		clientgtk_create_message_dialog("The password fields must be the same!", "Error register!",
+				GTK_MESSAGE_ERROR);
+		error = true;
+	}
+
+	// Check if email is correct
+	regex_t preg;
+	regcomp(&preg, ".*[@].*[.].*", REG_EXTENDED);
+	if (!error && regexec(&preg, email, 0, NULL, 0)) {
+		clientgtk_create_message_dialog("Email field is incorrect", "Error register!",
+				GTK_MESSAGE_ERROR);
+		error = true;
+	}
+
+	// Check if there are any errors
+	if (!error) {
+		// Register client TODO must retrieve answer too
+//		current_client->register_client(username, password1, email);
+
+		// Show information about register // TODO check answer from register_client to see if everything is ok
+		clientgtk_create_message_dialog("Account created", "Register information",
+				GTK_MESSAGE_INFO);
+
+		// Delete register interface
+		gtk_widget_destroy(g_info->vbox_align);
+
+		// Change interface back to login
+		clientgtk_create_login_window(g_info->window_top_level);
+
+		// Free space used by register interface
+		free(g_info);
+	}
 
 	// Delete username and password
 	free(username);
@@ -101,10 +148,36 @@ void signal_check_recovery(struct _general_info * g_info) {
 	// Save email
 	gchar * email = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->email)));
 
-	// Retrieve users -> communicate with server // TODO
-	cout << "email:" << email << endl;
+	// Variable used for errors
+	bool error = false;
 
-	// TODO recovery
+	// Check if email is correct
+	regex_t preg;
+	regcomp(&preg, ".*[@].*[.].*", REG_EXTENDED);
+	if (!error && regexec(&preg, email, 0, NULL, 0)) {
+		clientgtk_create_message_dialog("Email field is incorrect", "Error recovery!",
+				GTK_MESSAGE_ERROR);
+		error = true;
+	}
+
+	// Check if there are any errors
+	if (!error) {
+		// Recover account information TODO must retrieve answer too
+		// TODO function does not exist, must be created in server !!!
+
+		// Show information about recovery // TODO check answer from TODO to see if everything is ok
+		clientgtk_create_message_dialog("Account information recovered", "Recovery information",
+				GTK_MESSAGE_INFO);
+
+		// Delete recovery interface
+		gtk_widget_destroy(g_info->vbox_align);
+
+		// Change interface back to login
+		clientgtk_create_login_window(g_info->window_top_level);
+
+		// Free space used by recovery interface
+		free(g_info);
+	}
 
 	// Free email space
 	free(email);
@@ -131,7 +204,7 @@ void signal_send_file(GtkWidget * widget, gpointer g_client) {
 }
 
 /**
- * Send text to friend and save it in conversation text view
+ * Send text to friend and save it in conversation text view // TODO
  */
 gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
 		gpointer g_conversation_chat) {
@@ -221,6 +294,15 @@ void idle(gpointer data) {
  * Main function
  */
 int main(int argc, char *argv[]) {
+//	// Init localhost server (communication with other clients
+//	init_server(socket_server, sockfd, fdmax, &read_fds); // TODO
+//
+//	// Connect to main server
+//	connect_to_server(ip.c_str(), port, socket_server, fdmax, &read_fds); // TODO
+//
+//	// Create current client
+//	current_client = new Client(socket_server, ip.c_str());
+
 	// Init GTK
 	gtk_init(&argc, &argv);
 
@@ -247,12 +329,6 @@ int main(int argc, char *argv[]) {
 
 	// Add idle function
 //	g_idle_add((GSourceFunc) idle, 0); // TODO change function
-
-	// Init localhost server (communication with other clients
-//	init_server(socket_server, sockfd, fdmax, &read_fds); // TODO
-
-	// Connect to main server
-//	connect_to_server(ip.c_str(), port, socket_server, fdmax, &read_fds); // TODO
 
 	// Main gtk loop
 	gtk_main();
