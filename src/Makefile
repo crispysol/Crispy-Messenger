@@ -1,29 +1,36 @@
 CC = g++
 CFLAGS = -Wall -g
 CPPFLAGS = -D_DEBUG
+
+.PHONY: all clean
  
 all: ServerMain ClientMain ClientGTK
+
+# Main programs
 
 ServerMain: ServerMain.o ServerFunctions.o Server.o
 	$(CC) $(CFLAGS) $^ -l mysqlcppconn -o $@
 
 ClientMain: ClientMain.o ServerFunctions.o Client.o
 
-ClientGTK: ClientGTK.o ClientGTKFunctions.o ServerFunctions.o
+ServerMain.o: ServerMain.cpp
+Server.o: Server.cpp
+
+# Interface
+ClientGTK: ClientGTK.o LoginWindow.o MainWindow.o ChatWindow.o ServerFunctions.o
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -o $@ `pkg-config --libs gtk+-3.0`
-
-ClientGTK.o: ClientGTK.cpp
+ClientGTK.o: Interface/ClientGTK.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
-
-ClientGTKFunctions.o: ClientGTKFunctions.cpp
+LoginWindow.o: Interface/LoginWindow.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
-
+MainWindow.o: Interface/MainWindow.cpp
+	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
+ChatWindow.o: Interface/ChatWindow.cpp
+	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
+	
+# Database creation		
 CreateDatabase: CreateDatabase.o
 	$(CC) $(CFLAGS) $^ -l mysqlcppconn -o $@
 
-ServerMain.o: ServerMain.cpp
-
-Server.o: Server.cpp
-
 clean: 
-	rm -rf *.o ServerMain ClientMain CreateDatabase
+	rm -rf *.o ServerMain ClientMain CreateDatabase ClientGTK
