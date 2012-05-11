@@ -5,7 +5,7 @@ C: register user pass email
 S: OK | USEDUSER | USEDMAIL | ERR
 
 #2 autentificarea pe server
-C: login user pass ip port
+C: login user pass
 S: OK -> send more info :
 {
 groups:[

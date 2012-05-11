@@ -47,8 +47,10 @@ public:
 
 class Server {
 	// Map <sockfd, client info>
-	std::map <int, ClientInfo> clients;
-	// Database (initialized in constructor) TODO
+	std::map <int, ClientInfo> sockfd_to_clients;
+	// Map <username, sockfd>
+	std::map <std::string, int> clients_to_sockfd;
+	// Database (initialized in constructor)
 	sql::Connection	*con;
 
 public:
@@ -89,6 +91,8 @@ public:
 	
 	//TODO
 	bool forgot_password();
+	
+	std:string get_list_of_friends(std::string username);
 };
 
 #endif /* SERVER_H_ */

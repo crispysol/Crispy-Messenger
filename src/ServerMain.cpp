@@ -22,6 +22,7 @@
 #define BANNER			"OK"
 
 using namespace std;
+Server *server;
 
 /**
  * Execute command received from STDIN
@@ -37,17 +38,45 @@ void stdin_command() {
 		}
 }
 
-void client_command(string line, int sockfd, Server &server) {
+static void announce_friends_online_status(int sockfd) {
+	map<int, ClientInfo>::iterator it;
+	string friends = "", friend_sockfd, friend_name;
+	int pos, next_pos;
+	
+	it = server->sockfd_to_clients.find(sockfd);
+	assert(it != server->sockfd_to_clients.end());
+	
+	ClientInfo client = it->second;
+	
+	//TODO friends = get_list_of_friends(client.username);
+	
+	for (pos = 0, next_pos = friends.find(","); pos != string::npos; pos = next_pos) {
+		if (next_pos == string::npos)
+			friend_name = friends.substr(pos, friends.len());
+		else
+			friend_name = friends.substr(pos, next_pos);
+		dprintf("[SERVER]%s is friend of %s\n", friend_name, client.username);
+
+		it = server->client_to_sockfd.find(friend_name);
+		assert(it != server->sockfd_to_clients.end());
+
+		friend_sockfd = it->second;
+		//TODO send to friend_socket the (client.username, client.ip, client.port);
+	}
+	
+	
+}
+
+static void client_command(string line, int sockfd, Server *&server) {
 
 	if (line.find(CMD_REGISTER) == 0) {
 		int user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1,
 			email_pos = line.find(" ", pass_pos) + 1;
-		server.register_client(sockfd,
+		server->register_client(sockfd,
 				line.substr(user_pos, pass_pos -1 - user_pos),
 				line.substr(pass_pos, email_pos - 1 - pass_pos),
 				line.substr(email_pos));
-		//TODO add new user to clients map in server
 		return;
 	}
 
@@ -56,11 +85,13 @@ void client_command(string line, int sockfd, Server &server) {
 			pass_pos = line.find(" ", user_pos) + 1,
 			ip_pos = line.find(" ", pass_pos) + 1,
 			port_pos = line.find(" ", ip_pos);
-		server.authentication(sockfd,
+		server->authentication(sockfd,
 				line.substr(user_pos, pass_pos -1 - user_pos),
 				line.substr(pass_pos, ip_pos - 1 - pass_pos),
 				line.substr(ip_pos, port_pos - 1 - ip_pos),
 				atoi(line.substr(port_pos).c_str()));
+
+		announce_friends_online_status(sockfd);
 		return;
 	}
 
@@ -78,7 +109,7 @@ int run_server(int server_port) {
 	// Init server
 	init_server(server_port, sockfd, fdmax, &read_fds);
 
-	Server server = Server();
+	server = new Server();
 
 	// Main loop
 	for (;;) {

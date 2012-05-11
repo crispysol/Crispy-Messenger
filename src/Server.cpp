@@ -57,7 +57,6 @@ Server::Server() {
 		exit(EXIT_FAILURE);
 	}
 	
-	//TODO create map clients
 }
 
 Server::~Server() {
@@ -152,6 +151,8 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 					append(" FROM users "
 					"WHERE username = '").append(username).append("';");
 
+	//TODO add (sockfd, ClientInfo(username, ip, port)) to server->sockfd_to_clients
+
 	//query db and compare pass
 	//send FAIL/(more info<groups and users, offline messages> + END) on sockfd
 	try {
@@ -185,6 +186,7 @@ bool Server::add_user(int sockfd, std::string username) {
 }
 bool Server::remove_user(int sockfd, std::string username) {
 	//TODO
+	
 }
 bool Server::search_user(int sockfd, std::string name, std::string surname,
 			std::string phone, std::string email, std::string hobbies) 
