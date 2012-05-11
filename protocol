@@ -7,53 +7,53 @@ S: OK | USEDUSER | USEDMAIL | ERR
 #2 autentificarea pe server
 C: login user pass ip port
 S: OK -> send more info :
-	{
-		groups:[ 
-			group_name_1:[ user_1:[state_1, status_1], user_2:[state_2, status_2] ... ],
-			group_name_2:[ ... ],
-			...
-		],
+{
+groups:[
+group_name_1:[ user_1:[state_1, status_1], user_2:[state_2, status_2] ... ],
+group_name_2:[ ... ],
+...
+],
 
-		offline_messages:[ user_1:off_message_1, user_2:off_message_2 ]
-	}
-	END
+offline_messages:[ user_1:off_message_1, user_2:off_message_2 ]
+}
+END
 
 S: FAIL
 
 #3 afisare profil
 C: view_profile user
 S: OK -> send profile info:
-	{
-		name:name,
-		surname:surname,
-		phone:number,
-		email:email,
-		hobbies:hobbies
-	}
-	END
+{
+name:name,
+surname:surname,
+phone:number,
+email:email,
+hobbies:hobbies
+}
+END
 
-#4 update profil utilizator 
-C: update_profile myusername
-S: OK -> 	
-	{
-		name:name,
-		surname:surname,
-		phone:number,
-		email:email,
-		hobbies:hobbies
-	}
-	END
+#4 update profil utilizator
+C: update_profile
+S: OK ->
+{
+name:name,
+surname:surname,
+phone:number,
+email:email,
+hobbies:hobbies
+}
+END
 S: ERR
 
 -> in client: update_profile(name / surname / phone .., "Radu");
 
 #5 adaugare utilizator in lista
-C: add_user myusername user 
-S: OK	-> online/offline | ERR
-	{ state:status }
+C: add_user user
+S: OK -> online/offline | ERR
+{ state:status }
 
 #6 stergere utilizator din lista
-C: remove_user myusername user
+C: remove_user user
 S: OK | ERR
 
 #7 cautare utilizator dupa profil
@@ -61,37 +61,38 @@ C: search_user /* TODO */
 S: OK -> user | ERR
 
 #8 creare grup nou
-C: add_group myusername group_name 
+C: add_group group_name
 S: OK | ERR
 
 #9 stergere grup (exceptie default, userii merg in default)
-C: del_group myusername group_name 
+C: del_group group_name
 S: OK | ERR
 
 #10 plasare prieten intr-un grup
-C: move_user_to_group  myusername user =
+C: move_user_to_group user
 S: OK | ERR
+
 
 
 #11 setare status
-C: set_status myusername status_nou 
+C: set_status status_nou
 S: OK | ERR
 
 #12 change availability
-C: set_state  myusername available/away/busy/offline
+C: set_state available/away/busy/offline
 S: OK | ERR
 
 #### CLIENT - CLIENT COMMUNICATION
 
 #13 connect with user
-C: connect_with_user myusername user 
-S: OK -> { ip:port } | offline |ERR
+C: connect_with_user user
+S: OK -> { ip:port } | ERR
 
-## daca offline trimitem mesaj offline serverului
-C: send_off_msg myusername user  mesaj
-S: OK
-
-#14 daca nu e offline send message
+#14 send message
 -> atentie, incercare apelare connect_with_user if online
-C: send_msg myusername username  msg
+C: send_msg username msg
+
+#15 receive message (server receives if client offline)
+C: recv_msg msg
+S: recv_msg msg
 
