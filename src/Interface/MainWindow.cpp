@@ -30,30 +30,57 @@ static void execute_menu_item(GtkWidget * widget, gpointer g_client) {
 }
 
 /**
- * Add friend window
+ * Create a window with only one entry
  */
-static void add_friend_window(GtkWidget * widget, gpointer info = NULL) {
+static void create_one_entry_window(gint width, gint height, gchar * title, gchar * label_text,
+		gchar * button_text, void (* handler)(struct _general_info *)) {
 	// Create new window
-	GtkWidget * window = create_new_window(CHAT_WINDOW_WIDTH, CHAT_WINDOW_HEIGHT,
-			(gchar *) "Add friend"); // TODO maybe other defines
+	GtkWidget * window = create_new_window(width, height, title);
 
 	// Create vbox and it's alignment
 	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
 	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
 
 	// Create email field TODO limit nr chars
-	create_label_field(new_vbox, string("Enter friend's username:"));
+	create_label_field(new_vbox, string(label_text));
 	GtkWidget * entry = gtk_entry_new();
-	add_vbox_row(new_vbox, entry, CHAT_WINDOW_WIDTH / 2, 0); // TODO define
+	add_vbox_row(new_vbox, entry, width / 2, 0); // TODO define
 
 	// Create recovery button
-	GtkWidget * button = gtk_button_new_with_label("Add friend");
+	GtkWidget * button = gtk_button_new_with_label(button_text);
 	add_vbox_row(new_vbox, button, 0, 0);
 
 	// Action on button
-	g_signal_connect_swapped(button, "clicked", G_CALLBACK(signal_check_recovery), (gpointer) entry);
+	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
+	ng_info->window_top_level = window;
+	ng_info->username = entry;
+	g_signal_connect_swapped(button, "clicked", (GCallback) handler, (gpointer) ng_info);
 
 	gtk_widget_show_all(window);
+}
+
+/**
+ * Add friend window
+ */
+static void add_friend_window(GtkWidget * widget, gpointer info = NULL) {
+	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Add friend",
+			(gchar *) "Enter friend's username:", (gchar *) "Add friend", signal_add_friend);
+}
+
+/**
+ * Create group window
+ */
+static void create_group_window(GtkWidget * widget, gpointer info = NULL) {
+	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Add friend",
+			(gchar *) "Enter friend's username:", (gchar *) "Add friend", signal_add_friend);
+}
+
+/**
+ * Delete group window
+ */
+static void delete_group_window(GtkWidget * widget, gpointer info = NULL) {
+	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Add friend",
+			(gchar *) "Enter friend's username:", (gchar *) "Add friend", signal_add_friend);
 }
 
 /**
@@ -148,7 +175,7 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	GtkWidget * submenu2 = create_menu_bar_submenu(menu_bar, (gchar *) "Account");
 	create_menu_entry(submenu2, (gchar *) "Change status", execute_menu_item, NULL);
 	create_menu_entry(submenu2, (gchar *) "Change availability", execute_menu_item, NULL);
-	create_menu_entry(submenu2, (gchar *) "Show profile", execute_menu_item, NULL);
+	create_menu_entry(submenu2, (gchar *) "Show my profile", execute_menu_item, NULL);
 	create_menu_entry(submenu2, (gchar *) "Update profile", execute_menu_item, NULL);
 
 	GtkWidget * submenu3 = create_menu_bar_submenu(menu_bar, (gchar *) "Settings");

@@ -19,6 +19,8 @@ GtkWidget * create_new_window(gint width, gint height, gchar * title) {
 	gtk_window_set_title(GTK_WINDOW(window), title);
 	gtk_window_set_default_size(GTK_WINDOW(window), width, height);
 
+	g_signal_connect(window, "destroy", G_CALLBACK(gtk_widget_destroy), NULL);
+
 	return window;
 }
 

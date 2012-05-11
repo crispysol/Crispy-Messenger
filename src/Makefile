@@ -17,7 +17,7 @@ ServerMain.o: ServerMain.cpp
 Server.o: Server.cpp
 
 # Interface
-ClientGTK: ClientGTK.o LoginWindow.o MainWindow.o ChatWindow.o ServerFunctions.o
+ClientGTK: Client.o ClientGTK.o LoginWindow.o MainWindow.o ChatWindow.o ServerFunctions.o GTKFunctions.o:
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -o $@ `pkg-config --libs gtk+-3.0`
 ClientGTK.o: Interface/ClientGTK.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
@@ -26,6 +26,8 @@ LoginWindow.o: Interface/LoginWindow.cpp
 MainWindow.o: Interface/MainWindow.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
 ChatWindow.o: Interface/ChatWindow.cpp
+	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
+GTKFunctions.o: Interface/GTKFunctions.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
 	
 # Database creation		

@@ -111,6 +111,6 @@ void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
 	// Add chat window to map
 	map_chat_windows.insert(pair <string, GtkWidget *> (client, chat_window));
 
-	// Signal to kill main gtk loop
+	// Signal to kill window
 	g_signal_connect(chat_window, "destroy", G_CALLBACK(destroy_chat_window), client);
 }

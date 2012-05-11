@@ -255,11 +255,11 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
 /**
  * Add a new friend
  */
-void signal_add_friend(GtkWidget * widget, gpointer g_entry) {
-	GtkWidget * entry = (GtkWidget *) g_entry;
+void signal_add_friend(struct _general_info * g_info) {
+	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
 
 	// Save friend's username
-	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
+	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->username)));
 
 	// Add friend to user list TODO
 //	if (!current_client->add_user(username)) {
@@ -276,6 +276,10 @@ void signal_add_friend(GtkWidget * widget, gpointer g_entry) {
 
 	// Free space
 	free(username);
+	free(g_info);
+
+	// Destroy window
+	gtk_widget_destroy(window);
 }
 
 /**
