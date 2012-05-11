@@ -28,6 +28,7 @@ int main() {
 	s = string("USE ").append(DATABASE_NAME);
 	stmt->execute(s);
 	// Create tables
+	stmt->execute("DROP TABLE IF EXISTS users");
 	s = "CREATE TABLE users ("
 			"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
 			"username VARCHAR(30) NOT NULL,"
@@ -39,12 +40,20 @@ int main() {
 			"hobbies TEXT"
 			")";
 	stmt->execute(s);
-	s = "CREATE TABLE groups ("
+	stmt->execute("DROP TABLE IF EXISTS groups");
+	s = string("CREATE TABLE groups (").
+		append(GROUPS_T_ID).append(" INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,").
+		append(GROUPS_T_ID_USER_FK).append(" INT UNSIGNED NOT NULL,").
+		append(GROUPS_T_NAME).append(" VARCHAR(30) NOT NULL,").
+		append(GROUPS_T_FRIENDS_LIST).append(" TEXT").
+		append(")");
+/*	s = "CREATE TABLE groups ("
 			"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
 			"id_user INT UNSIGNED NOT NULL,"
 			"name VARCHAR(30) NOT NULL,"
 			"friends_list TEXT"
 			")";
+*/
 	stmt->execute(s);
 
 	delete stmt;

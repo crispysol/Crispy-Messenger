@@ -57,24 +57,58 @@ Server::Server() {
 	}
 }
 
-/* Commented because it is called after register_client and second call to register_client gives SIGSEGV. */ 
 Server::~Server() {
 	if (con)
 		delete con;
 	
 }
 
-bool Server::register_client(int sockfd, std::string username, std::string pass, std::string email) {
+static void add_default_group(string username) {
+	string id;
+	
+	string query = string("SELECT id "
+			"FROM users "
+			"WHERE username = '").append(username).
+			append("';");
+	dprintf("[%s] get id select query: %s\n", SQL_DEBUG, query.c_str());
+
+	try {		
+		sql::ResultSet * res = stmt->executeQuery(query);
+
+		if (res->next())
+			id = string(res->getString("id"));
+		delete res;
+
+		query = string("INSERT INTO groups(").
+			append(GROUPS_T_ID).append(", ").
+			append(GROUPS_T_ID_USER_FK).append(", ").
+			append(GROUPS_T_NAME).append(") ").
+			append(" VALUES ('").
+			append(GROUP_DEFAULT_ID).append("', )").
+			append(id).append(", '").
+			append(GROUP_DEFAULT_NAME).append("');");
+		dprintf("[SERVER] add default group query: %s\n", query.c_str());	
+		
+		stmt->executeUpdate(query);
+		
+	} catch(...) {
+		cout << "Exception in add_default_group!!!" << endl;
+		return;
+	}
+	
+}
+
+bool Server::register_client(int sockfd, string username, string pass, string email) {
 
 	dprintf("[SERVER]received register command\n");
 	int rc = true;
 	
 	//1)query database and check for username
 	string query = string("SELECT username, email "
-						"FROM users "
-						"WHERE username = '").append(username).
-						append("' OR email = '").append(email).
-						append("';"), query1;
+				"FROM users "
+				"WHERE username = '").append(username).
+				append("' OR email = '").append(email).
+				append("';");
 	cout << query << endl;
 	
 	try {
@@ -92,19 +126,17 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 			}
 		}
 		else {
-			//3)if username is valid, add to db and send OK on sockfd
+			//3)if username is valid, add to db, create default group for friends and send OK on sockfd
 			dprintf("[SERVER]adding %s\n", username.c_str());
-			query1 = string("INSERT INTO users(username, ").append(PASS_FIELD).append(", email)")
+			query = string("INSERT INTO users(username, ").append(PASS_FIELD).append(", email)")
 					.append(" VALUES ('").append(username).append("', '").
 					append(pass).append("', '").append(email + "');");
-			cout << query1 << endl << flush;
-			try {
-				stmt->executeQuery(query1.c_str());
-			}catch (...) {
-				printf("[SERVER]skipped insert exception!!!\n");
-			}
-			
+			cout << query << endl << flush;
+			stmt->executeUpdate(query);
 			dprintf("[SERVER]added %s\n", username.c_str());
+			
+			add_default_group(username);
+			
 			assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 		}
 
@@ -132,7 +164,7 @@ dprintf("[SERVER]query executed\n");
 				//save client info (ip and port) to session
 				ClientInfo ci = ClientInfo(ip, port);
 				clients.insert(pair<int, ClientInfo>(sockfd, ci));
-				//query db for client' friends and offline msg and send to client
+				//TODO query db for client' friends and offline msg and send to client
 				char end[] = "END";
 				assert(send(sockfd, end, strlen(end) + 1, 0) >= 0);
 		}
@@ -148,5 +180,18 @@ dprintf("[SERVER]query executed\n");
 	}
 
 	return rc;
+}
+
+// Add/Remove/Search a user for a client
+bool Server::add_user(int sockfd, std::string username) {
+	//TODO
+}
+bool Server::remove_user(int sockfd, std::string username) {
+	//TODO
+}
+bool Server::search_user(int sockfd, std::string name, std::string surname,
+			std::string phone, std::string email, std::string hobbies) 
+{
+	//TODO
 }
 

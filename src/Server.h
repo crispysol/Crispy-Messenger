@@ -21,7 +21,15 @@
 #define DATABASE_USER 	"crispy"
 #define DATABASE_PASS 	"M3$$enger"
 #define DATABASE_NAME 	"CrispyDatabase"
-#define PASS_FIELD		"password_hash"
+#define PASS_FIELD	"password_hash"
+
+//Groups table headers
+#define GROUPS_T_ID		"id"
+#define GROUPS_T_ID_USER_FK	"id_user"
+#define GROUPS_T_NAME		"name"
+#define GROUPS_T_FRIENDS_LIST	"friends_list"
+#define GROUP_DEFAULT_NAME	"friends"
+#define GROUP_DEFAULT_ID	0
 
 class ClientInfo: public User {
 	std::string ip;
@@ -79,6 +87,9 @@ public:
 
 	// Receive message for an offline user so it can be sent at login
 	bool recv_offline_message(int sockfd, std::string username, std::string message);
+	
+	//TODO
+	bool forgot_password();
 };
 
 #endif /* SERVER_H_ */
