@@ -29,6 +29,8 @@
 
 using namespace std;
 
+static sql::Statement	*stmt;
+
 ClientInfo::ClientInfo(std::string ip, int port) : ip(ip), port(port)
 {
 }
@@ -43,6 +45,8 @@ Server::Server() {
 		driver = sql::mysql::get_mysql_driver_instance();
 		con = driver->connect(DATABASE_HOST, DATABASE_USER, DATABASE_PASS);
 		con->setSchema(DATABASE_NAME);
+		
+		stmt = con->createStatement();
 	}catch (sql::SQLException &e) {
 		cout << "# ERR: SQLException in " << __FILE__;
 		cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
@@ -63,15 +67,14 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 
 	dprintf("[SERVER]received register command\n");
 	int rc = true;
-	sql::Statement	*stmt;
+	
 	//1)query database and check for username
 	string query = string("SELECT username, email "
 						"FROM users "
 						"WHERE username = '").append(username).
 						append("' OR email = '").append(email).
-						append("';");
+						append("';"), query1;
 	cout << query << endl;
-	stmt = con->createStatement();
 	
 	try {
 		sql::ResultSet * res = stmt->executeQuery(query);
@@ -90,14 +93,14 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 		else {
 			//3)if username is valid, add to db and send OK on sockfd
 			dprintf("[SERVER]adding %s\n", username.c_str());
-			query = string("INSERT INTO users(username, ").append(PASS_FIELD).append(", email)")
+			query1 = string("INSERT INTO users(username, ").append(PASS_FIELD).append(", email)")
 					.append(" VALUES ('").append(username).append("', '").
 					append(pass).append("', '").append(email + "');");
-			cout << query << endl << flush;
+			cout << query1 << endl << flush;
 			try {
-				stmt->executeQuery(query);
+				stmt->executeQuery(query1.c_str());
 			}catch (...) {
-				printf("[SERVER]skipped exception\n");
+				printf("[SERVER]skipped insert exception!!!\n");
 			}
 			
 			dprintf("[SERVER]added %s\n", username.c_str());
@@ -108,24 +111,22 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 	}catch (sql::SQLException &e) {
 		rc = false;
 	}
-		
-	delete stmt;
 
 	return rc;
 }
 
 bool Server::authentication(int sockfd, std::string username, std::string pass, std::string ip, int port) {
 	int rc = true;
-	sql::Statement	*stmt;
 	dprintf("[SERVER]received login request for '%s' with pass '%s'\n", username.c_str(), pass.c_str());
 	string query = string("SELECT ").append(PASS_FIELD).
 					append(" FROM users "
 					"WHERE username = '").append(username).append("';");
-	stmt = con->createStatement();
+
 	//query db and compare pass
 	//send FAIL/(more info<groups and users, offline messages> + END) on sockfd
 	try {
 		sql::ResultSet * res = stmt->executeQuery(query);
+dprintf("[SERVER]query executed\n");
 		if (res->next() && string(res->getString(PASS_FIELD)).compare(pass) == 0) {
 				//save client info (ip and port) to session
 				ClientInfo ci = ClientInfo(ip, port);
@@ -144,8 +145,6 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 		rc = false;
 	}
-	
-	delete stmt;
 
 	return rc;
 }
