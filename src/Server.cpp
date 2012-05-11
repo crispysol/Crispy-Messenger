@@ -79,11 +79,11 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 		if (res->next()) {
 			dprintf("[SERVER]invalid client info %s %s\n", username.c_str(), email.c_str());
 			if (username.compare(res->getString("username")) == 0) {
-				assert(send(sockfd, USEDUSER_ERR, strlen(USEDUSER_ERR), 0) >= 0);
+				assert(send(sockfd, USEDUSER_ERR, strlen(USEDUSER_ERR) + 1, 0) >= 0);
 				rc = false;
 			}
 			else if (email.compare(res->getString("email")) == 0) {
-				assert(send(sockfd, USEDEMAIL_ERR, strlen(USEDEMAIL_ERR), 0) >= 0);
+				assert(send(sockfd, USEDEMAIL_ERR, strlen(USEDEMAIL_ERR) + 1, 0) >= 0);
 				rc = false;
 			}
 		}
@@ -93,8 +93,13 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 			query = string("INSERT INTO users(username, ").append(PASS_FIELD).append(", email)")
 					.append(" VALUES ('").append(username).append("', '").
 					append(pass).append("', '").append(email + "');");
-			cout << query << endl;
-			stmt->executeQuery(query);
+			cout << query << endl << flush;
+			try {
+				stmt->executeQuery(query);
+			}catch (...) {
+				printf("[SERVER]skipped exception\n");
+			}
+			
 			dprintf("[SERVER]added %s\n", username.c_str());
 			assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 		}
@@ -112,7 +117,7 @@ bool Server::register_client(int sockfd, std::string username, std::string pass,
 bool Server::authentication(int sockfd, std::string username, std::string pass, std::string ip, int port) {
 	int rc = true;
 	sql::Statement	*stmt;
-	dprintf("[SERVER]received login request\n");
+	dprintf("[SERVER]received login request for '%s' with pass '%s'\n", username.c_str(), pass.c_str());
 	string query = string("SELECT ").append(PASS_FIELD).
 					append(" FROM users "
 					"WHERE username = '").append(username).append("';");
@@ -127,7 +132,7 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 				clients.insert(pair<int, ClientInfo>(sockfd, ci));
 				//query db for client' friends and offline msg and send to client
 				char end[] = "END";
-				assert(send(sockfd, "END", strlen(end) + 1, 0) >= 0);
+				assert(send(sockfd, end, strlen(end) + 1, 0) >= 0);
 		}
 		else {
 			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);

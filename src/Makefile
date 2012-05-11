@@ -9,7 +9,7 @@ all: ServerMain ClientMain ClientGTK
 # Main programs
 
 ServerMain: ServerMain.o ServerFunctions.o Server.o
-	$(CC) $(CFLAGS) $^ -l mysqlcppconn -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -l mysqlcppconn -o $@
 
 ClientMain: ClientMain.o ServerFunctions.o Client.o
 
