@@ -40,27 +40,29 @@ void stdin_command() {
 void client_command(string line, int sockfd, Server &server) {
 
 	if (line.find(CMD_REGISTER) == 0) {
-			int user_pos = line.find(" ") + 1,
-				pass_pos = line.find(" ", user_pos) + 1,
-				email_pos = line.find(" ", pass_pos) + 1;
-			server.register_client(sockfd,
-					line.substr(user_pos, pass_pos -1 - user_pos),
-					line.substr(pass_pos, email_pos - 1 - pass_pos),
-					line.substr(email_pos));
-			return;
-		}
-		if (line.find(CMD_AUTH) == 0) {
-			int user_pos = line.find(" ") + 1,
-				pass_pos = line.find(" ", user_pos) + 1,
-				ip_pos = line.find(" ", pass_pos) + 1,
-				port_pos = line.find(" ", ip_pos);
-			server.authentication(sockfd,
-					line.substr(user_pos, pass_pos -1 - user_pos),
-					line.substr(pass_pos, ip_pos - 1 - pass_pos),
-					line.substr(ip_pos, port_pos - 1 - ip_pos),
-					atoi(line.substr(port_pos).c_str()));
-			return;
-		}
+		int user_pos = line.find(" ") + 1,
+			pass_pos = line.find(" ", user_pos) + 1,
+			email_pos = line.find(" ", pass_pos) + 1;
+		server.register_client(sockfd,
+				line.substr(user_pos, pass_pos -1 - user_pos),
+				line.substr(pass_pos, email_pos - 1 - pass_pos),
+				line.substr(email_pos));
+		//TODO add new user to clients map in server
+		return;
+	}
+
+	if (line.find(CMD_AUTH) == 0) {
+		int user_pos = line.find(" ") + 1,
+			pass_pos = line.find(" ", user_pos) + 1,
+			ip_pos = line.find(" ", pass_pos) + 1,
+			port_pos = line.find(" ", ip_pos);
+		server.authentication(sockfd,
+				line.substr(user_pos, pass_pos -1 - user_pos),
+				line.substr(pass_pos, ip_pos - 1 - pass_pos),
+				line.substr(ip_pos, port_pos - 1 - ip_pos),
+				atoi(line.substr(port_pos).c_str()));
+		return;
+	}
 
 }
 

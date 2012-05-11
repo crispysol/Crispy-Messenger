@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
+#include <sstream>
 
 #include <fcntl.h>
 #include <sys/types.h>
@@ -55,6 +56,8 @@ Server::Server() {
 		cout << ", SQLState: " << e.getSQLState() << " )" << endl;
 		exit(EXIT_FAILURE);
 	}
+	
+	//TODO create map clients
 }
 
 Server::~Server() {
@@ -63,39 +66,30 @@ Server::~Server() {
 	
 }
 
-static void add_default_group(string username) {
-	string id;
-	
-	string query = string("SELECT id "
-			"FROM users "
-			"WHERE username = '").append(username).
-			append("';");
-	dprintf("[%s] get id select query: %s\n", SQL_DEBUG, query.c_str());
+/* Add default group for user <username>. 
+ * 
+ * @return true if insert in groups table succeded, false otherwise
+ */
+static bool add_default_group(string username) {
+
+	stringstream query;
 
 	try {		
-		sql::ResultSet * res = stmt->executeQuery(query);
-
-		if (res->next())
-			id = string(res->getString("id"));
-		delete res;
-
-		query = string("INSERT INTO groups(").
-			append(GROUPS_T_ID).append(", ").
-			append(GROUPS_T_ID_USER_FK).append(", ").
-			append(GROUPS_T_NAME).append(") ").
-			append(" VALUES ('").
-			append(GROUP_DEFAULT_ID).append("', )").
-			append(id).append(", '").
-			append(GROUP_DEFAULT_NAME).append("');");
-		dprintf("[SERVER] add default group query: %s\n", query.c_str());	
+		query.flush();
+		query << "INSERT INTO groups(" << GROUPS_T_ID_USER_FK << ", " <<
+			GROUPS_T_NAME << ") VALUES ((" << 
+			"SELECT id FROM users WHERE username = '" << username << "'), '" <<
+			GROUP_DEFAULT_NAME << "');";
 		
-		stmt->executeUpdate(query);
+		if (stmt->executeUpdate(query.str()) != 1)
+			return false;
+		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());	
 		
 	} catch(...) {
 		cout << "Exception in add_default_group!!!" << endl;
-		return;
+		return false;
 	}
-	
+	return true;
 }
 
 bool Server::register_client(int sockfd, string username, string pass, string email) {
@@ -135,7 +129,10 @@ bool Server::register_client(int sockfd, string username, string pass, string em
 			stmt->executeUpdate(query);
 			dprintf("[SERVER]added %s\n", username.c_str());
 			
-			add_default_group(username);
+			if (!add_default_group(username)) {
+				stmt->executeUpdate("DELETE FROM users WHERE username = '" + username + "';");
+				assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);	
+			}
 			
 			assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 		}

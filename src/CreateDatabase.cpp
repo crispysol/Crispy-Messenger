@@ -2,7 +2,7 @@
  * CreateDatabase.cpp
  *
  *  Created on: Mar 11, 2012
- *      Author: mihail
+ *      Author: mihail, andreea
  */
 
 #include "Server.h"

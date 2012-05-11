@@ -29,7 +29,6 @@
 #define GROUPS_T_NAME		"name"
 #define GROUPS_T_FRIENDS_LIST	"friends_list"
 #define GROUP_DEFAULT_NAME	"friends"
-#define GROUP_DEFAULT_ID	0
 
 class ClientInfo: public User {
 	std::string ip;
