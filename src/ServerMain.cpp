@@ -37,7 +37,7 @@ void stdin_command() {
 		}
 }
 
-void client_command(string line, int sockfd, Server server) {
+void client_command(string line, int sockfd, Server &server) {
 
 	if (line.find(CMD_REGISTER) == 0) {
 			int user_pos = line.find(" ") + 1,

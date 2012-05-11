@@ -57,10 +57,11 @@ Server::Server() {
 	}
 }
 
+/* Commented because it is called after register_client and second call to register_client gives SIGSEGV. */ 
 Server::~Server() {
 	if (con)
 		delete con;
-
+	
 }
 
 bool Server::register_client(int sockfd, std::string username, std::string pass, std::string email) {
