@@ -53,14 +53,14 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 	// Action on button
 	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
 	ng_info->window_top_level = window;
-	ng_info->username = entry;
+	ng_info->entry = entry;
 	g_signal_connect_swapped(button, "clicked", (GCallback) handler, (gpointer) ng_info);
 
 	gtk_widget_show_all(window);
 }
 
 /**
- * Add friend window
+ * Add a new friend
  */
 static void add_friend_window(GtkWidget * widget, gpointer info = NULL) {
 	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Add friend",
@@ -68,19 +68,19 @@ static void add_friend_window(GtkWidget * widget, gpointer info = NULL) {
 }
 
 /**
- * Create group window
+ * Create a new group
  */
 static void create_group_window(GtkWidget * widget, gpointer info = NULL) {
-	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Add friend",
-			(gchar *) "Enter friend's username:", (gchar *) "Add friend", signal_add_friend);
+	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Create group",
+			(gchar *) "Enter group name:", (gchar *) "Create group", signal_create_group);
 }
 
 /**
- * Delete group window
+ * Delete an existing group
  */
 static void delete_group_window(GtkWidget * widget, gpointer info = NULL) {
-	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Add friend",
-			(gchar *) "Enter friend's username:", (gchar *) "Add friend", signal_add_friend);
+	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Delete group",
+			(gchar *) "Enter group name:", (gchar *) "Delete group", signal_delete_group);
 }
 
 /**
@@ -169,8 +169,8 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	GtkWidget * submenu1 = create_menu_bar_submenu(menu_bar, (gchar *) "Friends");
 	create_menu_entry(submenu1, (gchar *) "Add friend", add_friend_window, NULL);
 	create_menu_entry(submenu1, (gchar *) "Search friends", execute_menu_item, NULL);
-	create_menu_entry(submenu1, (gchar *) "Create group", execute_menu_item, NULL);
-	create_menu_entry(submenu1, (gchar *) "Delete group", execute_menu_item, NULL);
+	create_menu_entry(submenu1, (gchar *) "Create group", create_group_window, NULL);
+	create_menu_entry(submenu1, (gchar *) "Delete group", delete_group_window, NULL);
 
 	GtkWidget * submenu2 = create_menu_bar_submenu(menu_bar, (gchar *) "Account");
 	create_menu_entry(submenu2, (gchar *) "Change status", execute_menu_item, NULL);
