@@ -33,6 +33,7 @@ struct _general_info {
 	GtkWidget * password1;
 	GtkWidget * password2;
 	GtkWidget * email;
+	GtkWidget * entry;
 };
 
 /**
@@ -86,10 +87,22 @@ void signal_check_recovery(struct _general_info * g_info);
  */
 void signal_send_file(GtkWidget * widget, gpointer g_client);
 
+///////////////// TODO /////////////////
+
 /**
  * Add a new friend
  */
 void signal_add_friend(struct _general_info * g_info);
+
+/**
+ * Create a new group
+ */
+void signal_create_group(struct _general_info * g_info);
+
+/**
+ * Delete an existing group
+ */
+void signal_delete_group(struct _general_info * g_info);
 
 /**
  * Send text to friend and save it in conversation text view
