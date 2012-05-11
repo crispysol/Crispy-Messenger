@@ -252,6 +252,8 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
 	return FALSE;
 }
 
+//////////////////////// TODO ////////////////////////////
+
 /**
  * Add a new friend
  */
@@ -259,12 +261,11 @@ void signal_add_friend(struct _general_info * g_info) {
 	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
 
 	// Save friend's username
-	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->username)));
+	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
 
 	// Add friend to user list TODO
 //	if (!current_client->add_user(username)) {
-//		clientgtk_create_message_dialog("Invalid username", "Login information",
-//				GTK_MESSAGE_WARNING);
+//		clientgtk_create_message_dialog("Invalid username", "Warning", GTK_MESSAGE_WARNING);
 //
 //		// Free space
 //		free(username);
@@ -276,6 +277,64 @@ void signal_add_friend(struct _general_info * g_info) {
 
 	// Free space
 	free(username);
+	free(g_info);
+
+	// Destroy window
+	gtk_widget_destroy(window);
+}
+
+/**
+ * Create a new group
+ */
+void signal_create_group(struct _general_info * g_info) {
+	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
+
+	// Save friend's username
+	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
+
+	// Add friend to user list TODO
+//	if (!current_client->add_user(username)) {
+//		clientgtk_create_message_dialog("Invalid group", "Warning", GTK_MESSAGE_WARNING);
+//
+//		// Free space
+//		free(group);
+//
+//		return;
+//	}
+
+	// Remake main window TODO
+
+	// Free space
+	free(username);
+	free(g_info);
+
+	// Destroy window
+	gtk_widget_destroy(window);
+}
+
+/**
+ * Delete an existing group
+ */
+void signal_delete_group(struct _general_info * g_info) {
+	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
+
+	// Save friend's username
+	gchar * group = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
+
+	// Add friend to user list TODO
+//	if (!current_client->add_user(group)) {
+//		clientgtk_create_message_dialog("Invalid group", "Warning", GTK_MESSAGE_WARNING);
+//
+//		// Free space
+//		free(group);
+//
+//		return;
+//	}
+
+	// Remake main window TODO
+
+	// Free space
+	free(group);
 	free(g_info);
 
 	// Destroy window
