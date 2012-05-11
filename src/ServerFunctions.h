@@ -16,6 +16,8 @@
 #define CMD_AUTH			"login"
 #define EXIT_MSG			"exit"
 
+#define SQL_DEBUG		"SQL"
+
 #ifdef _DEBUG
 # define dprintf(...) {printf(__VA_ARGS__); fflush(stdout);}
 #else
