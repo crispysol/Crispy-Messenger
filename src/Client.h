@@ -24,13 +24,9 @@ class Client : public User {
 	int server_socket;
 	// Map <sockfd, username>
 	std::map <int, std::string> connected_users;
-	// Ip
-	std::string ip;
-	// Port
-	int port;
 
 public:
-	Client(int server_socket, std::string ip);//, int port);
+	Client(int server_socket);
 	virtual ~Client();
 
 	// Getter
@@ -44,7 +40,7 @@ public:
 	 * Communication client-server
 	 */
 	bool register_client(std::string username, std::string pass, std::string email);
-	bool authentication(std::string username, std::string pass);
+	bool authentication(std::string username, std::string pass, int port);
 
 	Profile get_profile(std::string username);
 	bool update_profile(std::string name, std::string surname, std::string phone,

@@ -23,6 +23,8 @@
 
 using namespace std;
 
+int client_port = 0;
+
 /**
  * Execute command received from STDIN
  */
@@ -46,7 +48,7 @@ void stdin_command(Client client, fd_set * read_fds) {
 			pass_pos = line.find(" ", user_pos) + 1;
 		client.authentication(
 				line.substr(user_pos, pass_pos -1 - user_pos),
-				line.substr(pass_pos));
+				line.substr(pass_pos), client_port);
 		return;
 	}
 	if (line.find(EXIT_MSG) == 0) {
@@ -67,13 +69,13 @@ int run_server(char * server_ip, int server_port) {
 	FD_ZERO(&tmp_fds);
 
 	// Init localhost server (communication with other clients
-	init_server(socket_server, sockfd, fdmax, &read_fds);
+	init_server(client_port, sockfd, fdmax, &read_fds);
 
 	// Connect to main server
 	connect_to_server(server_ip, server_port, socket_server, fdmax, &read_fds);
 
 	// Client instance
-	Client client = Client(socket_server, "127.0.0.0");//TODO obtain client's port
+	Client client = Client(socket_server);
 
 	// Main loop
 	for (;;) {

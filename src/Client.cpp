@@ -20,19 +20,11 @@
 
 using namespace std;
 
-Client::Client(int server_socket, std::string ip) : server_socket(server_socket), ip(ip)
+Client::Client(int server_socket) : server_socket(server_socket)
 {}
 
 Client::~Client()
 {}
-
-std::string Client::get_ip() {
-	return ip;
-}
-
-int Client::get_port() {
-	return port;
-}
 
 int Client::get_server_socket() {
 	return server_socket;
@@ -58,13 +50,14 @@ bool Client::register_client(std::string username, std::string pass, std::string
 	return true;
 }
 
-bool Client::authentication(std::string username, std::string pass) {
+bool Client::authentication(std::string username, std::string pass, int port) {
 	int rc;
 	char buffer[BUFFER_LENGTH];
 
 	//send username, pass, ip, port to server_socket
 	char msg[BUFFER_LENGTH];
-	sprintf(msg, "%s %s %s %s %i", CMD_AUTH, username.c_str(), pass.c_str(), ip.c_str(), 8080);//, port);
+	//TODO determine ip
+	sprintf(msg, "%s %s %s %s %i", CMD_AUTH, username.c_str(), pass.c_str(), "127.0.0.1", port);
 	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
 
 	//receive response from server_socket
@@ -76,3 +69,4 @@ bool Client::authentication(std::string username, std::string pass) {
 	
 	return true;
 }
+
