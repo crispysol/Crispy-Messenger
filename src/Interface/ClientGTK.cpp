@@ -60,7 +60,16 @@ void signal_check_login(struct _general_info * g_info) {
 	gchar * password = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->password1)));
 
 	// Retrieve users -> communicate with server // TODO
-	cout << "username: " << username << endl << "password: " << password << endl;
+	if (!current_client->authentication(username, password)) {
+		clientgtk_create_message_dialog("Invalid login username/password", "Login information",
+				GTK_MESSAGE_WARNING);
+		
+		// Delete username and password
+		free(username);
+		free(password);
+		
+		return;
+	}
 
 	// Delete username and password
 	free(username);
@@ -117,21 +126,23 @@ void signal_check_register(struct _general_info * g_info) {
 
 	// Check if there are any errors
 	if (!error) {
-		// Register client TODO must retrieve answer too
-//		current_client->register_client(username, password1, email);
+		// Register client
+		if (current_client->register_client(username, password1, email)) {
+			clientgtk_create_message_dialog("Account created", "Register information",
+					GTK_MESSAGE_INFO);
 
-		// Show information about register // TODO check answer from register_client to see if everything is ok
-		clientgtk_create_message_dialog("Account created", "Register information",
-				GTK_MESSAGE_INFO);
+			// Delete register interface
+			gtk_widget_destroy(g_info->vbox_align);
 
-		// Delete register interface
-		gtk_widget_destroy(g_info->vbox_align);
+			// Change interface back to login
+			clientgtk_create_login_window(g_info->window_top_level);
 
-		// Change interface back to login
-		clientgtk_create_login_window(g_info->window_top_level);
-
-		// Free space used by register interface
-		free(g_info);
+			// Free space used by register interface
+			free(g_info);
+		} else {
+			clientgtk_create_message_dialog("Account already exists", "Register information",
+					GTK_MESSAGE_WARNING);
+		}	
 	}
 
 	// Delete username and password
@@ -163,7 +174,7 @@ void signal_check_recovery(struct _general_info * g_info) {
 	// Check if there are any errors
 	if (!error) {
 		// Recover account information TODO must retrieve answer too
-		// TODO function does not exist, must be created in server !!!
+		// TODO function does not exist, must be created in Client.h !!!
 
 		// Show information about recovery // TODO check answer from TODO to see if everything is ok
 		clientgtk_create_message_dialog("Account information recovered", "Recovery information",
@@ -187,6 +198,7 @@ void signal_check_recovery(struct _general_info * g_info) {
  * Select file for sending
  */
 void signal_send_file(GtkWidget * widget, gpointer g_client) {
+	// File dialog chooser
 	GtkWidget * chooser = gtk_file_chooser_dialog_new("Choose file ...", NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 			GTK_STOCK_OPEN, GTK_RESPONSE_OK, NULL);
@@ -196,10 +208,11 @@ void signal_send_file(GtkWidget * widget, gpointer g_client) {
 		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(chooser));
 	}
 
+	// Send file TODO
 	cout << "filename: " << filename << endl;
+	// TODO function does not exist, must be created in Client.h !!!
 
-	// TODO send file
-
+	// Destroy file dialog chooser
 	gtk_widget_destroy(chooser);
 }
 
@@ -237,6 +250,36 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
 		return TRUE;
 	}
 	return FALSE;
+}
+
+/**
+ * Add a new friend
+ */
+void signal_add_friend(struct _general_info * g_info) {
+	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
+
+	// Save friend's username
+	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->username)));
+
+	// Add friend to user list TODO
+//	if (!current_client->add_user(username)) {
+//		clientgtk_create_message_dialog("Invalid username", "Login information",
+//				GTK_MESSAGE_WARNING);
+//
+//		// Free space
+//		free(username);
+//
+//		return;
+//	}
+
+	// Remake main window TODO
+
+	// Free space
+	free(username);
+	free(g_info);
+
+	// Destroy window
+	gtk_widget_destroy(window);
 }
 
 /**
@@ -294,14 +337,16 @@ void idle(gpointer data) {
  * Main function
  */
 int main(int argc, char *argv[]) {
-//	// Init localhost server (communication with other clients
-//	init_server(socket_server, sockfd, fdmax, &read_fds); // TODO
-//
-//	// Connect to main server
-//	connect_to_server(ip.c_str(), port, socket_server, fdmax, &read_fds); // TODO
-//
-//	// Create current client
-//	current_client = new Client(socket_server, ip.c_str());
+	// Init localhost server (communication with other clients)
+	init_server(socket_server, sockfd, fdmax, &read_fds);
+
+	// Connect to main server
+	char aux_ip[strlen(ip.c_str()) + 1];
+	strcpy(aux_ip, ip.c_str());
+	connect_to_server(aux_ip, port, socket_server, fdmax, &read_fds);
+
+	// Create current client
+	current_client = new Client(socket_server, ip.c_str());
 
 	// Init GTK
 	gtk_init(&argc, &argv);
@@ -328,7 +373,7 @@ int main(int argc, char *argv[]) {
 	clientgtk_create_login_window(window_top_level);
 
 	// Add idle function
-//	g_idle_add((GSourceFunc) idle, 0); // TODO change function
+	g_idle_add((GSourceFunc) idle, 0); // TODO change function
 
 	// Main gtk loop
 	gtk_main();

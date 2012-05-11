@@ -80,7 +80,7 @@ void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
 	char * client = (char *) g_client;
 	printf("%s\n", (char *) g_client); // TODO delete
 
-	// Main window
+	// Chat window
 	GtkWidget * chat_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(chat_window), client);
 	gtk_window_set_default_size(GTK_WINDOW(chat_window),
@@ -111,6 +111,6 @@ void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
 	// Add chat window to map
 	map_chat_windows.insert(pair <string, GtkWidget *> (client, chat_window));
 
-	// Signal to kill main gtk loop
+	// Signal to kill window
 	g_signal_connect(chat_window, "destroy", G_CALLBACK(destroy_chat_window), client);
 }

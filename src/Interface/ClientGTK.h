@@ -12,9 +12,16 @@
 #define WINDOW_WIDTH		350
 #define WINDOW_HEIGHT		600
 #define WINDOW_BG_COLOR		"white"
-#define CHAT_WINDOW_WIDTH	400
+
+#define CHAT_WINDOW_WIDTH	300
 #define CHAT_WINDOW_HEIGHT	400
-#define MIN_REGISTER_CHARS	8
+#define AUX_WINDOW_WIDTH	200
+#define AUX_WINDOW_HEIGHT	200
+
+#define MIN_REGISTER_CHARS	4
+#define MAX_REGISTER_CHARS	30 // TODO add in function
+#define MAX_EMAIL_CHARS	50 // TODO add in function
+
 
 /**
  * Structure used to pass login information
@@ -78,6 +85,11 @@ void signal_check_recovery(struct _general_info * g_info);
  * Select file for sending
  */
 void signal_send_file(GtkWidget * widget, gpointer g_client);
+
+/**
+ * Add a new friend
+ */
+void signal_add_friend(struct _general_info * g_info);
 
 /**
  * Send text to friend and save it in conversation text view

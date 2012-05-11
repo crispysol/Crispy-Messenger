@@ -15,6 +15,7 @@
 #include <gtk/gtk.h>
 
 #include "ClientGTK.h"
+#include "GTKFunctions.h"
 
 using namespace std;
 
@@ -31,47 +32,6 @@ void clientgtk_create_message_dialog(const gchar * message, const gchar * title,
 	gtk_window_set_title(GTK_WINDOW(dialog), title);
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
-}
-
-
-/**
- * Create an aligned vbox
- */
-static GtkWidget * create_aligned_vbox(GtkWidget * window_top_level, GtkWidget * vbox_align) {
-	gtk_container_add(GTK_CONTAINER(window_top_level), vbox_align);
-	gtk_widget_show(vbox_align);
-	GtkWidget * vbox = gtk_vbox_new(FALSE, 5);
-	gtk_container_add(GTK_CONTAINER(vbox_align), vbox);
-	gtk_widget_show(vbox);
-
-	return vbox;
-}
-
-/**
- * Add a entry/button to a vbox and center it
- */
-static void add_vbox_row(GtkWidget * vbox, GtkWidget * entry, gint width, gint height) {
-	GtkWidget * align = gtk_alignment_new(0.5, 0.5, 0, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), align, FALSE, FALSE, 0);
-	gtk_widget_show(align);
-
-	GtkWidget * hbox = gtk_hbox_new(TRUE, 0);
-	gtk_container_add(GTK_CONTAINER(align), hbox);
-	gtk_widget_show(hbox);
-
-	gtk_widget_set_size_request(entry, width, height);
-	gtk_container_add(GTK_CONTAINER(hbox), entry);
-	gtk_widget_show(entry);
-}
-
-/**
- * Create a label field
- */
-static void create_label_field(GtkWidget * vbox, string label_text) {
-	GtkWidget * label = gtk_label_new("");
-	gtk_label_set_markup(GTK_LABEL(label), ("<big>" + label_text + "</big>").c_str());
-	gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-	gtk_widget_show(label);
 }
 
 /**
@@ -151,7 +111,7 @@ void clientgtk_create_recovery_window(struct _general_info * g_info) {
 	GtkWidget * recovery_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
 	GtkWidget * recovery_vbox = create_aligned_vbox(window_top_level, recovery_vbox_align);
 
-	// Create userneame field TODO limit nr chars
+	// Create email field TODO limit nr chars
 	create_label_field(recovery_vbox, string("Enter email used for registration:"));
 	GtkWidget * email_entry = gtk_entry_new();
 	add_vbox_row(recovery_vbox, email_entry, WINDOW_WIDTH / 2, 0);
