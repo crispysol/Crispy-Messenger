@@ -50,6 +50,13 @@ void stdin_command(Client *client, fd_set * read_fds) {
 				line.substr(pass_pos));
 		return;
 	}
+	if(line.find(CMD_ADD_USER) == 0){
+		int user_pos = line.find(" ") + 1;
+		client->add_user(
+				line.substr(user_pos));
+		return;
+	}
+
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
 		//end connection to server
