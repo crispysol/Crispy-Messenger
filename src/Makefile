@@ -12,14 +12,14 @@ ServerMain: ServerMain.o ServerFunctions.o Server.o User.o Profile.o
 	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -l mysqlcppconn -o $@
 
 ClientMain: ClientMain.o ServerFunctions.o Client.o User.o Profile.o
-	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -l json_linux-gcc-4.6.1_libmt -o $@
 
 ServerMain.o: ServerMain.cpp
 Server.o: Server.cpp
 
 # Interface
 ClientGTK: User.o Profile.o Client.o ClientGTK.o LoginWindow.o MainWindow.o ChatWindow.o ServerFunctions.o GTKFunctions.o Signal.o
-	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -o $@ `pkg-config --libs gtk+-3.0`
+	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -l json_linux-gcc-4.6.1_libmt -o $@ `pkg-config --libs gtk+-3.0`
 ClientGTK.o: Interface/ClientGTK.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
 LoginWindow.o: Interface/LoginWindow.cpp

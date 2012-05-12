@@ -25,7 +25,6 @@
 using namespace std;
 
 // Defines
-#define BUFFER_LENGTH	256
 #define MAX_CLIENTS		100
 #define BANNER			"OK"
 
