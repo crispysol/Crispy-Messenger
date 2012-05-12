@@ -81,7 +81,8 @@ ClientInfo * Server::get_client_info(int sockfd) {
 	return it_fdcl->second;
 }
 
-/* Add default group for user <username>. 
+/**
+ * Add default group for user <username>. 
  * 
  * @return true if insert in groups table succeded, false otherwise
  */
@@ -107,6 +108,9 @@ static bool add_default_group(string username) {
 	return true;
 }
 
+/**
+ * Get list of friends within each group of friends of user <username>. 
+ */
 map<string, string> Server::get_list_of_friends(string username) {
 	stringstream query;
 	map<string, string> friends;
@@ -114,11 +118,12 @@ map<string, string> Server::get_list_of_friends(string username) {
 	try {			
 		query.flush();
 		query << "SELECT " << GROUPS_T_NAME << ", " << GROUPS_T_FRIENDS_LIST << " FROM groups WHERE " <<
-				GROUPS_T_ID_USER_FK << " = " << "(SELECT id FROM users WHERE username = '" << username << "');";
+			GROUPS_T_ID_USER_FK << " = " << "(SELECT id FROM users WHERE username = '" << username << "');";
 		
 		sql::ResultSet * res = stmt->executeQuery(query.str());		
 		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());	
 
+		// For each group of friends in the db
 		while (res->next()) {
 			sql::SQLString group = res->getString(GROUPS_T_NAME);
 			sql::SQLString friends_list = res->getString(GROUPS_T_FRIENDS_LIST);
@@ -135,6 +140,10 @@ map<string, string> Server::get_list_of_friends(string username) {
 	return friends;
 }
 
+/** 
+ * Register client to db if data (username and email) is valid, create default group and send back operations' result. 
+ * If any of the operations fails, roll back and send coresponding message to client.
+ */
 bool Server::register_client(int sockfd, string username, string pass, string email) {
 
 	dprintf("[SERVER]received register command\n");
@@ -150,7 +159,7 @@ bool Server::register_client(int sockfd, string username, string pass, string em
 	
 	try {
 		sql::ResultSet * res = stmt->executeQuery(query);
-		//2)if username or email exists, send USEDUSER | USEDMAIL | ERR on sockfd
+		//2)if username or email exists, send USEDUSER | USEDMAIL | ERR
 		if (res->next()) {
 			dprintf("[SERVER]invalid client info %s %s\n", username.c_str(), email.c_str());
 			if (username.compare(res->getString("username")) == 0) {
@@ -188,7 +197,7 @@ bool Server::register_client(int sockfd, string username, string pass, string em
 	return rc;
 }
 
-void Tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ") {
+static void tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ") {
     // Skip delimiters at beginning.
     string::size_type lastPos = str.find_first_not_of(delimiters, 0);
     // Find first "non-delimiter".
@@ -233,7 +242,7 @@ static bool send_initial_info(Server * server, int sockfd, string username) {
 
 		// TODO get state and status
 		vector<string> tokens;
-		Tokenize(it->second, tokens, ", ");
+		tokenize(it->second, tokens, ", ");
 		vector<string>::iterator tok = tokens.begin(), tok_end = tokens.end();
 		first_tok = false;
 		for (; tok != tok_end; tok++) {
@@ -257,7 +266,9 @@ static bool send_initial_info(Server * server, int sockfd, string username) {
 	return true;
 }
 
-/* Login user <username>; if login succeeds, store info of him and send him OK, otherwise send FAIL. */
+/**
+ * Login user <username>; if login succeeds, store info of him and send him OK, otherwise send FAIL. 
+ */
 bool Server::authentication(int sockfd, std::string username, std::string pass, std::string ip, int port) {
 	int rc = true;
 	ClientInfo * ci;
