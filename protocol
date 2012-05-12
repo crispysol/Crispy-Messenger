@@ -4,7 +4,8 @@
 C: register user pass email
 S: OK | USEDUSER | USEDMAIL | ERR
 
-#2 autentificarea pe server
+#2 autentificarea pe server (nu mai dam ip si port pentru ca server are un map in care va asocia socketul pe care a 
+primit login cu ip si port corespunzatoare)
 C: login user pass
 S: OK -> send more info :
 {
@@ -13,10 +14,11 @@ group_name_1:[ user_1:[state_1, status_1], user_2:[state_2, status_2] ... ],
 group_name_2:[ ... ],
 ...
 ],
-
 offline_messages:[ user_1:off_message_1, user_2:off_message_2 ]
 }
 END
+	-> trimite tuturor prietenilor celui autentificat profilul acestuia din urma (faptul ca e online/busy etc.)
+	friend_online user info
 
 S: FAIL
 

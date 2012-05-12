@@ -10,12 +10,12 @@
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
+#include <sstream>
 
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include "ServerFunctions.h"
 #include "Server.h"
 
 // Defines
@@ -47,8 +47,9 @@ static void announce_friends_online_status(int sockfd) {
 	map<string, int> map_clfd;
 	map<int, ClientInfo*>::iterator it_fdcl;
 	map<string, int>::iterator it_clfd;
-	string friends = "", friend_sockfd, friend_name;
-	int pos, next_pos;
+	string friends = "", friend_name;
+	stringstream announcement;
+	int friend_sockfd, pos, next_pos;
 	
 	map_fdcl = server->get_sockfd_to_clients();
 	it_fdcl = map_fdcl.find(sockfd);
@@ -56,7 +57,7 @@ static void announce_friends_online_status(int sockfd) {
 	
 	ClientInfo *client = it_fdcl->second;
 	
-	//TODO friends = get_list_of_friends(client.username);
+	friends = string(server->get_list_of_friends(client->get_username()));
 	
 	for (pos = 0, next_pos = friends.find(","); pos != string::npos; pos = next_pos) {
 		if (next_pos == string::npos)
@@ -70,7 +71,11 @@ static void announce_friends_online_status(int sockfd) {
 		assert(it_clfd != map_clfd.end());
 
 		friend_sockfd = it_clfd->second;
-		//TODO send to friend_socket the (client.username, client.ip, client.port);
+		
+		//send to friend_socket (client.username, client.ip, client.port);
+		announcement << "friend_online " << client->get_username() << " " << client->get_ip() << " " <<
+				client->get_port();
+		assert(send(friend_sockfd, announcement.str().c_str(), announcement.str().length() + 1, 0) >= 0);
 	}
 	
 	
@@ -92,13 +97,15 @@ static void client_command(string line, int sockfd, Server *&server) {
 	if (line.find(CMD_AUTH) == 0) {
 		int user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1,
-			ip_pos = line.find(" ", pass_pos) + 1,
-			port_pos = line.find(" ", ip_pos);
+			ip_pos = line.find(" ", pass_pos) + 1;
+			
+		ClientInfo *ci = server->get_client_info(sockfd);
+		
 		server->authentication(sockfd,
 				line.substr(user_pos, pass_pos -1 - user_pos),
-				line.substr(pass_pos, ip_pos - 1 - pass_pos),
-				line.substr(ip_pos, port_pos - 1 - ip_pos),
-				atoi(line.substr(port_pos).c_str()));
+				line.substr(pass_pos),
+				ci->get_ip(),
+				ci->get_port());
 
 		announce_friends_online_status(sockfd);
 		return;
@@ -111,7 +118,8 @@ static void client_command(string line, int sockfd, Server *&server) {
  */
 int run_server(int server_port) {
 	char buffer[BUFFER_LENGTH];
-	int sockfd, fdmax, n;
+	int sockfd, fdmax, n, newsockfd, newport;
+	string ip;
 	fd_set read_fds, tmp_fds;
 	FD_ZERO(&tmp_fds);
 
@@ -130,7 +138,9 @@ int run_server(int server_port) {
 			if (FD_ISSET(i, &tmp_fds)) {
 				// New connection
 				if (i == sockfd) {
-					new_connection(sockfd, fdmax, &read_fds);
+					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
+					//store information of client connected on newsockfd
+					server->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
 					//send(i, "TEST", strlen("TEST"), 0); // TODO delete
 					continue;
 				}

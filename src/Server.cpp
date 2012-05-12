@@ -25,19 +25,12 @@
 #include <cppconn/statement.h>
 #include <cppconn/exception.h>
 
-#include "ServerFunctions.h"
 #include "Server.h"
 
 using namespace std;
 
 static sql::Statement	*stmt;
 
-ClientInfo::ClientInfo(std::string ip, int port) : ip(ip), port(port)
-{
-}
-
-
-ClientInfo::~ClientInfo() {}
 
 Server::Server() {
 	sql::mysql::MySQL_Driver *driver;
@@ -77,6 +70,15 @@ void Server::insert_in_sockfd_to_clients(int key, ClientInfo * ci) {
 	sockfd_to_clients.insert(pair<int, ClientInfo*> (key, ci));
 }
 
+ClientInfo * Server::get_client_info(int sockfd) {
+	map<int, ClientInfo*>::iterator it_fdcl;
+	
+	it_fdcl = sockfd_to_clients.find(sockfd);
+	assert(it_fdcl != sockfd_to_clients.end());
+	
+	return it_fdcl->second;
+}
+
 /* Add default group for user <username>. 
  * 
  * @return true if insert in groups table succeded, false otherwise
@@ -101,6 +103,30 @@ static bool add_default_group(string username) {
 		return false;
 	}
 	return true;
+}
+
+string Server::get_list_of_friends(string username) {
+	stringstream query;
+	string friends;
+
+	try {			
+		query.flush();
+		query << "SELECT friends FROM users WHERE username = '" << username << "';";
+		
+		sql::ResultSet * res = stmt->executeQuery(query.str());		
+		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());	
+		
+		if (res->next())
+			friends = string(res->getString("friends"));
+		
+		delete res;
+		
+	} catch(...) {
+		cout << "Exception in get_list_of_friends!!!" << endl;
+		return "";
+	}
+	
+	return friends;
 }
 
 bool Server::register_client(int sockfd, string username, string pass, string email) {
@@ -156,14 +182,15 @@ bool Server::register_client(int sockfd, string username, string pass, string em
 	return rc;
 }
 
+/* Login user <username>; if login succeeds, store info of him and send him OK, otherwise send FAIL. */
 bool Server::authentication(int sockfd, std::string username, std::string pass, std::string ip, int port) {
 	int rc = true;
+	ClientInfo * ci;
+	
 	dprintf("[SERVER]received login request for '%s' with pass '%s'\n", username.c_str(), pass.c_str());
 	string query = string("SELECT ").append(PASS_FIELD).
 					append(" FROM users "
 					"WHERE username = '").append(username).append("';");
-
-	//TODO add (sockfd, ClientInfo(username, ip, port)) to server->sockfd_to_clients
 
 	//query db and compare pass
 	//send FAIL/(more info<groups and users, offline messages> + END) on sockfd
@@ -171,20 +198,23 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 		sql::ResultSet * res = stmt->executeQuery(query);
 dprintf("[SERVER]query executed\n");
 		if (res->next() && string(res->getString(PASS_FIELD)).compare(pass) == 0) {
-				//save client info (ip and port) to session
-				ClientInfo * ci= new ClientInfo(ip, port);
-				
-				insert_in_sockfd_to_clients(sockfd, ci);
 				//TODO query db for client' friends and offline msg and send to client
 				char end[] = "END";
 				assert(send(sockfd, end, strlen(end) + 1, 0) >= 0);
+				
+				//update username (//TODO update status too?) of client with key sockfd
+				ci = get_client_info(sockfd);
+				ci->set_username(username);
 		}
 		else {
 			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 			rc = false;
 		}
+		
+		
 		if (res)
 			delete res;
+			
 	}catch (sql::SQLException &e) {
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 		rc = false;

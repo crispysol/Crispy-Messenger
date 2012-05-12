@@ -28,7 +28,7 @@ int client_port = 0;
 /**
  * Execute command received from STDIN
  */
-void stdin_command(Client client, fd_set * read_fds) {
+void stdin_command(Client *client, fd_set * read_fds) {
 	string line;
 	getline(cin, line);
 
@@ -37,7 +37,7 @@ void stdin_command(Client client, fd_set * read_fds) {
 		int user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1,
 			email_pos = line.find(" ", pass_pos) + 1;
-		client.register_client(
+		client->register_client(
 				line.substr(user_pos, pass_pos -1 - user_pos),
 				line.substr(pass_pos, email_pos - 1 - pass_pos),
 				line.substr(email_pos));
@@ -46,15 +46,15 @@ void stdin_command(Client client, fd_set * read_fds) {
 	if (line.find(CMD_AUTH) == 0) {
 		int user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1;
-		client.authentication(
+		client->authentication(
 				line.substr(user_pos, pass_pos -1 - user_pos),
-				line.substr(pass_pos), client_port);
+				line.substr(pass_pos));
 		return;
 	}
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
 		//end connection to server
-		end_connection(client.get_server_socket(), read_fds);
+		end_connection(client->get_server_socket(), read_fds);
 		exit(EXIT_SUCCESS);
 	}
 }
@@ -64,7 +64,8 @@ void stdin_command(Client client, fd_set * read_fds) {
  */
 int run_server(char * server_ip, int server_port) {
 	char buffer[BUFFER_LENGTH];
-	int sockfd, socket_server, fdmax, n;
+	int sockfd, socket_server, fdmax, n, newsockfd, newport;
+	string ip;
 	fd_set read_fds, tmp_fds;
 	FD_ZERO(&tmp_fds);
 
@@ -75,7 +76,7 @@ int run_server(char * server_ip, int server_port) {
 	connect_to_server(server_ip, server_port, socket_server, fdmax, &read_fds);
 
 	// Client instance
-	Client client = Client(socket_server);
+	Client *client = new Client(socket_server);
 
 	// Main loop
 	for (;;) {
@@ -87,7 +88,8 @@ int run_server(char * server_ip, int server_port) {
 			if (FD_ISSET(i, &tmp_fds)) {
 				// New connection
 				if (i == sockfd) {
-					new_connection(sockfd, fdmax, &read_fds);
+					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
+					client->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
 					continue;
 				}
 

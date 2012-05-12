@@ -15,7 +15,7 @@
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 
-#include "User.h"
+#include "ServerFunctions.h"
 
 #define DATABASE_HOST 	"localhost"
 #define DATABASE_USER 	"crispy"
@@ -29,21 +29,6 @@
 #define GROUPS_T_NAME		"name"
 #define GROUPS_T_FRIENDS_LIST	"friends_list"
 #define GROUP_DEFAULT_NAME	"friends"
-
-class ClientInfo: public User {
-	std::string ip;
-	int port;
-
-public:
-	ClientInfo(std::string ip, int port);
-	virtual ~ClientInfo();
-
-	void set_ip(std::string ip);
-	std::string get_ip();
-
-	void set_port(int port);
-	int get_port();
-};
 
 class Server {
 	// Map <sockfd, client info>
@@ -61,6 +46,8 @@ public:
 	std::map <std::string, int> get_clients_to_sockfd();
 	
 	void insert_in_sockfd_to_clients(int key, ClientInfo * ci);
+	/* Return value in sockfd_to_clients with key <sockfd> */
+	ClientInfo * get_client_info(int sockfd);
 
 	//TODO bool process_protocol(std::string username, std::string pass, std::string email); TODO in main and for client too
 	/**

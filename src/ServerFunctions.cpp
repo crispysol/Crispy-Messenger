@@ -38,8 +38,26 @@ string User::get_username() {
 	return username;
 }
 
+void User::set_username(string name) {
+	username = string(name);
+}
+
 Profile User::get_profile() {
 	return profile;
+}
+
+ClientInfo::ClientInfo(string ip, int port) : ip(ip), port(port)
+{
+}
+
+ClientInfo::~ClientInfo() {}
+
+string ClientInfo::get_ip() {
+	return ip;
+}
+
+int ClientInfo::get_port() {
+	return port;
 }
 
 Profile::Profile() {}
@@ -47,11 +65,13 @@ Profile::Profile() {}
 Profile::~Profile() {}
 
 /**
- * Receive a new connection and add it to read_fds
+ * Receive a new connection and add it to read_fds. Also return ip, new socket descriptor and port of this socket, so
+ * that the server can keep track of connections (i.e. map with key newsockfd, so that when something is received on 
+ * newsockfd, the server can send back the corresponding ip and port).
  */
-void new_connection(int sockfd, int & fdmax, fd_set * read_fds) {
+void new_connection(int sockfd, int & fdmax, fd_set * read_fds, string &ip, int &newsockfd, int &newport) {
 	struct sockaddr_in cli_addr;
-	int clilen = sizeof(cli_addr), newsockfd;
+	int clilen = sizeof(cli_addr);
 
 	// Accept new connection
 	newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr,
@@ -64,7 +84,9 @@ void new_connection(int sockfd, int & fdmax, fd_set * read_fds) {
 		fdmax = newsockfd;
 	}
 
-	cout << "[SERVER] New connection from: " << inet_ntoa(cli_addr.sin_addr) << endl;
+	ip = string(inet_ntoa(cli_addr.sin_addr));
+	newport = cli_addr.sin_port;
+	cout << "[SERVER] New connection from: " << ip << endl;
 
 	// Send 'welcome' message
 	assert(send(newsockfd, BANNER, strlen(BANNER) + 1, 0) >= 0);

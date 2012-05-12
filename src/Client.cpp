@@ -30,6 +30,10 @@ int Client::get_server_socket() {
 	return server_socket;
 }
 
+void Client::insert_in_sockfd_to_clients(int key, ClientInfo * ci) {
+	sockfd_to_clients.insert(pair<int, ClientInfo*> (key, ci));
+}
+
 bool Client::register_client(std::string username, std::string pass, std::string email) {
 	int rc;
 	char buffer[BUFFER_LENGTH];
@@ -50,14 +54,14 @@ bool Client::register_client(std::string username, std::string pass, std::string
 	return true;
 }
 
-bool Client::authentication(std::string username, std::string pass, int port) {
+bool Client::authentication(std::string username, std::string pass) {
 	int rc;
 	char buffer[BUFFER_LENGTH];
 
 	//send username, pass, ip, port to server_socket
 	char msg[BUFFER_LENGTH];
-	//TODO determine ip
-	sprintf(msg, "%s %s %s %s %i", CMD_AUTH, username.c_str(), pass.c_str(), "127.0.0.1", port);
+	
+	sprintf(msg, "%s %s %s", CMD_AUTH, username.c_str(), pass.c_str());
 	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
 
 	//receive response from server_socket

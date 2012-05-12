@@ -12,6 +12,7 @@
 #include <vector>
 #include <map>
 
+#include "ServerFunctions.h"
 #include "Profile.h"
 #include "User.h"
 
@@ -20,6 +21,8 @@ class Client : public User {
 	std::map <std::string, std::vector <User> > groups;
 	// Map <user, offline message>
 	std::map <std::string, std::string> offline_messages;
+	//map <the_other_end_socket, friend_info>
+	std::map <int, ClientInfo*> sockfd_to_clients;
 	// Server socket
 	int server_socket;
 	// Map <sockfd, username>
@@ -35,12 +38,14 @@ public:
 	int get_server_socket();
 	std::string get_ip();
 	int get_port();
+	
+	void insert_in_sockfd_to_clients(int key, ClientInfo * ci);
 
 	/**
 	 * Communication client-server
 	 */
 	bool register_client(std::string username, std::string pass, std::string email);
-	bool authentication(std::string username, std::string pass, int port);
+	bool authentication(std::string username, std::string pass);
 
 	Profile get_profile(std::string username);
 	bool update_profile(std::string name, std::string surname, std::string phone,
