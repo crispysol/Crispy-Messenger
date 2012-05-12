@@ -8,16 +8,16 @@ all: ServerMain ClientMain ClientGTK
 
 # Main programs
 
-ServerMain: ServerMain.o ServerFunctions.o Server.o
+ServerMain: ServerMain.o ServerFunctions.o Server.o User.o
 	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -l mysqlcppconn -o $@
 
-ClientMain: ClientMain.o ServerFunctions.o Client.o
+ClientMain: ClientMain.o ServerFunctions.o Client.o User.o
 
 ServerMain.o: ServerMain.cpp
 Server.o: Server.cpp
 
 # Interface
-ClientGTK: Client.o ClientGTK.o LoginWindow.o MainWindow.o ChatWindow.o ServerFunctions.o GTKFunctions.o
+ClientGTK: User.o Client.o ClientGTK.o LoginWindow.o MainWindow.o ChatWindow.o ServerFunctions.o GTKFunctions.o Signal.o
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -o $@ `pkg-config --libs gtk+-3.0`
 ClientGTK.o: Interface/ClientGTK.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
@@ -28,6 +28,8 @@ MainWindow.o: Interface/MainWindow.cpp
 ChatWindow.o: Interface/ChatWindow.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
 GTKFunctions.o: Interface/GTKFunctions.cpp
+	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
+Signal.o: Interface/Signal.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
 	
 # Database creation		

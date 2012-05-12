@@ -29,23 +29,6 @@ using namespace std;
 #define MAX_CLIENTS		100
 #define BANNER			"OK"
 
-
-User::User() {}
-
-User::~User() {}
-
-string User::get_username() {
-	return username;
-}
-
-void User::set_username(string name) {
-	username = string(name);
-}
-
-Profile User::get_profile() {
-	return profile;
-}
-
 ClientInfo::ClientInfo(string ip, int port) : ip(ip), port(port)
 {
 }
