@@ -329,33 +329,74 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 	return rc;
 }
 
+
+/*
+* Verify if a username is in the database
+*/
+static bool username_exists(std::string username)
+{
+	bool exists = false;
+	dprintf("[SERVER] Verifying if username '%s' exists\n", username.c_str());
+	string query = string("SELECT id from users where username = \"").append(username).append("\";");
+
+	try {
+		sql::ResultSet *  res = stmt->executeQuery(query);
+		dprintf("[%s executed]%s\n", SQL_DEBUG, query.c_str());
+		if(res->rowsCount()==1)
+				exists	= true;
+		delete res;
+	 }
+
+	catch(sql::SQLException &e) {
+		
+		
+		dprintf("sql exception\n");
+		cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+		
+	}
+
+	
+	return exists;
+}
+
 // Add/Remove/Search a user for a client
 bool Server::add_user(int sockfd, std::string username) {
 	int rc = true;
 	int myid,def_group_id;
 	bool exists=false;
 	std::stringstream out_id;
-
 	sql::ResultSet * res;
 	string myusername;
 	ClientInfo * my_client;
+	dprintf("[SERVER]received adduser request\n");
 	my_client=get_client_info(sockfd);
 	myusername=my_client->get_username();
 	if(myusername == "") {
 					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 					return false;
 				}
-	//string myusername = this->sockfd_to_clients.find(sockfd); //=> iterator TODO
+	
 	dprintf("[SERVER]received adduser request for '%s' from'%s'\n", username.c_str(), myusername.c_str());
-	
-	
+	/*if the person i'm trying to add doesn't exist, error
+	*/	
+	if(!username_exists(username)) {
+					dprintf("[SERVER] username i want to add not doesn't exist\n");
+					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+					return false;
+					
+
+					}
 	string query = string("SELECT ").append(GROUPS_T_ID).append( " from users where username = \"").append(myusername).append("\";");
 
 
 	try {
 		res = stmt->executeQuery(query);
 		dprintf("[%s executed]%s\n", SQL_DEBUG, query.c_str());
-		if(res==NULL) { dprintf("[SERVER] myuser not good\n");
+		if(res->rowsCount()!=1) { dprintf("[SERVER] myuser not good/ problem\n");
+				assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);				
 				return false;
 				}
 		res->next();
@@ -438,7 +479,32 @@ bool Server::add_user(int sockfd, std::string username) {
 }
 
 bool Server::remove_user(int sockfd, std::string username) {
-	//TODO
+
+	int rc = true;
+	int myid,def_group_id;
+	bool exists=false;
+	std::stringstream out_id;
+	sql::ResultSet * res;
+	string myusername;
+	ClientInfo * my_client;
+	
+	my_client=get_client_info(sockfd);
+	myusername=my_client->get_username();
+	if(myusername == "") {
+					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+					return false;
+				}
+	
+	dprintf("[SERVER]received remove request for '%s' from'%s'\n", username.c_str(), myusername.c_str());
+	/*if the person i'm trying to remove doesn't exist, error
+	*/	
+	if(!username_exists(username)) {
+					dprintf("[SERVER] username i want to add not doesn't exist\n");
+					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+					return false;
+					
+
+					}			
 	
 }
 bool Server::search_user(int sockfd, std::string name, std::string surname,
