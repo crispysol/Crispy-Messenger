@@ -3,33 +3,34 @@
 * untested functions
 *
 */
-
-
-
-
 bool Server::add_user(int sockfd, std::string username) {
 	int rc = true;
 	int myid,def_group_id;
-	bool exits=false;
-	sql::ResultSet * res;
-	dprintf("[SERVER]received adduser request for '%s' from'%s'\n", username.c_str(), myusername.c_str());
+	bool exists=false;
+	std::stringstream out_id;
 
-	//string myusername = this->sockfd_to_clients.find(sockfd); => iterator TODO
-	string query = string("SELECT").append(GROUPS_T_ID).append( " from USERS where username = \"").append(myusername).append("\";");
+	sql::ResultSet * res;
+	//string myusername = this->sockfd_to_clients.find(sockfd); //=> iterator TODO
+	dprintf("[SERVER]received adduser request for '%s' from'%s'\n", username.c_str(), myusername.c_str());
+	
+	
+	string query = string("SELECT ").append(GROUPS_T_ID).append( " from users where username = \"").append(myusername).append("\";");
 
 
 	try {
 		res = stmt->executeQuery(query);
-		if(res==null) { dprintf("[SERVER] myuser not good\n");
+		dprintf("[%s executed]%s\n", SQL_DEBUG, query.c_str());
+		if(res==NULL) { dprintf("[SERVER] myuser not good\n");
 				return false;
 				}
 		res->next();
-		myid=res->getInt(0);
-		dprintf("[SERVER]myid query executed myid=%i\n",id);
+		myid=res->getInt(1);
+		dprintf("[SERVER]myid query executed myid=%i\n",myid);
+		out_id << myid;
 		delete res;
-		query=string("SELECT ").append(GROUPS_T_FRIENDS_LIST).append(" FROM groups where ").append(GROUPS_T_ID_USER_FK).append("=").append(myid).append(";");
+		query=string("SELECT ").append(GROUPS_T_FRIENDS_LIST).append(" FROM groups where ").append(GROUPS_T_ID_USER_FK).append("=").append(out_id.str()).append(";");
 		res = stmt->executeQuery(query);
-		dprintf("[SERVER]groups list query executed \n",id);
+		dprintf("[SERVER]groups list query executed \n");
 		if(res->rowsCount()>0)
 		{
 			res->beforeFirst();
@@ -41,12 +42,12 @@ bool Server::add_user(int sockfd, std::string username) {
 				char *p, *cstr;
 
 				cstr=new char[friends.size()+1];
-				strcpy(cstr,str.c_str());
+				strcpy(cstr,friends.c_str());
 				p=strtok(cstr," ");
 
 				 while (p!=NULL)
   				{
-   			 		if(strcmp(p,username)==0)
+   			 		if(strcmp(p,username.c_str())==0)
 					{//username already is in my list
 					 	exists=true;
 					 	break;
@@ -62,28 +63,48 @@ bool Server::add_user(int sockfd, std::string username) {
 	*if user doesn't exist in the clients friend list, i will add him
 	*
 	*/
-		if(!exists)
+		if (!exists)
 		{
 			/*add_user to default group
 			*/
-			query=string("UPDATE groups SET ").append( GROUPS_T_FRIENDS_LIST).append("=concat(").append( GROUPS_T_FRIENDS_LIST).append(",").append(username).append(") where ").append(GROUPS_T_ID_USER_FK).append("=").append(myid).append(" AND ").append(GROUPS_T_NAME).append(" = ").append(GROUP_DEFAULT_NAME).append(";");
+			query=string("UPDATE groups SET ").append( GROUPS_T_FRIENDS_LIST).append("=concat(").append( GROUPS_T_FRIENDS_LIST).append(",\"").append(username).append("\") where ").append(GROUPS_T_ID_USER_FK).append("=").append(out_id.str()).append(" AND ").append(GROUPS_T_NAME).append(" = \"").append(GROUP_DEFAULT_NAME).append("\";");
+			dprintf("%s\n",query.c_str());\
 			int modified=stmt->executeUpdate(query);
-
-			if(modified)
+			dprintf("[%s executed]%s\n", SQL_DEBUG, query.c_str());
+			/*if (modified) 
 				dprintf("[SERVER]added to %i group \n",modified);
+				
 			else {
 				dprintf("[SERVER] myuser not good\n");
 				return false;
 				}
-
-
+			
+*/
 		}
 	}
 	catch(sql::SQLException &e) {
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		dprintf("sql exception\n");
+		cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << endl;
 		rc = false;
 	}
 
 	return rc;
 
 }
+
+//in server main, to recognize add_user command
+/*
+where CMD_ADD_USER =add_user in serverfunctions.h
+
+if(line.find(CMD_ADD_USER) == 0){
+	dprintf("sending add_user command\n");
+	int user_pos = line.find(" ") + 1;
+	server->add_user(sockfd,line.substr(user_pos));
+	return;
+	}
+	dprintf("%s\n",line.c_str());
+*/
