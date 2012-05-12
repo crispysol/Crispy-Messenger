@@ -28,7 +28,7 @@ extern map <string, GtkWidget *> map_chat_windows;
 void clientgtk_create_message_dialog(const gchar * message, const gchar * title,
 		GtkMessageType type) {
 	GtkWidget * dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
-			type, GTK_BUTTONS_OK, "%s", message); // TODO error change
+			type, GTK_BUTTONS_OK, "%s", message);
 	gtk_window_set_title(GTK_WINDOW(dialog), title);
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);

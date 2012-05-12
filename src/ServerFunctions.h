@@ -12,7 +12,7 @@
 
 #include "User.h"
 
-#define BUFFER_LENGTH		256
+#define BUFFER_LENGTH		20000
 #define SUCCESS_MSG			"OK"
 #define USEDUSER_ERR		"USEDUSER"
 #define USEDEMAIL_ERR		"USEDMAIL"

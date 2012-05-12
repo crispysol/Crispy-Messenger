@@ -34,6 +34,7 @@ public:
 
 	void set_state(State state);
 	State get_state();
+	std::string get_state_as_string();
 };
 
 #endif /* USER_H_ */

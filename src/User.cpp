@@ -8,7 +8,9 @@
 #include <string>
 #include "User.h"
 
-User::User() {}
+User::User() {
+	this->status = "";
+}
 
 User::~User() {}
 
@@ -35,4 +37,16 @@ void User::set_state(State state) {
 }
 State User::get_state() {
 	return state;
+}
+std::string User::get_state_as_string() {
+	switch (state) {
+		case AVAILABLE:
+			return "available";
+		case AWAY:
+			return "away";
+		case BUSY:
+			return "busy";
+		default:
+			return "offline";
+	}
 }
