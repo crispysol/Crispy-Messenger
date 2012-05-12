@@ -128,6 +128,15 @@ static void client_command(string line, int sockfd, Server *&server) {
 		return;
 	}
 
+	if(line.find(CMD_ADD_USER) == 0){
+	
+		dprintf("sending add_user command\n");
+		int user_pos = line.find(" ") + 1;
+		server->add_user(sockfd,line.substr(user_pos));
+		return;
+	}
+	
+
 }
 
 /**
