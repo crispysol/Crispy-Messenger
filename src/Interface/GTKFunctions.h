@@ -28,4 +28,10 @@ void add_vbox_row(GtkWidget * vbox, GtkWidget * entry, gint width, gint height);
  */
 void create_label_field(GtkWidget * vbox, std::string label_text);
 
+/**
+ * Create a button and add it to a box
+ */
+void add_button_to_box(GtkWidget * box, std::string label_text, gboolean aligned,
+		void (* handler)(GtkWidget *, GdkEventButton *, gpointer), gboolean no_background);
+
 #endif /* GTKFUNCTIONS_H_ */

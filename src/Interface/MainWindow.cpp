@@ -33,11 +33,14 @@ static void execute_menu_item(GtkWidget * widget, gpointer g_client) {
 	printf("test\n");
 }
 
+enum one_entry_type {NORMAL_ENTRY, DELETE_GROUP, CHANGE_AVAILABILITY};
+
 /**
  * Create a window with only one entry
  */
 static void create_one_entry_window(gint width, gint height, gchar * title, gchar * label_text,
-		gint chars_limit, gchar * button_text, void (* handler)(struct _general_info *)) {
+		gint chars_limit, gchar * button_text, void (* handler)(struct _general_info *),
+		one_entry_type type) {
 	// Create new window
 	GtkWidget * window = create_new_window(width, height, title);
 
@@ -45,10 +48,30 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
 	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
 
-	// Create field
+	// Create field / combo zone
 	create_label_field(new_vbox, string(label_text));
-	GtkWidget * entry = gtk_entry_new();
-	gtk_entry_set_max_length(GTK_ENTRY(entry), chars_limit);
+	map <string, vector <User *> > groups;
+	GtkWidget * entry;
+	switch (type) {
+		case DELETE_GROUP:
+			entry = gtk_combo_box_text_new();
+			groups = current_client->get_groups();
+			for (map <string, vector <User *> >::iterator it = groups.begin(); it != groups.end();
+					it++) {
+				gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(entry), it->first.c_str());
+			}
+			break;
+		case CHANGE_AVAILABILITY:
+			entry = gtk_combo_box_text_new();
+			gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(entry), "available");
+			gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(entry), "away");
+			gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(entry), "busy");
+			break;
+		default:
+			entry = gtk_entry_new();
+			gtk_entry_set_max_length(GTK_ENTRY(entry), chars_limit);
+			break;
+	}
 	add_vbox_row(new_vbox, entry, width / 1.5, 0);
 
 	// Create recovery button
@@ -70,7 +93,7 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 static void add_friend_window(GtkWidget * widget, gpointer info = NULL) {
 	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Add friend",
 			(gchar *) "Enter friend's username:", MAX_REGISTER_CHARS, (gchar *) "Add friend",
-			signal_add_friend);
+			signal_add_friend, NORMAL_ENTRY);
 }
 
 /**
@@ -79,7 +102,7 @@ static void add_friend_window(GtkWidget * widget, gpointer info = NULL) {
 static void create_group_window(GtkWidget * widget, gpointer info = NULL) {
 	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Create group",
 			(gchar *) "Enter group name:", MAX_REGISTER_CHARS, (gchar *) "Create group",
-			signal_create_group);
+			signal_create_group, NORMAL_ENTRY);
 }
 
 /**
@@ -87,8 +110,8 @@ static void create_group_window(GtkWidget * widget, gpointer info = NULL) {
  */
 static void delete_group_window(GtkWidget * widget, gpointer info = NULL) {
 	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Delete group",
-			(gchar *) "Enter group name:", MAX_REGISTER_CHARS, (gchar *) "Delete group",
-			signal_delete_group);
+			(gchar *) "Choose group name:", MAX_REGISTER_CHARS, (gchar *) "Delete group",
+			signal_delete_group, DELETE_GROUP);
 }
 
 /**
@@ -97,41 +120,16 @@ static void delete_group_window(GtkWidget * widget, gpointer info = NULL) {
 static void change_status_window(GtkWidget * widget, gpointer info = NULL) {
 	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Change status",
 			(gchar *) "Enter new status:", MAX_STATUS_CHARS, (gchar *) "Change status",
-			signal_change_status);
+			signal_change_status, NORMAL_ENTRY);
 }
 
 /**
  * Change availability
  */
 static void change_availability_window(GtkWidget * widget, gpointer info = NULL) {
-	// Create new window
-	GtkWidget * window = create_new_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT,
-			(gchar *) "Change availability");
-
-	// Create vbox and it's alignment
-	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
-	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
-
-	// Create field
-	GtkWidget * combo = gtk_combo_box_text_new();
-	gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo), "Available");
-	gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo), "Away");
-	gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo), "Busy");
-	add_vbox_row(new_vbox, combo, AUX_WINDOW_HEIGHT / 1.5, 0);
-
-	// Create recovery button
-	GtkWidget * button = gtk_button_new_with_label("Change availability");
-	add_vbox_row(new_vbox, button, 0, 0);
-
-	// Action on button
-	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
-	ng_info->window_top_level = window;
-	ng_info->entry = combo;
-	g_signal_connect_swapped(button, "clicked", (GCallback) signal_change_availability,
-			(gpointer) ng_info);
-
-	gtk_widget_show_all(window);
-
+	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Change availability",
+			(gchar *) "Choose new availability:", MAX_REGISTER_CHARS, (gchar *) "Change availability",
+			signal_delete_group, CHANGE_AVAILABILITY);
 }
 
 /**
@@ -187,15 +185,11 @@ static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpoi
 		GtkWidget * context_menu = gtk_menu_new();
 		gtk_widget_show(context_menu);
 
-		// Create context menu entries // TODO change strings into defines and functions
-		create_menu_entry(context_menu, (gchar *) "Start chat",
-				clientgtk_create_chat_window, g_client);
-		create_menu_entry(context_menu, (gchar *) "Send file",
-				signal_send_file, g_client);
-		create_menu_entry(context_menu, (gchar *) "Show profile",
-				signal_show_profile, g_client);
-		create_menu_entry(context_menu, (gchar *) "Move to group",
-				signal_move_to_group, g_client);
+		// Create context menu entries
+		create_menu_entry(context_menu, (gchar *) "Start chat", clientgtk_create_chat_window, g_client);
+		create_menu_entry(context_menu, (gchar *) "Send file", signal_send_file, g_client);
+		create_menu_entry(context_menu, (gchar *) "Show profile", signal_show_profile, g_client);
+		create_menu_entry(context_menu, (gchar *) "Move to group", signal_move_to_group, g_client);
 
 		// Create menu
 		gtk_menu_popup(GTK_MENU(context_menu), NULL, NULL, NULL, NULL,
@@ -257,10 +251,14 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	gtk_widget_show(main_vbox);
 
 	// Show groups and friends
-	GtkWidget * button, * label, * align;
+	GtkWidget * label, * align;
 	map <string, vector <User *> > groups = current_client->get_groups();
 	for (map <string, vector <User *> >::iterator it = groups.begin(); it != groups.end(); it++) {
-		// Show group TODO maybe function
+		// Doesn't show group if it has no users
+		if (it->second.size() == 0) {
+			continue;
+		}
+		// Show group
 		align = gtk_alignment_new(0.5, 0.5, 0, 0);
 		gtk_box_pack_start(GTK_BOX(main_vbox), align, FALSE, FALSE, 0);
 		gtk_widget_show(align);
@@ -272,28 +270,24 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 
 		// Show users
 		for (vector <User *>::iterator user = it->second.begin(); user != it->second.end(); user++) {
-			// Friend button
-			button = gtk_button_new();
-			gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
-			gtk_button_get_focus_on_click(GTK_BUTTON(button));
-			gtk_box_pack_start(GTK_BOX(main_vbox), button, FALSE, FALSE, 0);
-			gtk_widget_show(button);
+			// Create hbox
+			GtkWidget * hbox = gtk_hbox_new(FALSE, 0);
+			gtk_box_pack_start(GTK_BOX(main_vbox), hbox, FALSE, FALSE, 0);
 
-			// Action on click
+			// Create friend button
 			string client = (*user)->get_username();
-			g_signal_connect(button, "button_press_event",
-					G_CALLBACK(check_friend_clicks), (gpointer) client.c_str());
+			add_button_to_box(hbox, client, TRUE, check_friend_clicks, TRUE);
 
-			// Friend label and it's alignment
+			// Create state label TODO
+			string state = (*user)->get_state_as_string();
 			align = gtk_alignment_new(0, 0.5, 0, 0);
-			gtk_container_add(GTK_CONTAINER(button), align);
-			gtk_widget_show(align);
+			gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
 			label = gtk_label_new("");
-			gtk_label_set_markup(GTK_LABEL(label), ("<big><big>" + client + "</big></big>").c_str());
+			gtk_label_set_markup(GTK_LABEL(label), ("<big>" + state + "</big>").c_str());
 			gtk_container_add(GTK_CONTAINER(align), label);
-			gtk_widget_show(label);
 
+			// Show all widgets
+			gtk_widget_show_all(hbox);
 		}
-
 	}
 }

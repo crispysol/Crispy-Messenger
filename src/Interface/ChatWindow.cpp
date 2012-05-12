@@ -14,6 +14,7 @@
 
 #include <gtk/gtk.h>
 
+#include "GTKFunctions.h"
 #include "ClientGTK.h"
 
 using namespace std;
@@ -44,24 +45,26 @@ static GtkWidget * scrolled_chat_text_view(GtkWidget * vbox, gboolean from_start
 	return text_view;
 }
 
+// TODO delete
+static void todo_change(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
+
+}
+
 /**
  * Create buttons for a chat window TODO
  */
 static void create_chat_window_buttons(GtkWidget * vbox) {
-	// Create button
-	GtkWidget * send_button = gtk_button_new();
-	gtk_button_get_focus_on_click(GTK_BUTTON(send_button));
-	gtk_box_pack_start(GTK_BOX(vbox), send_button, FALSE, FALSE, 0);
-	gtk_widget_show(send_button);
+	// Create hbox
+	GtkWidget * hbox = gtk_hbox_new(FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-	// Send button label and it's alignment
-	GtkWidget * send_align = gtk_alignment_new(1, 0.5, 0, 0);
-	gtk_container_add(GTK_CONTAINER(send_button), send_align);
-	gtk_widget_show(send_align);
-	GtkWidget * send_label = gtk_label_new("");
-	gtk_label_set_markup(GTK_LABEL(send_label), "<big>Send</big>");
-	gtk_container_add(GTK_CONTAINER(send_align), send_label);
-	gtk_widget_show(send_label);
+	// Create send button TODO
+	add_button_to_box(hbox, "Send file", TRUE, todo_change, FALSE);
+	// Create test button TODO
+	add_button_to_box(hbox, "Test", FALSE, todo_change, FALSE);
+
+	// Show all widgets
+	gtk_widget_show_all(hbox);
 }
 
 /**
@@ -74,11 +77,10 @@ inline static void destroy_chat_window(GtkWidget * chat_window, gpointer g_clien
 }
 
 /**
- * Create a chat window // TODO change string parameter
+ * Create a chat window
  */
 void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
 	char * client = (char *) g_client;
-	printf("%s\n", (char *) g_client); // TODO delete
 
 	// Chat window
 	GtkWidget * chat_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
