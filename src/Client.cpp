@@ -27,6 +27,10 @@ Client::Client(int server_socket) : server_socket(server_socket)
 Client::~Client()
 {}
 
+std::map <std::string, std::vector <User *> > & Client::get_groups() {
+	return groups;
+}
+
 int Client::get_server_socket() {
 	return server_socket;
 }
@@ -74,7 +78,6 @@ bool Client::authentication(std::string username, std::string pass) {
 	
 	// receive friends
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
-	cout << buffer << endl;
 
 	// Parse json
 	Json::Value root;
@@ -84,8 +87,23 @@ bool Client::authentication(std::string username, std::string pass) {
 		return false;
 	}
 
-	// If we want to print JSON is as easy as doing:
-	cout << "Json Example pretty print: " <<endl<< root.toStyledString() << endl;
+	// Get groups
+	const Json::Value groups = root["groups"];
+	for (int i = 0, imax = groups.size(); i < imax; i++) {
+		string group_name = groups[i]["name"].asString();
+		vector<User *> vect;
+		const Json::Value users = groups[i]["users"];
+		for (int j = 0, jmax = users.size(); j < jmax; j++) {
+			User * user = new User();
+			user->set_username(users[i]["name"].asString());
+			user->set_state_from_string(users[i]["state"].asString());
+			user->set_status(users[i]["status"].asString());
+		}
+	}
+
+	// Get offline messages TODO
+
+	cout << root.toStyledString(); // TODO delete
 
 	return true;
 }

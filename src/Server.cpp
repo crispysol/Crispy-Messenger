@@ -233,12 +233,13 @@ bool Server::send_initial_info(int sockfd, string username) {
 	ss << "{ \"groups\": [";
 	bool first = false, first_tok;
 	for (; it != it_end; it++) {
+		// Add group name
 		if (!first) {
 			first = true;
 		} else {
 			ss << ", ";
 		}
-		ss << endl << "\"" << it->first << "\": [";
+		ss << endl << "{\"name\": \"" << it->first << "\", \"users\": [";
 
 		// Add users to message
 		vector<string> tokens;
@@ -246,30 +247,28 @@ bool Server::send_initial_info(int sockfd, string username) {
 		vector<string>::iterator tok = tokens.begin(), tok_end = tokens.end();
 		first_tok = false;
 		for (; tok != tok_end; tok++) {
+			// Add user name
 			if (!first_tok) {
 				first_tok = true;
 			} else {
 				ss << ", ";
 			}
-			ss << "\"" << *tok << "\": [";
+			ss << "{\"name\": \"" << *tok << "\", ";
 			// Add state and status
 			std::map <std::string, int>::iterator cli_sock = clients_to_sockfd.find(username);
-			if (cli_sock == clients_to_sockfd.end()) {
-				ss << "\"offline\", \"" << NO_STATUS << "\""; // TODO none
-			} else {
+			string state = "offline", status = NO_STATUS;
+			if (cli_sock != clients_to_sockfd.end()) {
 				std::map <int, ClientInfo*>::iterator cli = sockfd_to_clients.find(cli_sock->second);
-				if (cli == sockfd_to_clients.end()) {
-					// TODO Error maybe
-					ss << "\"offline\", \"" << NO_STATUS << "\""; // TODO none
-				} else {
+				if (cli != sockfd_to_clients.end()) {
 					ClientInfo * ci = cli->second;
-					ss << "\"" << ci->get_state_as_string() << "\", \"" << ci->get_status() << "\"";
+					state = ci->get_state_as_string();
+					status = ci->get_status();
 				}
 			}
-			ss << "] ";
+			ss << "\"state\": \"" << state << "\", \"status\": \"" << status << "\"";
+			ss << "}";
 		}
-
-		ss << "] ";
+		ss << "]}";
 	}
 	ss << endl << "]," << endl;
 

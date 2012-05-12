@@ -38,6 +38,18 @@ void User::set_state(State state) {
 State User::get_state() {
 	return state;
 }
+
+void User::set_state_from_string(std::string state) {
+	if (state == "available") {
+		this->state = AVAILABLE;
+	} else if (state == "away") {
+		this->state = AWAY;
+	} else if (state == "busy") {
+		this->state = BUSY;
+	} else {
+		this->state = OFFLINE;
+	}
+}
 std::string User::get_state_as_string() {
 	switch (state) {
 		case AVAILABLE:

@@ -34,6 +34,8 @@ public:
 
 	void set_state(State state);
 	State get_state();
+
+	void set_state_from_string(std::string state);
 	std::string get_state_as_string();
 };
 

@@ -18,7 +18,7 @@
 
 class Client : public User {
 	// Map <group, list of friends>
-	std::map <std::string, std::vector <User> > groups;
+	std::map <std::string, std::vector <User *> > groups;
 	// Map <user, offline message>
 	std::map <std::string, std::string> offline_messages;
 	//map <the_other_end_socket, friend_info>
@@ -33,7 +33,7 @@ public:
 	virtual ~Client();
 
 	// Getter
-	std::map <std::string, std::vector <User> > & get_groups();
+	std::map <std::string, std::vector <User *> > & get_groups();
 	std::map <std::string, std::string> & get_offline_messages();
 	int get_server_socket();
 	std::string get_ip();
