@@ -76,6 +76,17 @@ bool Client::authentication(std::string username, std::string pass) {
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	cout << buffer << endl;
 
+	// Parse json
+	Json::Value root;
+	Json::Reader reader;
+	if (!reader.parse(buffer, root, false)) {
+		cout  << "Failed to parse JSON"<< endl << reader.getFormatedErrorMessages()<< endl;
+		return false;
+	}
+
+	// If we want to print JSON is as easy as doing:
+	cout << "Json Example pretty print: " <<endl<< root.toStyledString() << endl;
+
 	return true;
 }
 

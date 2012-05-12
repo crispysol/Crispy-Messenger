@@ -18,7 +18,6 @@
 #include "Client.h"
 
 // Defines
-#define BUFFER_LENGTH	256
 #define BANNER			"OK"
 
 using namespace std;
