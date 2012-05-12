@@ -56,6 +56,7 @@ void stdin_command(Client *client, fd_set * read_fds) {
 				line.substr(user_pos));
 		return;
 	}
+
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
 		//end connection to server

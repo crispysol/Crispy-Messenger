@@ -337,7 +337,14 @@ bool Server::add_user(int sockfd, std::string username) {
 	std::stringstream out_id;
 
 	sql::ResultSet * res;
-	string myusername; //TODO iau din json??
+	string myusername;
+	ClientInfo * my_client;
+	my_client=get_client_info(sockfd);
+	myusername=my_client->get_username();
+	if(myusername == "") {
+					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+					return false;
+				}
 	//string myusername = this->sockfd_to_clients.find(sockfd); //=> iterator TODO
 	dprintf("[SERVER]received adduser request for '%s' from'%s'\n", username.c_str(), myusername.c_str());
 	
@@ -395,7 +402,7 @@ bool Server::add_user(int sockfd, std::string username) {
 		{
 			/*add_user to default group
 			*/
-			query=string("UPDATE groups SET ").append( GROUPS_T_FRIENDS_LIST).append("=concat(").append( GROUPS_T_FRIENDS_LIST).append(",\"").append(username).append("\") where ").append(GROUPS_T_ID_USER_FK).append("=").append(out_id.str()).append(" AND ").append(GROUPS_T_NAME).append(" = \"").append(GROUP_DEFAULT_NAME).append("\";");
+			query=string("UPDATE groups SET ").append( GROUPS_T_FRIENDS_LIST).append("=concat(").append( GROUPS_T_FRIENDS_LIST).append(",\"").append(username).append(" \") where ").append(GROUPS_T_ID_USER_FK).append("=").append(out_id.str()).append(" AND ").append(GROUPS_T_NAME).append(" = \"").append(GROUP_DEFAULT_NAME).append("\";");
 			dprintf("%s\n",query.c_str());\
 			int modified=stmt->executeUpdate(query);
 			dprintf("[%s executed]%s\n", SQL_DEBUG, query.c_str());
@@ -409,7 +416,7 @@ bool Server::add_user(int sockfd, std::string username) {
 			
 */
 		}
-		else assert(send(sockfd, ERR_MSG, strlen(USER_ALREADY_IN_LIST) + 1, 0) >= 0);
+		else assert(send(sockfd, USER_ALREADY_IN_LIST, strlen(USER_ALREADY_IN_LIST) + 1, 0) >= 0);
 	}
 	catch(sql::SQLException &e) {
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
@@ -421,6 +428,10 @@ bool Server::add_user(int sockfd, std::string username) {
 		cout << ", SQLState: " << e.getSQLState() << " )" << endl;
 		rc = false;
 	}
+
+	if(rc == true) assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+
+	else assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 
 	return rc;
 

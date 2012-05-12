@@ -10,6 +10,7 @@ bool Server::add_user(int sockfd, std::string username) {
 	std::stringstream out_id;
 
 	sql::ResultSet * res;
+	string myusername; //TODO iau din json??
 	//string myusername = this->sockfd_to_clients.find(sockfd); //=> iterator TODO
 	dprintf("[SERVER]received adduser request for '%s' from'%s'\n", username.c_str(), myusername.c_str());
 	
@@ -81,9 +82,11 @@ bool Server::add_user(int sockfd, std::string username) {
 			
 */
 		}
+		else assert(send(sockfd, ERR_MSG, strlen(USER_ALREADY_IN_LIST) + 1, 0) >= 0);
 	}
 	catch(sql::SQLException &e) {
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		
 		dprintf("sql exception\n");
 		cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
 		cout << "# ERR: " << e.what();
@@ -110,3 +113,24 @@ if(line.find(CMD_ADD_USER) == 0){
 	}
 	dprintf("%s\n",line.c_str());
 */
+
+
+bool Client:add_user(std::string username)
+{
+	int rc;
+	char buffer[BUFFER_LENGTH];
+
+	//send username,  to server_socket
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s", CMD_REGISTER, username.c_str());
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+
+	//receive response from server_socket
+	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	assert(rc >= 0);
+	dprintf("[CLIENT]received from server: %s\n", buffer);
+	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0 || strcm(buffer, USER_ALREADY_IN_LIST) == 0)
+		return false;
+
+	return true;
+}
