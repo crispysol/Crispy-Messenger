@@ -8,16 +8,17 @@ all: ServerMain ClientMain ClientGTK
 
 # Main programs
 
-ServerMain: ServerMain.o ServerFunctions.o Server.o User.o
+ServerMain: ServerMain.o ServerFunctions.o Server.o User.o Profile.o
 	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -l mysqlcppconn -o $@
 
-ClientMain: ClientMain.o ServerFunctions.o Client.o User.o
+ClientMain: ClientMain.o ServerFunctions.o Client.o User.o Profile.o
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
 
 ServerMain.o: ServerMain.cpp
 Server.o: Server.cpp
 
 # Interface
-ClientGTK: User.o Client.o ClientGTK.o LoginWindow.o MainWindow.o ChatWindow.o ServerFunctions.o GTKFunctions.o Signal.o
+ClientGTK: User.o Profile.o Client.o ClientGTK.o LoginWindow.o MainWindow.o ChatWindow.o ServerFunctions.o GTKFunctions.o Signal.o
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -o $@ `pkg-config --libs gtk+-3.0`
 ClientGTK.o: Interface/ClientGTK.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`

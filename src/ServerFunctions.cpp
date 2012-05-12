@@ -43,10 +43,6 @@ int ClientInfo::get_port() {
 	return port;
 }
 
-Profile::Profile() {}
-
-Profile::~Profile() {}
-
 /**
  * Receive a new connection and add it to read_fds. Also return ip, new socket descriptor and port of this socket, so
  * that the server can keep track of connections (i.e. map with key newsockfd, so that when something is received on 
