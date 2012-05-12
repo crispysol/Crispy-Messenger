@@ -30,6 +30,8 @@
 #define GROUPS_T_FRIENDS_LIST	"friends_list"
 #define GROUP_DEFAULT_NAME	"friends"
 
+#define NO_STATUS	"NONE"
+
 class Server {
 	// Map <sockfd, client info>
 	std::map <int, ClientInfo*> sockfd_to_clients;
@@ -38,12 +40,15 @@ class Server {
 	// Database (initialized in constructor)
 	sql::Connection	*con;
 
+	// TODO
+	bool send_initial_info(int sockfd, std::string username);
+
 public:
 	Server();
 	virtual ~Server();
 	
-	std::map <int, ClientInfo*> get_sockfd_to_clients();
-	std::map <std::string, int> get_clients_to_sockfd();
+	std::map <int, ClientInfo*> & get_sockfd_to_clients();
+	std::map <std::string, int> & get_clients_to_sockfd();
 	
 	void insert_in_sockfd_to_clients(int key, ClientInfo * ci);
 	/* Return value in sockfd_to_clients with key <sockfd> */

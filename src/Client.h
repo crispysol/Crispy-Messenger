@@ -33,8 +33,8 @@ public:
 	virtual ~Client();
 
 	// Getter
-	std::map <std::string, std::vector <User> > get_groups();
-	std::map <std::string, std::string> get_offline_messages();
+	std::map <std::string, std::vector <User> > & get_groups();
+	std::map <std::string, std::string> & get_offline_messages();
 	int get_server_socket();
 	std::string get_ip();
 	int get_port();

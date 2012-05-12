@@ -60,11 +60,11 @@ Server::~Server() {
 	
 }
 
-map <int, ClientInfo*> Server::get_sockfd_to_clients() {
+map <int, ClientInfo*> & Server::get_sockfd_to_clients() {
 	return sockfd_to_clients;
 }
 
-map <std::string, int> Server::get_clients_to_sockfd() {
+map <std::string, int> & Server::get_clients_to_sockfd() {
 	return clients_to_sockfd;
 }
 
@@ -216,11 +216,11 @@ static void tokenize(const string& str, vector<string>& tokens, const string& de
 /**
  * Send initial info at login to user that just logged
  */
-static bool send_initial_info(Server * server, int sockfd, string username) {
+bool Server::send_initial_info(int sockfd, string username) {
 	stringstream ss;
 
 	// Retrieve friends
-	map<string, string> friends = server->get_list_of_friends(username);
+	map<string, string> friends = this->get_list_of_friends(username);
 	map<string, string>::iterator it = friends.begin(), it_end = friends.end();
 
 	// Error (should not receive this case)
@@ -229,8 +229,8 @@ static bool send_initial_info(Server * server, int sockfd, string username) {
 		return false;
 	}
 
-	// Create message
-	ss << "{\ngroups: [";
+	// Add groups to message
+	ss << "{ \"groups\": [";
 	bool first = false, first_tok;
 	for (; it != it_end; it++) {
 		if (!first) {
@@ -238,9 +238,9 @@ static bool send_initial_info(Server * server, int sockfd, string username) {
 		} else {
 			ss << ", ";
 		}
-		ss << endl << it->first << ": [";
+		ss << endl << "\"" << it->first << "\": [";
 
-		// TODO get state and status
+		// Add users to message
 		vector<string> tokens;
 		tokenize(it->second, tokens, ", ");
 		vector<string>::iterator tok = tokens.begin(), tok_end = tokens.end();
@@ -251,17 +251,33 @@ static bool send_initial_info(Server * server, int sockfd, string username) {
 			} else {
 				ss << ", ";
 			}
-			ss << *tok << ": [ TODO ]";
+			ss << "\"" << *tok << "\": [";
+			// Add state and status
+			std::map <std::string, int>::iterator cli_sock = clients_to_sockfd.find(username);
+			if (cli_sock == clients_to_sockfd.end()) {
+				ss << "\"offline\", \"" << NO_STATUS << "\""; // TODO none
+			} else {
+				std::map <int, ClientInfo*>::iterator cli = sockfd_to_clients.find(cli_sock->second);
+				if (cli == sockfd_to_clients.end()) {
+					// TODO Error maybe
+					ss << "\"offline\", \"" << NO_STATUS << "\""; // TODO none
+				} else {
+					ClientInfo * ci = cli->second;
+					ss << "\"" << ci->get_state_as_string() << "\", \"" << ci->get_status() << "\"";
+				}
+			}
+			ss << "] ";
 		}
 
 		ss << "] ";
 	}
 	ss << endl << "]," << endl;
 
-	// TODO create offline messages
-	ss << "offline_messages: TODO \n}" << endl << "END" << endl;
+	// Add offline messages TODO
+	ss << "\"offline_messages\": \"TODO\"" << endl << "}" << endl;
 
-	cout << ss.str() << endl;
+	// Send message
+	assert(send(sockfd, ss.str().c_str(), ss.str().length() + 1, 0) >= 0);
 
 	return true;
 }
@@ -287,13 +303,15 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 				//TODO query db for client' friends and offline msg and send to client
 				char end[] = "END";
 				assert(send(sockfd, end, strlen(end) + 1, 0) >= 0);
-				
-				// Send initial info TODO
-				send_initial_info(this, sockfd, username);
 
 				//update username (//TODO update status too?) of client with key sockfd
 				ci = get_client_info(sockfd);
 				ci->set_username(username);
+				ci->set_state(AVAILABLE);
+				ci->set_status("");
+
+				// Send initial info TODO
+				send_initial_info(sockfd, username);
 		}
 		else {
 			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);

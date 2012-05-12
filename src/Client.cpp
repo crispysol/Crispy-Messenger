@@ -17,6 +17,7 @@
 
 #include "ServerFunctions.h"
 #include "Client.h"
+#include "jsoncpp/json.h"
 
 using namespace std;
 
@@ -58,7 +59,7 @@ bool Client::authentication(std::string username, std::string pass) {
 	int rc;
 	char buffer[BUFFER_LENGTH];
 
-	//send username, pass, ip, port to server_socket
+	// send username, pass, ip, port to server_socket
 	char msg[BUFFER_LENGTH];
 	
 	sprintf(msg, "%s %s %s", CMD_AUTH, username.c_str(), pass.c_str());
@@ -71,6 +72,21 @@ bool Client::authentication(std::string username, std::string pass) {
 	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
 		return false;
 	
+	// receive friends
+	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	cout << buffer << endl;
+
+	// Parse json
+	Json::Value root;
+	Json::Reader reader;
+	if (!reader.parse(buffer, root, false)) {
+		cout  << "Failed to parse JSON"<< endl << reader.getFormatedErrorMessages()<< endl;
+		return false;
+	}
+
+	// If we want to print JSON is as easy as doing:
+	cout << "Json Example pretty print: " <<endl<< root.toStyledString() << endl;
+
 	return true;
 }
 

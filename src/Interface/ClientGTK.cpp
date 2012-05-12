@@ -24,7 +24,6 @@
 #include "ClientGTK.h"
 
 // Defines
-#define BUFFER_LENGTH	256
 #define DEFAULT_IP		"127.0.0.1"
 #define DEFAULT_PORT	5000
 
