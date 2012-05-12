@@ -118,7 +118,7 @@ bool Client::add_user(std::string username)
 
 	//send username,  to server_socket
 	char msg[BUFFER_LENGTH];
-	sprintf(msg, "%s %s", CMD_REGISTER, username.c_str());
+	sprintf(msg, "%s %s", CMD_ADD_USER, username.c_str());
 	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
 
 	//receive response from server_socket
