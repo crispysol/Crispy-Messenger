@@ -111,13 +111,20 @@ string Server::get_list_of_friends(string username) {
 
 	try {			
 		query.flush();
-		query << "SELECT friends FROM users WHERE username = '" << username << "';";
+		query << "SELECT " << GROUPS_T_FRIENDS_LIST << " FROM groups WHERE " << GROUPS_T_FRIENDS_LIST << " IS NOT NULL AND " << GROUPS_T_ID_USER_FK << " = " << 
+			"(SELECT id FROM users WHERE username = '" << username << "');";
 		
 		sql::ResultSet * res = stmt->executeQuery(query.str());		
 		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());	
 		
-		if (res->next())
-			friends = string(res->getString("friends"));
+		if (res->next()) {
+			sql::SQLString friends_list = res->getString(GROUPS_T_FRIENDS_LIST);
+			cout << "[SERVER] list is: " << friends_list << endl << flush;
+			friends = string(friends_list);
+			
+		}
+		else
+			friends = string("");
 		
 		delete res;
 		
@@ -196,7 +203,7 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 	//send FAIL/(more info<groups and users, offline messages> + END) on sockfd
 	try {
 		sql::ResultSet * res = stmt->executeQuery(query);
-dprintf("[SERVER]query executed\n");
+		dprintf("[%s executed]%s\n", SQL_DEBUG, query.c_str());
 		if (res->next() && string(res->getString(PASS_FIELD)).compare(pass) == 0) {
 				//TODO query db for client' friends and offline msg and send to client
 				char end[] = "END";

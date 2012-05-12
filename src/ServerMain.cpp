@@ -49,7 +49,7 @@ static void announce_friends_online_status(int sockfd) {
 	map<string, int>::iterator it_clfd;
 	string friends = "", friend_name;
 	stringstream announcement;
-	int friend_sockfd, pos, next_pos;
+	int friend_sockfd, pos, next_pos, len;
 	
 	map_fdcl = server->get_sockfd_to_clients();
 	it_fdcl = map_fdcl.find(sockfd);
@@ -59,16 +59,25 @@ static void announce_friends_online_status(int sockfd) {
 	
 	friends = string(server->get_list_of_friends(client->get_username()));
 	
-	for (pos = 0, next_pos = friends.find(","); pos != string::npos; pos = next_pos) {
-		if (next_pos == string::npos)
-			friend_name = friends.substr(pos, friends.length());
+	if (friends.compare("") == 0)
+		return;
+	
+	for (pos = 0, next_pos = friends.find(","), len = friends.length(); pos != string::npos && pos < len; 
+		pos = next_pos + 1, next_pos = friends.find(",", pos)) 
+	{
+		if (next_pos == string::npos) {
+			friend_name = friends.substr(pos, len);
+			next_pos = len;
+		}
 		else
 			friend_name = friends.substr(pos, next_pos);
 		dprintf("[SERVER]%s is friend of %s\n", friend_name.c_str(), client->get_username().c_str());
 
 		map_clfd = server->get_clients_to_sockfd();
 		it_clfd = map_clfd.find(friend_name);
-		assert(it_clfd != map_clfd.end());
+		if (it_clfd == map_clfd.end())
+			//friend is not online, do nothing
+			continue;
 
 		friend_sockfd = it_clfd->second;
 		
@@ -77,8 +86,6 @@ static void announce_friends_online_status(int sockfd) {
 				client->get_port();
 		assert(send(friend_sockfd, announcement.str().c_str(), announcement.str().length() + 1, 0) >= 0);
 	}
-	
-	
 }
 
 static void client_command(string line, int sockfd, Server *&server) {
