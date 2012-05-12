@@ -95,9 +95,9 @@ bool Client::authentication(std::string username, std::string pass) {
 		const Json::Value users = groups[i]["users"];
 		for (int j = 0, jmax = users.size(); j < jmax; j++) {
 			User * user = new User();
-			user->set_username(users[i]["name"].asString());
-			user->set_state_from_string(users[i]["state"].asString());
-			user->set_status(users[i]["status"].asString());
+			user->set_username(users[j]["name"].asString());
+			user->set_state_from_string(users[j]["state"].asString());
+			user->set_status(users[j]["status"].asString());
 			vect.push_back(user);
 		}
 		this->groups.insert(pair <string, vector <User *> > (group_name, vect));
