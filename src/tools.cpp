@@ -97,6 +97,8 @@ bool Server::add_user(int sockfd, std::string username) {
 }
 
 //in server main, to recognize add_user command
+
+
 /*
 where CMD_ADD_USER =add_user in serverfunctions.h
 
