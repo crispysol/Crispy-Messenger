@@ -47,7 +47,7 @@ public:
 
 class Server {
 	// Map <sockfd, client info>
-	std::map <int, ClientInfo> sockfd_to_clients;
+	std::map <int, ClientInfo*> sockfd_to_clients;
 	// Map <username, sockfd>
 	std::map <std::string, int> clients_to_sockfd;
 	// Database (initialized in constructor)
@@ -56,6 +56,11 @@ class Server {
 public:
 	Server();
 	virtual ~Server();
+	
+	std::map <int, ClientInfo*> get_sockfd_to_clients();
+	std::map <std::string, int> get_clients_to_sockfd();
+	
+	void insert_in_sockfd_to_clients(int key, ClientInfo * ci);
 
 	//TODO bool process_protocol(std::string username, std::string pass, std::string email); TODO in main and for client too
 	/**
@@ -92,7 +97,7 @@ public:
 	//TODO
 	bool forgot_password();
 	
-	std:string get_list_of_friends(std::string username);
+	std::string get_list_of_friends(std::string username);
 };
 
 #endif /* SERVER_H_ */

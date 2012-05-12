@@ -24,10 +24,14 @@
 using namespace std;
 Server *server;
 
+static void stdin_command();
+static void announce_friends_online_status(int sockfd);
+static void client_command(string line, int sockfd, Server *&server);
+
 /**
  * Execute command received from STDIN
  */
-void stdin_command() {
+static void stdin_command() {
 	string line;
 	getline(cin, line);
 
@@ -39,28 +43,33 @@ void stdin_command() {
 }
 
 static void announce_friends_online_status(int sockfd) {
-	map<int, ClientInfo>::iterator it;
+	map<int, ClientInfo*> map_fdcl;
+	map<string, int> map_clfd;
+	map<int, ClientInfo*>::iterator it_fdcl;
+	map<string, int>::iterator it_clfd;
 	string friends = "", friend_sockfd, friend_name;
 	int pos, next_pos;
 	
-	it = server->sockfd_to_clients.find(sockfd);
-	assert(it != server->sockfd_to_clients.end());
+	map_fdcl = server->get_sockfd_to_clients();
+	it_fdcl = map_fdcl.find(sockfd);
+	assert(it_fdcl != map_fdcl.end());
 	
-	ClientInfo client = it->second;
+	ClientInfo *client = it_fdcl->second;
 	
 	//TODO friends = get_list_of_friends(client.username);
 	
 	for (pos = 0, next_pos = friends.find(","); pos != string::npos; pos = next_pos) {
 		if (next_pos == string::npos)
-			friend_name = friends.substr(pos, friends.len());
+			friend_name = friends.substr(pos, friends.length());
 		else
 			friend_name = friends.substr(pos, next_pos);
-		dprintf("[SERVER]%s is friend of %s\n", friend_name, client.username);
+		dprintf("[SERVER]%s is friend of %s\n", friend_name.c_str(), client->get_username().c_str());
 
-		it = server->client_to_sockfd.find(friend_name);
-		assert(it != server->sockfd_to_clients.end());
+		map_clfd = server->get_clients_to_sockfd();
+		it_clfd = map_clfd.find(friend_name);
+		assert(it_clfd != map_clfd.end());
 
-		friend_sockfd = it->second;
+		friend_sockfd = it_clfd->second;
 		//TODO send to friend_socket the (client.username, client.ip, client.port);
 	}
 	

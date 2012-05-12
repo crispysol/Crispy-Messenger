@@ -65,6 +65,18 @@ Server::~Server() {
 	
 }
 
+map <int, ClientInfo*> Server::get_sockfd_to_clients() {
+	return sockfd_to_clients;
+}
+
+map <std::string, int> Server::get_clients_to_sockfd() {
+	return clients_to_sockfd;
+}
+
+void Server::insert_in_sockfd_to_clients(int key, ClientInfo * ci) {
+	sockfd_to_clients.insert(pair<int, ClientInfo*> (key, ci));
+}
+
 /* Add default group for user <username>. 
  * 
  * @return true if insert in groups table succeded, false otherwise
@@ -160,8 +172,9 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 dprintf("[SERVER]query executed\n");
 		if (res->next() && string(res->getString(PASS_FIELD)).compare(pass) == 0) {
 				//save client info (ip and port) to session
-				ClientInfo ci = ClientInfo(ip, port);
-				clients.insert(pair<int, ClientInfo>(sockfd, ci));
+				ClientInfo * ci= new ClientInfo(ip, port);
+				
+				insert_in_sockfd_to_clients(sockfd, ci);
 				//TODO query db for client' friends and offline msg and send to client
 				char end[] = "END";
 				assert(send(sockfd, end, strlen(end) + 1, 0) >= 0);

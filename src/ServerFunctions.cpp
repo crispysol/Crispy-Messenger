@@ -34,6 +34,10 @@ User::User() {}
 
 User::~User() {}
 
+string User::get_username() {
+	return username;
+}
+
 Profile User::get_profile() {
 	return profile;
 }
