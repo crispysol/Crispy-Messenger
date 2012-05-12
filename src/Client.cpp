@@ -98,7 +98,9 @@ bool Client::authentication(std::string username, std::string pass) {
 			user->set_username(users[i]["name"].asString());
 			user->set_state_from_string(users[i]["state"].asString());
 			user->set_status(users[i]["status"].asString());
+			vect.push_back(user);
 		}
+		this->groups.insert(pair <string, vector <User *> > (group_name, vect));
 	}
 
 	// Get offline messages TODO

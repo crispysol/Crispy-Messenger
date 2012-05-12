@@ -16,8 +16,12 @@
 
 #include "ClientGTK.h"
 #include "GTKFunctions.h"
+#include "../Client.h"
 
 using namespace std;
+
+// Client info
+extern Client * current_client;
 
 // Map used for correspondence between client - chat window
 extern map <string, GtkWidget *> map_chat_windows;
@@ -252,23 +256,22 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	gtk_container_add(GTK_CONTAINER(event_box), main_vbox);
 	gtk_widget_show(main_vbox);
 
-	// Example TODO change
+	// Show groups and friends
 	GtkWidget * button, * label, * align;
-	for (int i = 0; i < 2; i++) {
-		// Group label TODO maybe function
+	map <string, vector <User *> > groups = current_client->get_groups();
+	for (map <string, vector <User *> >::iterator it = groups.begin(); it != groups.end(); it++) {
+		// Show group TODO maybe function
 		align = gtk_alignment_new(0.5, 0.5, 0, 0);
 		gtk_box_pack_start(GTK_BOX(main_vbox), align, FALSE, FALSE, 0);
 		gtk_widget_show(align);
-
-		char * group = (char *) malloc(strlen("Group ") + 3); // TODO change 4
-		sprintf(group, "Group %i", i);
 		label = gtk_label_new("");
-		gtk_label_set_markup(GTK_LABEL(label), // TODO change test string
-				("<big><b><u>" + string(group) + "</u></b></big>").c_str());
+		gtk_label_set_markup(GTK_LABEL(label),
+				("<big><b><u>" + it->first + "</u></b></big>").c_str());
 		gtk_container_add(GTK_CONTAINER(align), label);
 		gtk_widget_show(label);
 
-		for (int j = 0; j < 10; j++) {
+		// Show users
+		for (vector <User *>::iterator user = it->second.begin(); user != it->second.end(); user++) {
 			// Friend button
 			button = gtk_button_new();
 			gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
@@ -276,23 +279,21 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 			gtk_box_pack_start(GTK_BOX(main_vbox), button, FALSE, FALSE, 0);
 			gtk_widget_show(button);
 
-			// Action on click // TODO change param
-			char * client = (char *) malloc(strlen("Client ") + 5); // TODO change 4
-			sprintf(client, "Client %i%i", i, j);
+			// Action on click
+			string client = (*user)->get_username();
 			g_signal_connect(button, "button_press_event",
-					G_CALLBACK(check_friend_clicks), (gpointer) client);
-
-			// TODO free space occupied by client -> might not be necessary
+					G_CALLBACK(check_friend_clicks), (gpointer) client.c_str());
 
 			// Friend label and it's alignment
 			align = gtk_alignment_new(0, 0.5, 0, 0);
 			gtk_container_add(GTK_CONTAINER(button), align);
 			gtk_widget_show(align);
 			label = gtk_label_new("");
-			gtk_label_set_markup(GTK_LABEL(label), // TODO change test string
-					("<big><big>" + string(client) + "</big></big>").c_str());
+			gtk_label_set_markup(GTK_LABEL(label), ("<big><big>" + client + "</big></big>").c_str());
 			gtk_container_add(GTK_CONTAINER(align), label);
 			gtk_widget_show(label);
+
 		}
+
 	}
 }
