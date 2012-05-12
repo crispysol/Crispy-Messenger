@@ -19,6 +19,7 @@
 #define ERR_MSG				"FAIL"
 #define CMD_REGISTER		"register"
 #define CMD_AUTH			"login"
+#define CMD_ADD_USER		"add_user"
 #define EXIT_MSG			"exit"
 
 #define SQL_DEBUG		"SQL"
