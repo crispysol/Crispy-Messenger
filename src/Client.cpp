@@ -59,6 +59,7 @@ bool Client::register_client(std::string username, std::string pass, std::string
 	return true;
 }
 
+
 bool Client::authentication(std::string username, std::string pass) {
 	int rc;
 	char buffer[BUFFER_LENGTH];
@@ -104,6 +105,26 @@ bool Client::authentication(std::string username, std::string pass) {
 	// Get offline messages TODO
 
 	cout << root.toStyledString(); // TODO delete
+
+	return true;
+}
+
+bool Client:add_user(std::string username)
+{
+	int rc;
+	char buffer[BUFFER_LENGTH];
+
+	//send username,  to server_socket
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s", CMD_REGISTER, username.c_str());
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+
+	//receive response from server_socket
+	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	assert(rc >= 0);
+	dprintf("[CLIENT]received from server: %s\n", buffer);
+	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0 || strcm(buffer, USER_ALREADY_IN_LIST) == 0)
+		return false;
 
 	return true;
 }

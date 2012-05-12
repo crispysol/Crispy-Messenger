@@ -16,6 +16,7 @@
 #define SUCCESS_MSG			"OK"
 #define USEDUSER_ERR		"USEDUSER"
 #define USEDEMAIL_ERR		"USEDMAIL"
+#define USER_ALREADY_IN_LIST 	"USER_IN_LIST"
 #define ERR_MSG				"FAIL"
 #define CMD_REGISTER		"register"
 #define CMD_AUTH			"login"
