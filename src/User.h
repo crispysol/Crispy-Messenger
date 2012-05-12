@@ -23,7 +23,7 @@ public:
 	virtual ~User();
 
 	// Getter
-	virtual Profile get_profile();
+	virtual Profile & get_profile();
 
 	// Setter-Getter
 	void set_username(std::string username);
