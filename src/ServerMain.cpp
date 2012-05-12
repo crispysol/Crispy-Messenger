@@ -43,6 +43,7 @@ static void stdin_command() {
 }
 
 static void announce_friends_online_status(int sockfd) {
+	/*
 	map<int, ClientInfo*> map_fdcl;
 	map<string, int> map_clfd;
 	map<int, ClientInfo*>::iterator it_fdcl;
@@ -86,6 +87,7 @@ static void announce_friends_online_status(int sockfd) {
 				client->get_port();
 		assert(send(friend_sockfd, announcement.str().c_str(), announcement.str().length() + 1, 0) >= 0);
 	}
+	*/
 }
 
 static void client_command(string line, int sockfd, Server *&server) {

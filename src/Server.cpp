@@ -11,6 +11,8 @@
 #include <cassert>
 #include <cstring>
 #include <sstream>
+#include <algorithm>
+#include <vector>
 
 #include <fcntl.h>
 #include <sys/types.h>
@@ -186,18 +188,73 @@ bool Server::register_client(int sockfd, string username, string pass, string em
 	return rc;
 }
 
+void Tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ") {
+    // Skip delimiters at beginning.
+    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+    // Find first "non-delimiter".
+    string::size_type pos     = str.find_first_of(delimiters, lastPos);
+
+    while (string::npos != pos || string::npos != lastPos) {
+        // Found a token, add it to the vector.
+        tokens.push_back(str.substr(lastPos, pos - lastPos));
+        // Skip delimiters.  Note the "not_of"
+        lastPos = str.find_first_not_of(delimiters, pos);
+        // Find next "non-delimiter"
+        pos = str.find_first_of(delimiters, lastPos);
+    }
+}
+
 /**
  * Send initial info at login to user that just logged
  */
-static void send_initial_info(Server * server, int sockfd, string username) {
+static bool send_initial_info(Server * server, int sockfd, string username) {
+	stringstream ss;
+
+	// Retrieve friends
 	map<string, string> friends = server->get_list_of_friends(username);
 	map<string, string>::iterator it = friends.begin(), it_end = friends.end();
 
-	// TODO if it == it_end do something
-
-	for (; it != it_end; it++) {
-		cout << it->first << ": " << it->second << "\n";
+	// Error (should not receive this case)
+	if (it == it_end) {
+		cerr << "[BUG] Error at retrieving groups from database for user: " << username << endl;
+		return false;
 	}
+
+	// Create message
+	ss << "{\ngroups: [";
+	bool first = false, first_tok;
+	for (; it != it_end; it++) {
+		if (!first) {
+			first = true;
+		} else {
+			ss << ", ";
+		}
+		ss << endl << it->first << ": [";
+
+		// TODO get state and status
+		vector<string> tokens;
+		Tokenize(it->second, tokens, ", ");
+		vector<string>::iterator tok = tokens.begin(), tok_end = tokens.end();
+		first_tok = false;
+		for (; tok != tok_end; tok++) {
+			if (!first_tok) {
+				first_tok = true;
+			} else {
+				ss << ", ";
+			}
+			ss << *tok << ": [ TODO ]";
+		}
+
+		ss << "] ";
+	}
+	ss << endl << "]," << endl;
+
+	// TODO create offline messages
+	ss << "offline_messages: TODO \n}" << endl << "END" << endl;
+
+	cout << ss.str() << endl;
+
+	return true;
 }
 
 /* Login user <username>; if login succeeds, store info of him and send him OK, otherwise send FAIL. */

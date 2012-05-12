@@ -33,7 +33,7 @@ static void execute_menu_item(GtkWidget * widget, gpointer g_client) {
  * Create a window with only one entry
  */
 static void create_one_entry_window(gint width, gint height, gchar * title, gchar * label_text,
-		gchar * button_text, void (* handler)(struct _general_info *)) {
+		gint chars_limit, gchar * button_text, void (* handler)(struct _general_info *)) {
 	// Create new window
 	GtkWidget * window = create_new_window(width, height, title);
 
@@ -41,10 +41,11 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
 	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
 
-	// Create email field TODO limit nr chars
+	// Create field
 	create_label_field(new_vbox, string(label_text));
 	GtkWidget * entry = gtk_entry_new();
-	add_vbox_row(new_vbox, entry, width / 2, 0); // TODO define
+	gtk_entry_set_max_length(GTK_ENTRY(entry), chars_limit);
+	add_vbox_row(new_vbox, entry, width / 1.5, 0);
 
 	// Create recovery button
 	GtkWidget * button = gtk_button_new_with_label(button_text);
@@ -64,7 +65,8 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
  */
 static void add_friend_window(GtkWidget * widget, gpointer info = NULL) {
 	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Add friend",
-			(gchar *) "Enter friend's username:", (gchar *) "Add friend", signal_add_friend);
+			(gchar *) "Enter friend's username:", MAX_REGISTER_CHARS, (gchar *) "Add friend",
+			signal_add_friend);
 }
 
 /**
@@ -72,7 +74,8 @@ static void add_friend_window(GtkWidget * widget, gpointer info = NULL) {
  */
 static void create_group_window(GtkWidget * widget, gpointer info = NULL) {
 	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Create group",
-			(gchar *) "Enter group name:", (gchar *) "Create group", signal_create_group);
+			(gchar *) "Enter group name:", MAX_REGISTER_CHARS, (gchar *) "Create group",
+			signal_create_group);
 }
 
 /**
@@ -80,7 +83,51 @@ static void create_group_window(GtkWidget * widget, gpointer info = NULL) {
  */
 static void delete_group_window(GtkWidget * widget, gpointer info = NULL) {
 	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Delete group",
-			(gchar *) "Enter group name:", (gchar *) "Delete group", signal_delete_group);
+			(gchar *) "Enter group name:", MAX_REGISTER_CHARS, (gchar *) "Delete group",
+			signal_delete_group);
+}
+
+/**
+ * Change status
+ */
+static void change_status_window(GtkWidget * widget, gpointer info = NULL) {
+	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Change status",
+			(gchar *) "Enter new status:", MAX_STATUS_CHARS, (gchar *) "Change status",
+			signal_change_status);
+}
+
+/**
+ * Change availability
+ */
+static void change_availability_window(GtkWidget * widget, gpointer info = NULL) {
+	// Create new window
+	GtkWidget * window = create_new_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT,
+			(gchar *) "Change availability");
+
+	// Create vbox and it's alignment
+	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
+	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
+
+	// Create field
+	GtkWidget * combo = gtk_combo_box_text_new();
+	gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo), "Available");
+	gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo), "Away");
+	gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo), "Busy");
+	add_vbox_row(new_vbox, combo, AUX_WINDOW_HEIGHT / 1.5, 0);
+
+	// Create recovery button
+	GtkWidget * button = gtk_button_new_with_label("Change availability");
+	add_vbox_row(new_vbox, button, 0, 0);
+
+	// Action on button
+	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
+	ng_info->window_top_level = window;
+	ng_info->entry = combo;
+	g_signal_connect_swapped(button, "clicked", (GCallback) signal_change_availability,
+			(gpointer) ng_info);
+
+	gtk_widget_show_all(window);
+
 }
 
 /**
@@ -142,9 +189,9 @@ static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpoi
 		create_menu_entry(context_menu, (gchar *) "Send file",
 				signal_send_file, g_client);
 		create_menu_entry(context_menu, (gchar *) "Show profile",
-				execute_menu_item, g_client);
+				signal_show_profile, g_client);
 		create_menu_entry(context_menu, (gchar *) "Move to group",
-				execute_menu_item, g_client);
+				signal_move_to_group, g_client);
 
 		// Create menu
 		gtk_menu_popup(GTK_MENU(context_menu), NULL, NULL, NULL, NULL,
@@ -161,7 +208,7 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	gtk_container_add(GTK_CONTAINER(window_top_level), vbox);
 	gtk_widget_show(vbox);
 
-	// Create menu bar TODO change functions
+	// Create menu bar
 	GtkWidget * menu_bar = gtk_menu_bar_new();
 	gtk_box_pack_start(GTK_BOX(vbox), menu_bar, FALSE, FALSE, 0);
 	gtk_widget_show(menu_bar);
@@ -173,13 +220,16 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	create_menu_entry(submenu1, (gchar *) "Delete group", delete_group_window, NULL);
 
 	GtkWidget * submenu2 = create_menu_bar_submenu(menu_bar, (gchar *) "Account");
-	create_menu_entry(submenu2, (gchar *) "Change status", execute_menu_item, NULL);
-	create_menu_entry(submenu2, (gchar *) "Change availability", execute_menu_item, NULL);
+	create_menu_entry(submenu2, (gchar *) "Change status", change_status_window, NULL);
+	create_menu_entry(submenu2, (gchar *) "Change availability", change_availability_window, NULL);
 	create_menu_entry(submenu2, (gchar *) "Show my profile", execute_menu_item, NULL);
 	create_menu_entry(submenu2, (gchar *) "Update profile", execute_menu_item, NULL);
 
 	GtkWidget * submenu3 = create_menu_bar_submenu(menu_bar, (gchar *) "Settings");
-	create_menu_entry(submenu3, (gchar *) "Change ip/port", execute_menu_item, NULL);
+	struct _general_info * g_info = (struct _general_info *) malloc(sizeof(struct _general_info));
+	g_info->window_top_level = window_top_level;
+	g_info->vbox_align = vbox;
+	create_menu_entry(submenu3, (gchar *) "Logout", signal_logout, (gpointer) g_info);
 
 	// Create scroll window
 	GtkWidget * scroll_window = gtk_scrolled_window_new(NULL, NULL);

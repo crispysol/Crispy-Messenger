@@ -19,8 +19,9 @@
 #define AUX_WINDOW_HEIGHT	200
 
 #define MIN_REGISTER_CHARS	4
-#define MAX_REGISTER_CHARS	30 // TODO add in function
-#define MAX_EMAIL_CHARS	50 // TODO add in function
+#define MAX_REGISTER_CHARS	30
+#define MAX_EMAIL_CHARS		50
+#define MAX_STATUS_CHARS	100
 
 
 /**
@@ -87,7 +88,20 @@ void signal_check_recovery(struct _general_info * g_info);
  */
 void signal_send_file(GtkWidget * widget, gpointer g_client);
 
-///////////////// TODO /////////////////
+/**
+ * Show user profile
+ */
+void signal_show_profile(GtkWidget * widget, gpointer g_client);
+
+/**
+ * Move user to group
+ */
+void signal_move_to_group(GtkWidget * widget, gpointer g_client);
+
+/**
+ * Logout
+ */
+void signal_logout(GtkWidget * widget, gpointer info);
 
 /**
  * Add a new friend
@@ -103,6 +117,16 @@ void signal_create_group(struct _general_info * g_info);
  * Delete an existing group
  */
 void signal_delete_group(struct _general_info * g_info);
+
+/**
+ * Change status
+ */
+void signal_change_status(struct _general_info * g_info);
+
+/**
+ * Change availability
+ */
+void signal_change_availability(struct _general_info * g_info);
 
 /**
  * Send text to friend and save it in conversation text view

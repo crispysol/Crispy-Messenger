@@ -40,7 +40,7 @@ static fd_set read_fds;
 static fd_set tmp_fds;
 static int fdmax;
 // Server socket
-static int socket_server;
+static int socket_server, client_port;
 
 // Client info
 Client * current_client;
@@ -63,22 +63,24 @@ void signal_check_login(struct _general_info * g_info) {
 	if (!current_client->authentication(username, password)) {
 		clientgtk_create_message_dialog("Invalid login username/password", "Login information",
 				GTK_MESSAGE_WARNING);
-		
-		// Delete username and password
+
+		// Free space
 		free(username);
 		free(password);
-		
 		return;
 	}
 
-	// Delete username and password
-	free(username);
-	free(password);
+	// Memorize my username
+	current_client->set_username(username);
+	current_client->set_state(AVAILABLE);
+	current_client->set_status("");
 
 	// Delete login interface
 	gtk_widget_destroy(g_info->vbox_align);
 
-	// Free space used by login interface
+	// Free space
+	free(username);
+	free(password);
 	free(g_info);
 
 	// Create main interface
@@ -142,10 +144,10 @@ void signal_check_register(struct _general_info * g_info) {
 		} else {
 			clientgtk_create_message_dialog("Account already exists", "Register information",
 					GTK_MESSAGE_WARNING);
-		}	
+		}
 	}
 
-	// Delete username and password
+	// Free space
 	free(username);
 	free(password1);
 	free(password2);
@@ -190,7 +192,7 @@ void signal_check_recovery(struct _general_info * g_info) {
 		free(g_info);
 	}
 
-	// Free email space
+	// Free space
 	free(email);
 }
 
@@ -252,93 +254,29 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
 	return FALSE;
 }
 
-//////////////////////// TODO ////////////////////////////
-
 /**
- * Add a new friend
+ * Logout
  */
-void signal_add_friend(struct _general_info * g_info) {
-	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
+void signal_logout(GtkWidget * widget, gpointer info) {
+	struct _general_info * g_info = (struct _general_info *) info;
 
-	// Save friend's username
-	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
+	// Destroy old interface
+	gtk_widget_destroy(g_info->vbox_align);
 
-	// Add friend to user list TODO
-//	if (!current_client->add_user(username)) {
-//		clientgtk_create_message_dialog("Invalid username", "Warning", GTK_MESSAGE_WARNING);
-//
-//		// Free space
-//		free(username);
-//
-//		return;
-//	}
+	// Destroy all chat windows
+	map <string, GtkWidget *>::iterator it = map_chat_windows.begin(),
+			it_end = map_chat_windows.end();
+	for (; it != it_end; it++) {
+		gtk_widget_destroy(it->second);
+	}
 
-	// Remake main window TODO
+	// Create login interface
+	clientgtk_create_login_window(g_info->window_top_level);
+
+	// TODO logout from server
 
 	// Free space
-	free(username);
 	free(g_info);
-
-	// Destroy window
-	gtk_widget_destroy(window);
-}
-
-/**
- * Create a new group
- */
-void signal_create_group(struct _general_info * g_info) {
-	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
-
-	// Save friend's username
-	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
-
-	// Add friend to user list TODO
-//	if (!current_client->add_user(username)) {
-//		clientgtk_create_message_dialog("Invalid group", "Warning", GTK_MESSAGE_WARNING);
-//
-//		// Free space
-//		free(group);
-//
-//		return;
-//	}
-
-	// Remake main window TODO
-
-	// Free space
-	free(username);
-	free(g_info);
-
-	// Destroy window
-	gtk_widget_destroy(window);
-}
-
-/**
- * Delete an existing group
- */
-void signal_delete_group(struct _general_info * g_info) {
-	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
-
-	// Save friend's username
-	gchar * group = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
-
-	// Add friend to user list TODO
-//	if (!current_client->add_user(group)) {
-//		clientgtk_create_message_dialog("Invalid group", "Warning", GTK_MESSAGE_WARNING);
-//
-//		// Free space
-//		free(group);
-//
-//		return;
-//	}
-
-	// Remake main window TODO
-
-	// Free space
-	free(group);
-	free(g_info);
-
-	// Destroy window
-	gtk_widget_destroy(window);
 }
 
 /**
@@ -347,7 +285,8 @@ void signal_delete_group(struct _general_info * g_info) {
 void idle(gpointer data) {
 	// Run local server
 	char buffer[BUFFER_LENGTH];
-	int n;
+	int n, newsockfd, newport;
+	string ip;
 
 	FD_ZERO(&tmp_fds);
 	tmp_fds = read_fds;
@@ -358,13 +297,13 @@ void idle(gpointer data) {
 		if (FD_ISSET(i, &tmp_fds)) {
 			// New connection
 			if (i == sockfd) {
-				new_connection(sockfd, fdmax, &read_fds);
+				new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
+				current_client->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
 				continue;
 			}
 
-			// Execute command from STDIN
+			// Command from STDIN (doesn't apply for GTK client)
 			if (i == STDIN_FILENO) {
-				// stdin_command(); TODO might delete
 				continue;
 			}
 
@@ -396,8 +335,10 @@ void idle(gpointer data) {
  * Main function
  */
 int main(int argc, char *argv[]) {
+	if (argc == 2) // TODO delete
+		port = atoi(argv[1]);
 	// Init localhost server (communication with other clients)
-	init_server(socket_server, sockfd, fdmax, &read_fds);
+	init_server(client_port, sockfd, fdmax, &read_fds);
 
 	// Connect to main server
 	char aux_ip[strlen(ip.c_str()) + 1];
@@ -405,7 +346,7 @@ int main(int argc, char *argv[]) {
 	connect_to_server(aux_ip, port, socket_server, fdmax, &read_fds);
 
 	// Create current client
-	current_client = new Client(socket_server, ip.c_str());
+	current_client = new Client(socket_server);
 
 	// Init GTK
 	gtk_init(&argc, &argv);
@@ -432,7 +373,7 @@ int main(int argc, char *argv[]) {
 	clientgtk_create_login_window(window_top_level);
 
 	// Add idle function
-	g_idle_add((GSourceFunc) idle, 0); // TODO change function
+	g_idle_add((GSourceFunc) idle, 0);
 
 	// Main gtk loop
 	gtk_main();

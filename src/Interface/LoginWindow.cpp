@@ -60,14 +60,16 @@ void clientgtk_create_login_window(GtkWidget * window_top_level) {
 	GtkWidget * login_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
 	GtkWidget * login_vbox = create_aligned_vbox(window_top_level, login_vbox_align);
 
-	// Create username field and add it to the vbox TODO limit nr chars
+	// Create username field and add it to the vbox
 	create_label_field(login_vbox, string("Enter username:"));
 	GtkWidget * username_entry = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(username_entry), MAX_REGISTER_CHARS);
 	add_vbox_row(login_vbox, username_entry, WINDOW_WIDTH / 2, 0);
 
-	// Create password field and add it to the vbox TODO limit nr chars
+	// Create password field and add it to the vbox
 	create_label_field(login_vbox, string("Enter password:"));
 	GtkWidget * password_entry = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(password_entry), MAX_REGISTER_CHARS);
 	gtk_entry_set_visibility((GtkEntry *) password_entry, FALSE);
 	add_vbox_row(login_vbox, password_entry, WINDOW_WIDTH / 2, 0);
 
@@ -111,9 +113,10 @@ void clientgtk_create_recovery_window(struct _general_info * g_info) {
 	GtkWidget * recovery_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
 	GtkWidget * recovery_vbox = create_aligned_vbox(window_top_level, recovery_vbox_align);
 
-	// Create email field TODO limit nr chars
+	// Create email field
 	create_label_field(recovery_vbox, string("Enter email used for registration:"));
 	GtkWidget * email_entry = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(email_entry), MAX_EMAIL_CHARS);
 	add_vbox_row(recovery_vbox, email_entry, WINDOW_WIDTH / 2, 0);
 
 	// Create recovery button
@@ -145,26 +148,30 @@ void clientgtk_create_new_account_window(struct _general_info * g_info) {
 	GtkWidget * new_account_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
 	GtkWidget * new_account_vbox = create_aligned_vbox(window_top_level, new_account_vbox_align);
 
-	// Create userneame field TODO limit nr chars
+	// Create username field
 	create_label_field(new_account_vbox, string("Enter username:"));
 	GtkWidget * username_entry = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(username_entry), MAX_REGISTER_CHARS);
 	add_vbox_row(new_account_vbox, username_entry, WINDOW_WIDTH / 2, 0);
 
-	// Create first password field TODO limit nr chars
+	// Create first password field
 	create_label_field(new_account_vbox, string("Enter password:"));
 	GtkWidget * password_entry1 = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(password_entry1), MAX_REGISTER_CHARS);
 	gtk_entry_set_visibility((GtkEntry *) password_entry1, FALSE);
 	add_vbox_row(new_account_vbox, password_entry1, WINDOW_WIDTH / 2, 0);
 
-	// Create second password field TODO limit nr chars
+	// Create second password field
 	create_label_field(new_account_vbox, string("Retype password:"));
 	GtkWidget * password_entry2 = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(password_entry2), MAX_REGISTER_CHARS);
 	gtk_entry_set_visibility((GtkEntry *) password_entry2, FALSE);
 	add_vbox_row(new_account_vbox, password_entry2, WINDOW_WIDTH / 2, 0);
 
 	// Create email field
 	create_label_field(new_account_vbox, string("Enter email:"));
 	GtkWidget * email_entry = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(email_entry), MAX_EMAIL_CHARS);
 	add_vbox_row(new_account_vbox, email_entry, WINDOW_WIDTH / 2, 0);
 
 	// Create register button
