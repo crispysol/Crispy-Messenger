@@ -45,7 +45,7 @@ int main() {
 		append(GROUPS_T_ID).append(" INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,").
 		append(GROUPS_T_ID_USER_FK).append(" INT UNSIGNED NOT NULL,").
 		append(GROUPS_T_NAME).append(" VARCHAR(30) NOT NULL,").
-		append(GROUPS_T_FRIENDS_LIST).append(" TEXT").
+		append(GROUPS_T_FRIENDS_LIST).append(" TEXT NOT NULL DEFAULT ''").
 		append(")");
 /*	s = "CREATE TABLE groups ("
 			"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"

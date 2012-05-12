@@ -90,7 +90,7 @@ static bool add_default_group(string username) {
 	try {		
 		query.flush();
 		query << "INSERT INTO groups(" << GROUPS_T_ID_USER_FK << ", " <<
-			GROUPS_T_NAME << ") VALUES ((" << 
+			GROUPS_T_NAME << ") VALUES ((" <<
 			"SELECT id FROM users WHERE username = '" << username << "'), '" <<
 			GROUP_DEFAULT_NAME << "');";
 		
@@ -105,32 +105,29 @@ static bool add_default_group(string username) {
 	return true;
 }
 
-string Server::get_list_of_friends(string username) {
+map<string, string> Server::get_list_of_friends(string username) {
 	stringstream query;
-	string friends;
+	map<string, string> friends;
 
 	try {			
 		query.flush();
-		query << "SELECT " << GROUPS_T_FRIENDS_LIST << " FROM groups WHERE " << GROUPS_T_FRIENDS_LIST << " IS NOT NULL AND " << GROUPS_T_ID_USER_FK << " = " << 
-			"(SELECT id FROM users WHERE username = '" << username << "');";
+		query << "SELECT " << GROUPS_T_NAME << ", " << GROUPS_T_FRIENDS_LIST << " FROM groups WHERE " <<
+				GROUPS_T_ID_USER_FK << " = " << "(SELECT id FROM users WHERE username = '" << username << "');";
 		
 		sql::ResultSet * res = stmt->executeQuery(query.str());		
 		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());	
-		
-		if (res->next()) {
+
+		while (res->next()) {
+			sql::SQLString group = res->getString(GROUPS_T_NAME);
 			sql::SQLString friends_list = res->getString(GROUPS_T_FRIENDS_LIST);
-			cout << "[SERVER] list is: " << friends_list << endl << flush;
-			friends = string(friends_list);
-			
+			cout << "[SERVER] list ( " << group << " ) is: " << friends_list << endl << flush;
+			friends.insert(pair<string, string> (string(group), string(friends_list)));
 		}
-		else
-			friends = string("");
 		
 		delete res;
 		
 	} catch(...) {
 		cout << "Exception in get_list_of_friends!!!" << endl;
-		return "";
 	}
 	
 	return friends;
@@ -189,6 +186,20 @@ bool Server::register_client(int sockfd, string username, string pass, string em
 	return rc;
 }
 
+/**
+ * Send initial info at login to user that just logged
+ */
+static void send_initial_info(Server * server, int sockfd, string username) {
+	map<string, string> friends = server->get_list_of_friends(username);
+	map<string, string>::iterator it = friends.begin(), it_end = friends.end();
+
+	// TODO if it == it_end do something
+
+	for (; it != it_end; it++) {
+		cout << it->first << ": " << it->second << "\n";
+	}
+}
+
 /* Login user <username>; if login succeeds, store info of him and send him OK, otherwise send FAIL. */
 bool Server::authentication(int sockfd, std::string username, std::string pass, std::string ip, int port) {
 	int rc = true;
@@ -209,6 +220,9 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 				char end[] = "END";
 				assert(send(sockfd, end, strlen(end) + 1, 0) >= 0);
 				
+				// Send initial info TODO
+				send_initial_info(this, sockfd, username);
+
 				//update username (//TODO update status too?) of client with key sockfd
 				ci = get_client_info(sockfd);
 				ci->set_username(username);

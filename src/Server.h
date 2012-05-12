@@ -84,7 +84,7 @@ public:
 	//TODO
 	bool forgot_password();
 	
-	std::string get_list_of_friends(std::string username);
+	std::map<std::string, std::string> get_list_of_friends(std::string username);
 };
 
 #endif /* SERVER_H_ */
