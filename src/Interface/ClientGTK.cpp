@@ -58,7 +58,7 @@ void signal_check_login(struct _general_info * g_info) {
 	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->username)));
 	gchar * password = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->password1)));
 
-	// Retrieve users -> communicate with server // TODO
+	// Login
 	if (!current_client->authentication(username, password)) {
 		clientgtk_create_message_dialog("Invalid login username/password", "Login information",
 				GTK_MESSAGE_WARNING);
@@ -235,10 +235,11 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
 		gtk_text_buffer_get_bounds(buffer2, &start, &end);
 		gchar * old_text = gtk_text_buffer_get_text(buffer2, &start, &end, FALSE);
 		string text;
+		string username = current_client->get_username();
 		if (strcmp(old_text, "") == 0) {
-			text = string(new_text);
+			text = username + ": " + string(new_text);
 		} else {
-			text = string(old_text) + "\n" + string(new_text);
+			text = string(old_text) + "\n" + username + ": " + string(new_text);
 		}
 		gtk_text_buffer_set_text(buffer2, text.c_str(), -1);
 
@@ -248,6 +249,9 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
 
 		// Delete all text from input
 		gtk_text_buffer_set_text(buffer1, "", -1);
+
+		// Send new text + username to friend TODO
+
 		return TRUE;
 	}
 	return FALSE;
@@ -322,9 +326,7 @@ void idle(gpointer data) {
 				end_connection(i, &read_fds);
 				//TODO remove connection from connected_users list
 			} else {
-				//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),
-				//	&database, result); TODO
-				cout << "TODO" << endl;
+				cout << "TODO" << endl; // TODO
 			}
 		}
 	}

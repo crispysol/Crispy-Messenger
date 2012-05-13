@@ -151,7 +151,6 @@ bool Client::add_user(std::string username)
 	}
 
 	// Get offline messages TODO
-	cout << root.toStyledString(); // TODO delete
 
 	return true;
 }
@@ -172,6 +171,12 @@ bool Client::remove_user(std::string username) {
 	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
 		return false;
 
+	// Receive friends
+	Json::Value root;
+	if (!receive_friend_list(root)) {
+		return false;
+	}
+
 	return true;
 }
 
@@ -190,6 +195,12 @@ bool Client::add_group(std::string group) {
 	dprintf("[CLIENT]received from server: %s\n", buffer);
 	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
 		return false;
+
+	// Receive friends
+	Json::Value root;
+	if (!receive_friend_list(root)) {
+		return false;
+	}
 
 	return true;
 }

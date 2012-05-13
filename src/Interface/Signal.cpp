@@ -5,6 +5,7 @@
  *      Author: mihailc
  */
 
+#include <iostream>
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
@@ -18,69 +19,74 @@
 // Client info
 extern Client * current_client;
 
+using namespace std;
+
+
 /**
  * Add a new friend
  */
 void signal_add_friend(struct _general_info * g_info) {
-	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
+	GtkWidget * window_top_level = (GtkWidget *) g_info->window_top_level;
 
 	// Save friend's username
 	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
 
-	// Add friend to user list TODO
-//	if (!current_client->add_user(username)) {
-//		clientgtk_create_message_dialog("Invalid username", "Warning", GTK_MESSAGE_WARNING);
-//
-//		// Free space
-//		free(username);
-//
-//		return;
-//	}
+	// Add friend to user list
+	if (!current_client->add_user(username)) {
+		clientgtk_create_message_dialog("Invalid username", "Warning", GTK_MESSAGE_WARNING);
 
-	// Remake main window TODO
+		// Free space
+		free(username);
+		return;
+	}
+
+	// Destroy windows
+	gtk_widget_destroy(g_info->window);
+	gtk_widget_destroy(g_info->vbox_align);
 
 	// Free space
 	free(username);
 	free(g_info);
 
-	// Destroy window
-	gtk_widget_destroy(window);
+	// Remake main interface
+	clientgtk_create_main_window(window_top_level);
 }
 
 /**
  * Create a new group
  */
 void signal_create_group(struct _general_info * g_info) {
-	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
+	GtkWidget * window_top_level = (GtkWidget *) g_info->window_top_level;
 
 	// Save friend's username
-	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
+	gchar * group = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
 
-	// TODO
-//	if (!current_client->add_user(username)) {
-//		clientgtk_create_message_dialog("Invalid group", "Warning", GTK_MESSAGE_WARNING);
-//
-//		// Free space
-//		free(group);
-//
-//		return;
-//	}
+	// Create new group
+	if (!current_client->add_group(group)) {
+		clientgtk_create_message_dialog("Invalid group", "Warning", GTK_MESSAGE_WARNING);
 
-	// Remake main window TODO
+		// Free space
+		free(group);
+		return;
+	}
+
+	// Destroy windows
+	gtk_widget_destroy(g_info->window);
+	gtk_widget_destroy(g_info->vbox_align);
 
 	// Free space
-	free(username);
+	free(group);
 	free(g_info);
 
-	// Destroy window
-	gtk_widget_destroy(window);
+	// Remake main interface
+	clientgtk_create_main_window(window_top_level);
 }
 
 /**
  * Delete an existing group
  */
 void signal_delete_group(struct _general_info * g_info) {
-	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
+	GtkWidget * window_top_level = (GtkWidget *) g_info->window_top_level;
 
 	// Save friend's username
 	gchar * group = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
@@ -95,21 +101,23 @@ void signal_delete_group(struct _general_info * g_info) {
 //		return;
 //	}
 
-	// Remake main window TODO
+	// Destroy windows
+	gtk_widget_destroy(g_info->window);
+	gtk_widget_destroy(g_info->vbox_align);
 
 	// Free space
 	free(group);
 	free(g_info);
 
-	// Destroy window
-	gtk_widget_destroy(window);
+	// Remake main interface
+	clientgtk_create_main_window(window_top_level);
 }
 
 /**
  * Delete an existing group
  */
 void signal_change_status(struct _general_info * g_info) {
-	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
+	GtkWidget * window_top_level = (GtkWidget *) g_info->window_top_level;
 
 	// Save friend's username
 	gchar * status = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
@@ -124,21 +132,23 @@ void signal_change_status(struct _general_info * g_info) {
 //		return;
 //	}
 
-	// Remake main window TODO
+	// Destroy windows
+	gtk_widget_destroy(g_info->window);
+	gtk_widget_destroy(g_info->vbox_align);
 
 	// Free space
 	free(status);
 	free(g_info);
 
-	// Destroy window
-	gtk_widget_destroy(window);
+	// Remake main interface
+	clientgtk_create_main_window(window_top_level);
 }
 
 /**
  * Change availability
  */
 void signal_change_availability(struct _general_info * g_info) {
-	GtkWidget * window = (GtkWidget *) g_info->window_top_level;
+	GtkWidget * window_top_level = (GtkWidget *) g_info->window_top_level;
 
 	// Save friend's username
 	gchar * state = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
@@ -153,14 +163,16 @@ void signal_change_availability(struct _general_info * g_info) {
 //		return;
 //	}
 
-	// Remake main window TODO
+	// Destroy windows
+	gtk_widget_destroy(g_info->window);
+	gtk_widget_destroy(g_info->vbox_align);
 
 	// Free space
 	free(state);
 	free(g_info);
 
-	// Destroy window
-	gtk_widget_destroy(window);
+	// Remake main interface
+	clientgtk_create_main_window(window_top_level);
 }
 
 /**
@@ -173,6 +185,13 @@ void signal_show_profile(GtkWidget * widget, gpointer g_client) {
 /**
  * Move user to group
  */
-void signal_move_to_group(GtkWidget * widget, gpointer g_client) {
+void signal_change_group(GtkWidget * widget, gpointer g_client) {
+	// TODO
+}
+
+/**
+ * Move user to group
+ */
+void signal_remove_user(GtkWidget * widget, gpointer g_client) {
 	// TODO
 }

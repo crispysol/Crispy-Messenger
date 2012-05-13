@@ -204,22 +204,6 @@ bool Server::register_client(int sockfd, string username, string pass, string em
 	return rc;
 }
 
-void tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ") {
-    // Skip delimiters at beginning.
-    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-    // Find first "non-delimiter".
-    string::size_type pos     = str.find_first_of(delimiters, lastPos);
-
-    while (string::npos != pos || string::npos != lastPos) {
-        // Found a token, add it to the vector.
-        tokens.push_back(str.substr(lastPos, pos - lastPos));
-        // Skip delimiters.  Note the "not_of"
-        lastPos = str.find_first_not_of(delimiters, pos);
-        // Find next "non-delimiter"
-        pos = str.find_first_of(delimiters, lastPos);
-    }
-}
-
 /**
  * Send initial info at login to user that just logged
  */
@@ -601,6 +585,11 @@ bool Server::remove_user(int sockfd, std::string username) {
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 	else
 		assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+
+	// Send friends list
+	if (rc && !send_friends_list(sockfd, myusername)) {
+		rc = false;
+	}
 		
 	return rc;
 }
@@ -641,6 +630,11 @@ bool Server::add_group(int sockfd, std::string group, string username) {
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 	else
 		assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+
+	// Send friends list
+	if (rc && !send_friends_list(sockfd, username)) {
+		rc = false;
+	}
 		
 	return rc;
 }
