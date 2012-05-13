@@ -72,7 +72,7 @@ public:
 			std::string phone, std::string email, std::string hobbies);
 
 	// Add/Remove/Edit a group
-	bool add_group(int sockfd, std::string group);
+	bool add_group(int sockfd, std::string group, std::string username);
 	bool remove_group(int sockfd, std::string group);
 	bool move_user_to_group(int sockfd, std::string username, std::string group);
 

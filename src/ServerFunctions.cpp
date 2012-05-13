@@ -30,6 +30,7 @@ using namespace std;
 
 ClientInfo::ClientInfo(string ip, int port) : ip(ip), port(port)
 {
+	this->set_username("");
 }
 
 ClientInfo::~ClientInfo() {}

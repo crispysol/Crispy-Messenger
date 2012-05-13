@@ -56,12 +56,19 @@ void stdin_command(Client *client, fd_set * read_fds) {
 				line.substr(user_pos));
 		return;
 	}
-	cout << CMD_REMOVE_USER << " send to server " << endl << flush;
+
 	if(line.find(CMD_REMOVE_USER) == 0) {
 		int user_pos = line.find(" ") + 1;
 		client->remove_user(line.substr(user_pos));
 		return;
 	}
+	
+	if(line.find(CMD_ADD_GROUP) == 0) {
+		int group_pos = line.find(" ") + 1;
+		client->add_group(line.substr(group_pos));
+		return;
+	}
+	
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
 		//end connection to server

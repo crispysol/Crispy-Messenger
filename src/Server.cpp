@@ -33,6 +33,7 @@ using namespace std;
 
 static sql::Statement	*stmt;
 
+static bool add_group_for(string group_name, string username);
 
 Server::Server() {
 	sql::mysql::MySQL_Driver *driver;
@@ -82,12 +83,9 @@ ClientInfo * Server::get_clientInfo_by_sockfd(int sockfd) {
 }
 
 /**
- * Add default group for user <username>. 
- * 
- * @return true if insert in groups table succeded, false otherwise
+ * Add group for username. Caller must verify if group <group_name> does not exist for user <username>.
  */
-static bool add_default_group(string username) {
-
+static bool add_group_for(string group_name, string username) {
 	stringstream query;
 
 	try {		
@@ -95,17 +93,26 @@ static bool add_default_group(string username) {
 		query << "INSERT INTO groups(" << GROUPS_T_ID_USER_FK << ", " <<
 			GROUPS_T_NAME << ") VALUES ((" <<
 			"SELECT id FROM users WHERE username = '" << username << "'), '" <<
-			GROUP_DEFAULT_NAME << "');";
+			 group_name << "');";
 		
 		if (stmt->executeUpdate(query.str()) != 1)
 			return false;
 		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());	
 		
 	} catch(...) {
-		cout << "Exception in add_default_group!!!" << endl;
+		dprintf("Exception in add_group %s for user %s!!!\n", group_name.c_str(), username.c_str());
 		return false;
 	}
 	return true;
+}
+
+/**
+ * Add default group for user <username>. 
+ * 
+ * @return true if insert in groups table succeded, false otherwise
+ */
+static bool add_default_group(string username) {
+	return add_group_for(GROUP_DEFAULT_NAME, username);
 }
 
 /**
@@ -583,3 +590,36 @@ bool Server::search_user(int sockfd, std::string name, std::string surname,
 	//TODO
 }
 
+/**
+ * Add group for client who sent the command. Caller function must verify username is valid.
+ */
+bool Server::add_group(int sockfd, std::string group, string username) {
+	//Verify if group already exists
+	stringstream query;
+	query << "SELECT id FROM groups WHERE name = '" << group << "' AND " << GROUPS_T_ID_USER_FK << 
+			 " = (SELECT id FROM users WHERE username = '" << username << "');";
+	bool rc;
+	
+	try {
+		sql::ResultSet *  res = stmt->executeQuery(query.str());
+		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());
+
+		if (!res->next()) {
+			// Create new group
+			rc = add_group_for(group, username);
+		}
+		else rc = false;
+		
+		delete res;
+	} catch (...) {
+		dprintf("Exception in add_group!!!\n");
+		rc = false;
+	}
+	
+	if (!rc)
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+	else
+		assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+		
+	return rc;
+}

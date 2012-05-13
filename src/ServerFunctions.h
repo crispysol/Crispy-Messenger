@@ -5,10 +5,10 @@
  *      Author: cmihail, andreea
  */
 
-#include <stdio.h>
-
 #ifndef SERVER_FUNCTIONS_H_
 #define SERVER_FUNCTIONS_H_
+
+#include <stdio.h>
 
 #include "User.h"
 
@@ -21,8 +21,9 @@
 #define CMD_REGISTER		"register"
 #define CMD_AUTH			"login"
 #define CMD_ADD_USER		"add_user"
-#define EXIT_MSG			"exit"
 #define CMD_REMOVE_USER		"remove_user"
+#define CMD_ADD_GROUP		"add_group"
+#define EXIT_MSG			"exit"
 
 #define SQL_DEBUG		"SQL"
 
@@ -66,5 +67,6 @@ void init_server(int & server_port, int & sockfd, int & fdmax, fd_set * read_fds
  * Connect to a server (only for client)
  */
 void connect_to_server(char * server_ip, int server_port,  int & socket_server, int & fdmax, fd_set * read_fds);
+
 
 #endif //define SERVER_FUNCTIONS_H_

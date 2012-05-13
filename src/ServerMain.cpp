@@ -110,13 +110,13 @@ static void client_command(string line, int sockfd, Server *&server) {
 				line.substr(email_pos));
 		return;
 	}
-
+	
+	ClientInfo *ci = server->get_clientInfo_by_sockfd(sockfd);
+	
 	if (line.find(CMD_AUTH) == 0) {
 		int user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1,
 			ip_pos = line.find(" ", pass_pos) + 1;
-			
-		ClientInfo *ci = server->get_clientInfo_by_sockfd(sockfd);
 		
 		server->authentication(sockfd,
 				line.substr(user_pos, pass_pos -1 - user_pos),
@@ -128,6 +128,11 @@ static void client_command(string line, int sockfd, Server *&server) {
 		return;
 	}
 
+	if (ci->get_username().empty()) {
+		dprintf("[SERVER]Can not execute '%s'; user is not logged in\n", line.c_str());
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		return;
+	}
 	if(line.find(CMD_ADD_USER) == 0){
 	
 		dprintf("sending add_user command\n");
@@ -139,6 +144,13 @@ static void client_command(string line, int sockfd, Server *&server) {
 	if (line.find(CMD_REMOVE_USER) == 0) {
 		int user_pos = line.find(" ") + 1;
 		server->remove_user(sockfd,line.substr(user_pos));
+		return;
+	}
+	
+	if (line.find(CMD_ADD_GROUP) == 0) {
+		int group_pos = line.find(" ") + 1;
+		
+		server->add_group(sockfd,line.substr(group_pos), ci->get_username());
 		return;
 	}
 }
