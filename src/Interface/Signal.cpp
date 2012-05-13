@@ -81,7 +81,7 @@ void signal_search_user(struct _general_info * g_info) {
 	gchar * phone = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->profile.phone)));
 	gchar * email = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->profile.email)));
 
-	// Update profile
+	// Construct user profile
 	string profile = "";
 	if (!strlen(name)) profile += string(NO_INFORMATION) + " ";
 	else profile += string(name) + " ";
@@ -91,7 +91,8 @@ void signal_search_user(struct _general_info * g_info) {
 	else profile += string(phone) + " ";
 	if (!strlen(email)) profile += string(NO_INFORMATION);
 	else profile += email;
-	cout << profile << endl;
+
+	// Search user
 	string username = current_client->search_user(profile);
 	if (username == NO_USER_FOUND) {
 		clientgtk_create_message_dialog("Invalid search", "Warning", GTK_MESSAGE_WARNING);
@@ -99,10 +100,11 @@ void signal_search_user(struct _general_info * g_info) {
 		// Free space
 		free(name); free(surname); free(phone); free(email);
 		return;
-	} else {
-		cout << username << endl;
-		// TODO
 	}
+
+	// Display user
+	clientgtk_create_message_dialog(("Username found: " + username).c_str(), "Search user result",
+			GTK_MESSAGE_INFO);
 
 	// Destroy windows
 	gtk_widget_destroy(g_info->window);

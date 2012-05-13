@@ -40,7 +40,7 @@ class Server {
 	// Database (initialized in constructor)
 	sql::Connection	*con;
 
-	// TODO
+	// Send friend list
 	bool send_friends_list(int sockfd, std::string username);
 
 public:
