@@ -2,7 +2,7 @@
  * server.cpp
  *
  *  Created on: Mar 10, 2012
- *      Author: andreea
+ *      Author: andreea, mihail, radu
  */
 
 #include <iostream>
@@ -77,9 +77,42 @@ ClientInfo * Server::get_clientInfo_by_sockfd(int sockfd) {
 	map<int, ClientInfo*>::iterator it_fdcl;
 	
 	it_fdcl = sockfd_to_clients.find(sockfd);
-	assert(it_fdcl != sockfd_to_clients.end());
+	if (it_fdcl != sockfd_to_clients.end())	
+		return it_fdcl->second;
+		
+	return NULL;
+}
+
+int Server::get_clientInfo_by_username(string username) {
+	map<string, int>::iterator it;
 	
-	return it_fdcl->second;
+	it = clients_to_sockfd.find(username);
+	if (it != clients_to_sockfd.end())
+		return it->second;
+		
+	return 0;
+}
+
+/* Send ip and port of user <username> to another user which made the request on socket <sockfd>. */
+bool Server::send_user_ip(int sockfd, std::string username) {
+
+	int rc, newsockfd ;
+	char buffer[BUFFER_LENGTH];
+	
+	newsockfd = get_clientInfo_by_username(username);
+	ClientInfo *ci = get_clientInfo_by_sockfd(newsockfd);
+	
+	if (ci == NULL) {
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		return false;	
+	}
+	
+	//send "ip port" on sockfd
+	sprintf(buffer, "%s: %s %i", CMD_CONN_CLIENT_TO_CLIENT_RES, ci->get_ip().c_str(), ci->get_port());
+	dprintf("[SERVER] sending %s of username %s\n", buffer, username.c_str());
+	assert(send(sockfd, buffer, strlen(buffer) + 1, 0) >= 0);
+	
+	return true;
 }
 
 /**
@@ -916,7 +949,7 @@ bool Server::remove_group(int sockfd, std::string group)
 /**
  * Send profile to user.
  * username: user to search for in database.
- * //TODO: Not ready
+ *
  * Liviu
  */
 bool Server::send_profile(int sockfd, std::string username) {
@@ -928,8 +961,8 @@ bool Server::send_profile(int sockfd, std::string username) {
 		sql::ResultSet * res = stmt->executeQuery(query);
 		dprintf("[SERVER] query executed\n");
 		if (res->next()) {
+			cout << "Match found!\n";
 			char buff[BUFFER_LENGTH];
-			cout << res->getString("name") << " " << res->getString("username") << "\n";
 			sprintf(buff, "%s %s %s %s %s", string(res->getString("name")).c_str(),
 							string(res->getString("surname")).c_str(),
 							string(res->getString("phone")).c_str(),
@@ -943,7 +976,7 @@ bool Server::send_profile(int sockfd, std::string username) {
 		if (res)
 			delete res;
 	} catch (sql::SQLException &e) {
-		//assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 		rc = false;
 	}
 

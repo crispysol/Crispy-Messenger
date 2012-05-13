@@ -21,7 +21,6 @@ extern Client * current_client;
 
 using namespace std;
 
-
 /**
  * Add a new friend
  */
@@ -183,6 +182,13 @@ void signal_show_profile(GtkWidget * widget, gpointer g_client) {
 }
 
 /**
+ * Update user's profile
+ */
+void signal_update_profile(GtkWidget * widget, gpointer g_client) {
+	// TODO
+}
+
+/**
  * Change user's group
  */
 void signal_change_group(GtkWidget * widget, gpointer g_client) {
@@ -192,27 +198,23 @@ void signal_change_group(GtkWidget * widget, gpointer g_client) {
 /**
  * Remove user from list
  */
-void signal_remove_user(struct _general_info * g_info) {
+void signal_remove_user(GtkWidget * widget, gpointer info) {
+	struct _general_info * g_info = (struct _general_info *) info;
 	GtkWidget * window_top_level = (GtkWidget *) g_info->window_top_level;
 
 	// Save friend's username
-	gchar * username = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
+	const char * username = g_info->client;
 
 	// Add friend to user list
-	if (!current_client->add_user(username)) {
+	if (!current_client->remove_user(username)) {
 		clientgtk_create_message_dialog("Invalid username", "Warning", GTK_MESSAGE_WARNING);
-
-		// Free space
-		free(username);
 		return;
 	}
 
 	// Destroy windows
-	gtk_widget_destroy(g_info->window);
 	gtk_widget_destroy(g_info->vbox_align);
 
 	// Free space
-	free(username);
 	free(g_info);
 
 	// Remake main interface

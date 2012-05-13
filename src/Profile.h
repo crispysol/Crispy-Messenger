@@ -17,6 +17,8 @@ class Profile {
 
 public:
 	Profile();
+	Profile(std::string, std::string, std::string,
+		std::string, std::string);
 	virtual ~Profile();
 
 	void set_name(std::string name);

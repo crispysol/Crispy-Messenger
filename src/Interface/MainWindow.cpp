@@ -81,7 +81,7 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 	}
 	add_vbox_row(new_vbox, entry, width / 1.5, 0);
 
-	// Create recovery button
+	// Create button
 	GtkWidget * button = gtk_button_new_with_label(button_text);
 	add_vbox_row(new_vbox, button, 0, 0);
 
@@ -147,6 +147,63 @@ static void change_availability_window(GtkWidget * widget, gpointer info) {
 }
 
 /**
+ * Create update profile window
+ */
+static void create_update_profile_window(GtkWidget * widget, gpointer info) {
+	struct _general_info g_info = * (struct _general_info *) info;
+
+	gint width = PROFILE_WINDOW_WIDTH, height = PROFILE_WINDOW_HEIGHT;
+	// Create new window
+	GtkWidget * window = create_new_window(width, height, (gchar *) "Update profile");
+
+	// Create vbox and it's alignment
+	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.2, 0, 0);
+	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
+
+	// Create name entry
+	create_label_field(new_vbox, string("Enter name"));
+	GtkWidget * name = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(name), MAX_PROFILE_CHARS);
+	add_vbox_row(new_vbox, name, width / 1.5, 0);
+
+	// Create surname entry
+	create_label_field(new_vbox, string("Enter surname"));
+	GtkWidget * surname = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(surname), MAX_PROFILE_CHARS);
+	add_vbox_row(new_vbox, surname, width / 1.5, 0);
+
+	// Create phone entry
+	create_label_field(new_vbox, string("Enter phone"));
+	GtkWidget * phone = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(phone), MAX_PROFILE_CHARS);
+	add_vbox_row(new_vbox, phone, width / 1.5, 0);
+
+	// Create hobbies entry
+	GtkWidget * hobbies = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(hobbies),
+			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	GtkWidget * text_view = gtk_text_view_new();
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
+	gtk_container_add(GTK_CONTAINER(hobbies), text_view);
+	create_label_field(new_vbox, string("Enter hobbies"));
+	add_vbox_row(new_vbox, hobbies, width / 1.5, height / 3);
+
+	// Create button
+	GtkWidget * button = gtk_button_new_with_label("Update profile");
+	add_vbox_row(new_vbox, button, 0, 0);
+
+	// Action on button
+	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
+	ng_info->window_top_level = g_info.window_top_level;
+	ng_info->window = window;
+	// TODO more entries
+	ng_info->vbox_align = g_info.vbox_align;
+	g_signal_connect_swapped(button, "clicked", (GCallback) signal_update_profile, (gpointer) ng_info);
+
+	gtk_widget_show_all(window);
+}
+
+/**
  * Create a entry for the context menu
  */
 inline static void create_menu_entry(GtkWidget * menu, gchar * label_text,
@@ -175,13 +232,16 @@ inline static GtkWidget * create_menu_bar_submenu(GtkWidget * menu_bar, gchar * 
 /**
  * Check number of clicks in order to create/focus a chat window
  */
-static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
+static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpointer info) {
+	struct _general_info * ng_info = (struct _general_info *) info;
+	const char * client = ng_info->client;
+	gpointer g_client = (gpointer) client;
+
 	// Check number of left clicks
 	if (GTK_IS_BUTTON(widget) && event->button == 1 &&
 			(event->type == GDK_2BUTTON_PRESS || event->type == GDK_3BUTTON_PRESS)) {
 
 		// Check if chat window already exists
-		char * client = (char *) g_client;
 		map <string, GtkWidget *>::iterator it;
 		it = map_chat_windows.find(client);
 
@@ -204,7 +264,7 @@ static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpoi
 		create_menu_entry(context_menu, (gchar *) "Send file", signal_send_file, g_client);
 		create_menu_entry(context_menu, (gchar *) "Show profile", signal_show_profile, g_client);
 		create_menu_entry(context_menu, (gchar *) "Change group", signal_change_group, g_client);
-		//create_menu_entry(context_menu, (gchar *) "Remove user", signal_remove_user, g_client);
+		create_menu_entry(context_menu, (gchar *) "Remove user", signal_remove_user, ng_info);
 
 		// Create menu
 		gtk_menu_popup(GTK_MENU(context_menu), NULL, NULL, NULL, NULL,
@@ -241,7 +301,7 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	create_menu_entry(submenu2, (gchar *) "Change availability", change_availability_window,
 			(gpointer) g_info);
 	create_menu_entry(submenu2, (gchar *) "Show my profile", execute_menu_item, (gpointer) g_info);
-	create_menu_entry(submenu2, (gchar *) "Update profile", execute_menu_item,(gpointer) g_info);
+	create_menu_entry(submenu2, (gchar *) "Update profile", create_update_profile_window, (gpointer) g_info);
 
 	GtkWidget * submenu3 = create_menu_bar_submenu(menu_bar, (gchar *) "Settings");
 	create_menu_entry(submenu3, (gchar *) "Logout", signal_logout, (gpointer) g_info);
@@ -308,6 +368,12 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 			GtkWidget * hbox = gtk_hbox_new(FALSE, 0);
 			gtk_box_pack_start(GTK_BOX(main_vbox), hbox, FALSE, FALSE, 0);
 
+			// Create client info;
+			struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
+			ng_info->window_top_level = window_top_level;
+			ng_info->vbox_align = vbox;
+			ng_info->client = client.c_str();
+
 			// Create button
 			button = gtk_button_new();
 			gtk_button_get_focus_on_click(GTK_BUTTON(button));
@@ -315,8 +381,7 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 			gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
 
 			// Action on click
-			g_signal_connect(button, "button_press_event", G_CALLBACK(check_friend_clicks),
-					(gpointer) client.c_str());
+			g_signal_connect(button, "button_press_event", G_CALLBACK(check_friend_clicks), (gpointer) ng_info);
 
 			// Button label and it's alignment
 			align = gtk_alignment_new(0, 0.5, 0, 0);

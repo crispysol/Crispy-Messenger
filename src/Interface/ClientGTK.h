@@ -8,20 +8,23 @@
 #ifndef CLIENTGTK_H_
 #define CLIENTGTK_H_
 
-#define WINDOW_TITLE		"Crispy Messenger"
-#define WINDOW_WIDTH		350
-#define WINDOW_HEIGHT		600
-#define WINDOW_BG_COLOR		"white"
+#define WINDOW_TITLE			"Crispy Messenger"
+#define WINDOW_WIDTH			350
+#define WINDOW_HEIGHT			600
+#define WINDOW_BG_COLOR			"white"
 
-#define CHAT_WINDOW_WIDTH	300
-#define CHAT_WINDOW_HEIGHT	400
-#define AUX_WINDOW_WIDTH	200
-#define AUX_WINDOW_HEIGHT	200
+#define CHAT_WINDOW_WIDTH		300
+#define CHAT_WINDOW_HEIGHT		400
+#define AUX_WINDOW_WIDTH		200
+#define AUX_WINDOW_HEIGHT		200
+#define PROFILE_WINDOW_WIDTH	300
+#define PROFILE_WINDOW_HEIGHT	400
 
-#define MIN_REGISTER_CHARS	4
-#define MAX_REGISTER_CHARS	30
-#define MAX_EMAIL_CHARS		50
-#define MAX_STATUS_CHARS	100
+#define MIN_REGISTER_CHARS		4
+#define MAX_REGISTER_CHARS		30
+#define MAX_EMAIL_CHARS			50
+#define MAX_STATUS_CHARS		100
+#define MAX_PROFILE_CHARS		15
 
 
 /**
@@ -36,7 +39,7 @@ struct _general_info {
 	GtkWidget * password2;
 	GtkWidget * email;
 	GtkWidget * entry;
-	std::string client;
+	const char * client;
 };
 
 /**
@@ -91,6 +94,11 @@ void signal_check_recovery(struct _general_info * g_info);
 void signal_send_file(GtkWidget * widget, gpointer g_client);
 
 /**
+ * Send text to friend and save it in conversation text view
+ */
+gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer g_conversation_chat);
+
+/**
  * Logout
  */
 void signal_logout(GtkWidget * widget, gpointer info);
@@ -121,14 +129,14 @@ void signal_change_status(struct _general_info * g_info);
 void signal_change_availability(struct _general_info * g_info);
 
 /**
- * Send text to friend and save it in conversation text view
- */
-gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer g_conversation_chat);
-
-/**
  * Show user's profile
  */
 void signal_show_profile(GtkWidget * widget, gpointer g_client);
+
+/**
+ * Update user's profile
+ */
+void signal_update_profile(GtkWidget * widget, gpointer g_client);
 
 /**
  * Change user's group
@@ -138,6 +146,6 @@ void signal_change_group(GtkWidget * widget, gpointer g_client);
 /**
  * Remove user from group
  */
-void signal_remove_user(struct _general_info * g_info);
+void signal_remove_user(GtkWidget * widget, gpointer info);
 
 #endif /* CLIENTGTK_H_ */

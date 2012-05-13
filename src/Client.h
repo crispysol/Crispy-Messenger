@@ -22,12 +22,10 @@ class Client : public User {
 	std::map <std::string, std::vector <User *> > groups;
 	// Map <user, offline message>
 	std::map <std::string, std::string> offline_messages;
-	//map <the_other_end_socket, friend_info>
-	std::map <int, ClientInfo*> sockfd_to_clients;
 	// Server socket
 	int server_socket;
 	// Map <sockfd, username>
-	std::map <int, std::string> connected_users;
+	std::map <std::string, int> connected_users;
 
 public:
 	Client(int server_socket);
@@ -40,7 +38,8 @@ public:
 	std::string get_ip();
 	int get_port();
 	
-	void insert_in_sockfd_to_clients(int key, ClientInfo * ci);
+	void insert_in_connected_users(std::string username, int sockfd);
+	void remove_from_connected_users(int sockfd);
 
 	/**
 	 * Communication client-server
@@ -69,8 +68,14 @@ public:
 	// Refresh a user (message sent by server when another user changes status/state)
 	bool refresh_user(User user);
 
-	// Returns socket file descriptor of the other user
-	int connect_with_user(std::string username);
+	/**
+	 * Asks for port and ip of user <username>.
+	 */
+	void connect_with_user_req(std::string username);
+	/**
+	 * Returns socket file descriptor of the other user or -1 on error.
+	 */
+	int connect_with_user_res(char* response, int & fdmax, fd_set * read_fds);
 
 	// Receive friend list
 	bool receive_friend_list(Json::Value & root);
