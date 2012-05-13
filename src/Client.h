@@ -37,6 +37,7 @@ public:
 	int get_server_socket();
 	std::string get_ip();
 	int get_port();
+	int get_socket_of_connected_user(std::string username);
 	
 	void insert_in_connected_users(std::string username, int sockfd);
 	void remove_from_connected_users(int sockfd);

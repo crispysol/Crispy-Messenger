@@ -45,6 +45,7 @@
 #define CMD_SET_STATUS			"set_status"
 #define CMD_SEARCH_USER 		"search_user"
 
+#define CONNECTED_MSG			"connected_with"
 #define EXIT_MSG			"exit"
 
 #define SQL_DEBUG			"SQL"

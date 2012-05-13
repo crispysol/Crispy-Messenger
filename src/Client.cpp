@@ -39,8 +39,32 @@ void Client::insert_in_connected_users(std::string username, int sockfd) {
 	connected_users.insert(pair<string, int> (username, sockfd));
 }
 
+/**
+ * @return socket descriptor for user <username> or -1 if this client is not connected with user <username>
+ */
+int Client::get_socket_of_connected_user(std::string username) {
+	map<string, int>::iterator it = connected_users.find(username);
+	
+	if ( it == connected_users.end())
+		return -1;
+	return it->second;
+}
+
 void Client::remove_from_connected_users(int sockfd) {
-	//TODO
+	map<string, int>::iterator it = connected_users.begin(), it_end = connected_users.end();
+	string username;
+	
+	// Determine user who hung up
+	for(; it != it_end && it->second != sockfd; it++);
+	
+	if (it == it_end)
+		return;
+		
+	username = it->first;
+	dprintf("[CLIENT] %s hung up\n", username.c_str());
+	
+	//Remove user from connected_users
+	connected_users.erase(it);
 }
 
 bool Client::register_client(std::string username, std::string pass, std::string email) {
@@ -326,10 +350,14 @@ bool Client::move_user_to_group(std::string username, std::string group){
 
 }
 /**
- * Asks for port and ip of user <username>.
+ * Asks for port and ip of user <username> if they are not already connected.
  */
 void Client::connect_with_user_req(std::string username) {
-	char buffer[BUFFER_LENGTH];
+
+	if (get_socket_of_connected_user(username) != -1) {
+		dprintf("[CLIENT] already connected with %s\n", username.c_str());
+		return;
+	}
 
 	//send request to server for (ip, port) of user <username>
 	char msg[BUFFER_LENGTH];
@@ -339,6 +367,7 @@ void Client::connect_with_user_req(std::string username) {
 
 /**
  * Returns socket file descriptor of the other user or -1 on error.
+ * @param response "CMD_..._RES ip port username"
  */
 int Client::connect_with_user_res(string response, int & fdmax, fd_set * read_fds) {
 	int rc, newsocket, port;
@@ -367,14 +396,16 @@ int Client::connect_with_user_res(string response, int & fdmax, fd_set * read_fd
 	
 	//connect_to_server(consider the other client the server)
 	connect_to_server(ip, port, newsocket, fdmax, read_fds);
-	dprintf("connected to %s\n", username);
-	insert_in_connected_users(string(username), newsocket);
 	
 	//return socket from connect_to server
 	return newsocket;
 
 }
 
+
+/**
+ * Send message to user <username_dst> through server.
+ */
 bool Client::send_message(string username_dst, string message) {
 	char buffer[BUFFER_LENGTH];
 	
