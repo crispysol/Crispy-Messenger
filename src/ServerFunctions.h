@@ -23,6 +23,8 @@
 #define CMD_ADD_USER		"add_user"
 #define CMD_REMOVE_USER		"remove_user"
 #define CMD_ADD_GROUP		"add_group"
+#define CMD_DEL_GROUP		"del_group"
+#define CMD_MV_USER		"move_user_to_group"
 #define EXIT_MSG			"exit"
 
 #define SQL_DEBUG		"SQL"

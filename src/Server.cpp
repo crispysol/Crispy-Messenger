@@ -634,3 +634,24 @@ bool Server::add_group(int sockfd, std::string group, string username) {
 		
 	return rc;
 }
+
+
+/*
+* Move user to group 
+* (Radu)
+*/
+bool move_user_to_group(int sockfd, std::string username, std::string group)
+{
+	
+}
+
+/*
+* Remove a group. Make sure group is empty
+* (Radu)
+*/
+bool remove_group(int sockfd, std::string group)
+{
+}
+
+
+	
