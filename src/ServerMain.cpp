@@ -160,7 +160,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 		server->send_user_ip(sockfd, line.substr(username_pos));
 		return;
 	}
-	
+
 	if (line.find(CMD_GET_PROFILE) == 0) {
 		int user_pos = line.find(" ") + 1;
 

@@ -10,6 +10,11 @@
 
 Profile::Profile() {}
 
+Profile::Profile(std::string name, std::string surname,
+		 std::string phone, std::string email, std::string hobbies):
+	name(name), surname(surname), phone(phone), email(email), hobbies(hobbies)
+{}
+		 
 Profile::~Profile() {}
 
 void Profile::set_name(std::string name) {

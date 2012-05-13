@@ -692,7 +692,7 @@ bool remove_group(int sockfd, std::string group)
 /**
  * Send profile to user.
  * username: user to search for in database.
- * //TODO: Not ready
+ *
  * Liviu
  */
 bool Server::send_profile(int sockfd, std::string username) {
@@ -704,8 +704,8 @@ bool Server::send_profile(int sockfd, std::string username) {
 		sql::ResultSet * res = stmt->executeQuery(query);
 		dprintf("[SERVER] query executed\n");
 		if (res->next()) {
+			cout << "Match found!\n";
 			char buff[BUFFER_LENGTH];
-			cout << res->getString("name") << " " << res->getString("username") << "\n";
 			sprintf(buff, "%s %s %s %s %s", string(res->getString("name")).c_str(),
 							string(res->getString("surname")).c_str(),
 							string(res->getString("phone")).c_str(),
@@ -719,7 +719,7 @@ bool Server::send_profile(int sockfd, std::string username) {
 		if (res)
 			delete res;
 	} catch (sql::SQLException &e) {
-		//assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 		rc = false;
 	}
 
