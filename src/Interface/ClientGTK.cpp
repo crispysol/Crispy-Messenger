@@ -49,10 +49,6 @@ Client * current_client;
 map <string, GtkWidget *> map_chat_windows;
 map <string, GtkWidget *> map_chat_text;
 
-// TODO
-bool create_window_ok = false;
-string global_friend_username;
-
 /**
  * Check login values and execute create main interface if everything is ok
  */
@@ -231,9 +227,7 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer 
 		struct _general_info * g_info = (struct _general_info *) info;
 		GtkWidget * conversation_chat = (GtkWidget *) g_info->window;
 
-		// TODO lock
 		// Get text from input
-//		gdk_threads_enter();
 		GtkTextBuffer * buffer1 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(entry_chat));
 		GtkTextIter start, end;
 		gtk_text_buffer_get_bounds(buffer1, &start, &end);
@@ -253,7 +247,8 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer 
 		gtk_text_buffer_set_text(buffer2, text.c_str(), -1);
 
 		// Send message to friend
-		current_client->send_message(g_info->client, new_text);
+		cout << "USER: " << g_info->friend_username << endl;
+		current_client->send_message(g_info->friend_username, new_text);
 
 		// Free space
 		free(old_text);
@@ -261,7 +256,6 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer 
 
 		// Delete all text from input
 		gtk_text_buffer_set_text(buffer1, "", -1);
-//		gdk_threads_leave();
 
 		return TRUE;
 	}
@@ -328,15 +322,15 @@ void receive_msg(string friend_username, string message) {
 // Declare buffer
 char buffer[BUFFER_LENGTH];
 
-// TODO
+/**
+ * Local server run
+ */
 void * start_thread(void * ptr_thread) {
-	// Run local server
 	int n, newsockfd;
 	string ip;
 
-	FD_ZERO(&tmp_fds);
-
 	// Main loop
+	FD_ZERO(&tmp_fds);
 	for (;;) {
 		tmp_fds = read_fds;
 		assert(select(fdmax + 1, &tmp_fds, NULL, NULL, NULL) != -1);
