@@ -2,7 +2,7 @@
  * client.cpp
  *
  *  Created on: Mar 10, 2012
- *      Author: mihail, andreea, radu
+ *      Author: mihail, andreea, radu, liviu
  */
 
 #include <iostream>
@@ -27,6 +27,8 @@ int client_port = 0;
 Client * client;
 
 static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds);
+static void client_command(string buffer, int sockfd);
+static void stdin_command(Client *client, fd_set * read_fds);
 
 /**
  * Process message from server.
@@ -37,7 +39,6 @@ static void process_server_msg(string buffer, int & fdmax, fd_set * read_fds) {
 
 	if(buffer.find(CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
 		// connect with user
-		printf("buffer %s\n", buffer.c_str());
 		int sockfd = client->connect_with_user_res(buffer, fdmax, read_fds);
 		dprintf("[DONE, sockfd %i]%s\n", sockfd, buffer.c_str());
 		if (sockfd == -1)
@@ -63,10 +64,11 @@ static void process_server_msg(string buffer, int & fdmax, fd_set * read_fds) {
 		
 	}
 }
+
 /**
  * Execute command received from STDIN
  */
-void stdin_command(Client *client, fd_set * read_fds) {
+static void stdin_command(Client *client, fd_set * read_fds) {
 	string line;
 	getline(cin, line);
 
@@ -131,9 +133,7 @@ void stdin_command(Client *client, fd_set * read_fds) {
 						line.substr(group_pos)
 						);
 		return;
-	}
-	
-	
+	}	
 
 	if (line.find(CMD_GET_PROFILE) == 0) {
 		
@@ -173,30 +173,47 @@ void stdin_command(Client *client, fd_set * read_fds) {
 	}
 }
 
-static void client_command(char * buffer, int sockfd) {	
 
-	if (strstr(buffer, SUCCESS_MSG) == 0) {
-		dprintf("just start tweeting...;)\n");
-		return;
-	}
-	
-	if (strstr(buffer, ERR_MSG) == 0) {
-		dprintf("cannot start tweeting :( error encountered\n");
-		return;
-	}
+/**
+ * Process message from other client.
+ */
+static void client_command(string buffer, int sockfd) {	
+	if (buffer.find(CMD_CONN_REQ_FROM) == 0) {
+		//get username of client which initiated connection
+		char username[BUFFER_LENGTH];
+		int user_pos = buffer.find(' ') + 1;
 		
-	if (strstr(buffer, CMD_CONN_REQ_FROM) == 0) {
-		//get username
-		char *username = strchr(buffer, ' ');
-		if (!username) {
-			dprintf("%s wrong format (correct format is '%s username')\n", CMD_CONN_REQ_FROM, CMD_CONN_REQ_FROM);
+		if (user_pos == 0) {
+			dprintf("[CLIENT]%s wrong format (correct format is '%s username')\n", CMD_CONN_REQ_FROM, 
+				CMD_CONN_REQ_FROM);
 			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 			return;
 		}
 		
+		// store socket of the other end
+		memset(username, 0, strlen(username));
+		buffer.copy(username, buffer.length() - user_pos, user_pos);
+		dprintf("[CLIENT]connected with %s\n", username);
 		client->insert_in_connected_users(username, sockfd);
-		assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 		
+		sprintf(username, "%s %s", CONNECTED_MSG, client->get_username().c_str());
+		
+		// Tell the other end connection is established.
+		assert(send(sockfd, username, strlen(username) + 1, 0) >= 0);
+		
+		return;
+	}
+
+	if (buffer.find(CONNECTED_MSG) == 0) {
+		int user_pos 	= buffer.find(" ") + 1;
+		string username = buffer.substr(user_pos);
+		dprintf("[CLIENT]just start sending file to %s\n", username.c_str());
+		client->insert_in_connected_users(username, sockfd);
+		return;
+	}
+	
+	if (buffer.find(ERR_MSG) == 0) {
+		dprintf("[CLIENT]cannot start sending file :( error encountered\n");
 		return;
 	}
 	
@@ -221,6 +238,7 @@ int run_server(char * server_ip, int server_port) {
 	// to communicate directly with this server)
 	connect_to_server(server_ip, server_port, socket_server, fdmax, &read_fds);
 	sprintf(buffer, "%s %i", INFO_CLIENT_PORT, client_port);
+	dprintf("sending port %i to server\n", client_port);
 	assert(send(socket_server, buffer, strlen(buffer) + 1, 0) >= 0);
 
 	// Client instance
@@ -236,7 +254,6 @@ int run_server(char * server_ip, int server_port) {
 			if (FD_ISSET(i, &tmp_fds)) {
 				// New connection
 				if (i == sockfd) {
-					dprintf("received new connection on %i\n", i);
 					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd);
 					continue;
 				}
@@ -250,7 +267,12 @@ int run_server(char * server_ip, int server_port) {
 				// Receive data from server
 				if (i == socket_server) {
 					n = recv(i, buffer, sizeof(buffer), 0);
-					assert(n >= 0); // TODO test if we have to exit
+					if (n <= 0) {
+						dprintf("server hung up\n");
+						end_connection(i, &read_fds);
+						goto exit_label;
+						break;
+					}
 					dprintf("[CLIENT]received from SERVER: %s\n", buffer);
 					process_server_msg(string(buffer), fdmax, &read_fds);
 					continue;
@@ -258,17 +280,16 @@ int run_server(char * server_ip, int server_port) {
 
 				// Received data from another client
 				if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
-					assert(n == -1);
 					end_connection(i, &read_fds);
 					client->remove_from_connected_users(i);
 				} else {
 					dprintf("received from client: %s\n", buffer);
-					client_command(buffer, i);
+					client_command(string(buffer), i);
 				}
 			}
 		}
 	}
-
+exit_label:
 	close(sockfd);
 	return 0;
 }

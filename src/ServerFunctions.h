@@ -41,6 +41,7 @@
 #define CMD_SEND_MSG			"send_msg"
 #define INFO_CLIENT_PORT		"info_port"
 
+#define CONNECTED_MSG			"connected_with"
 #define EXIT_MSG			"exit"
 
 #define SQL_DEBUG			"SQL"

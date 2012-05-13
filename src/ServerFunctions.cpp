@@ -26,7 +26,7 @@ using namespace std;
 
 // Defines
 #define MAX_CLIENTS		100
-#define BANNER			"OK"
+#define BANNER			"WELCOME"
 
 ClientInfo::ClientInfo(string ip) : ip(ip), port(-1) 
 {
@@ -73,7 +73,6 @@ void new_connection(int sockfd, int & fdmax, fd_set * read_fds, string &ip, int 
 
 	ip = string(inet_ntoa(cli_addr.sin_addr));
 	newport = cli_addr.sin_port;
-	cout << "[SERVER] New connection from: " << ip << " on port " << newport << endl;
 
 	// Send 'welcome' message
 	assert(send(newsockfd, BANNER, strlen(BANNER) + 1, 0) >= 0);

@@ -31,15 +31,21 @@ static void client_command(string line, int sockfd, Server *&server);
 /**
  * Execute command received from STDIN
  */
-static void stdin_command() {
+static void stdin_command(fd_set * read_fds) {
 	string line;
 	getline(cin, line);
 
-	// Tratarea comenzii de la tastatura TODO
-		if (line.find(EXIT_MSG) == 0) {
-			//TODO end all connections
-			exit(EXIT_SUCCESS);
-		}
+	// Tratarea comenzii de la tastatura
+	if (line.find(EXIT_MSG) == 0) {
+		//end all connections
+		map<int, ClientInfo*> clients 		= server->get_sockfd_to_clients();
+		map<int, ClientInfo*>::iterator it 	= clients.begin(), 
+						it_end	= clients.end();
+		for (; it != it_end; it++)
+			end_connection(it->first, read_fds);	
+					
+		exit(EXIT_SUCCESS);
+	}
 }
 
 static void announce_friends_online_status(int sockfd) {
@@ -112,6 +118,19 @@ static void client_command(string line, int sockfd, Server *&server) {
 	}
 	
 	ClientInfo *ci = server->get_clientInfo_by_sockfd(sockfd);
+	
+	
+	if (line.find(INFO_CLIENT_PORT) == 0) {
+		int	port_pos = line.find(" ") + 1, port;
+		char	port_ch[6];
+		assert(line.copy(port_ch, line.length() - port_pos, port_pos) > 0);
+		port = atoi(port_ch);
+		dprintf("[SERVER]received port %i\n", port);
+		assert(ci != NULL);
+		ci->set_port(port);
+		
+		return;
+	}
 	
 	if (line.find(CMD_AUTH) == 0) {
 		int 	user_pos = line.find(" ") + 1,
@@ -212,20 +231,6 @@ static void client_command(string line, int sockfd, Server *&server) {
 				line.substr(msg_pos));
 		return;
 	}
-	
-	if (line.find(INFO_CLIENT_PORT) == 0) {
-		int	port_pos = line.find(" ") + 1, port;
-		char	port_ch[6];
-		assert(line.copy(port_ch, line.length() - port_pos, port_pos) > 0);
-		port = atoi(port_ch);
-		dprintf("received port %i\n", port);
-		ClientInfo *ci = server->get_clientInfo_by_sockfd(sockfd);
-		assert(ci != NULL);
-		ci->set_port(port);
-		
-		return;
-	}
-
 }
 
 /**
@@ -233,7 +238,7 @@ static void client_command(string line, int sockfd, Server *&server) {
  */
 int run_server(int server_port) {
 	char buffer[BUFFER_LENGTH];
-	int sockfd, fdmax, n, newsockfd, newport;
+	int sockfd, fdmax, n, newsockfd;
 	string ip;
 	fd_set read_fds, tmp_fds;
 	FD_ZERO(&tmp_fds);
@@ -261,7 +266,7 @@ int run_server(int server_port) {
 
 				// Execute command from STDIN
 				if (i == STDIN_FILENO) {
-					stdin_command();
+					stdin_command(&read_fds);
 					continue;
 				}
 
