@@ -154,8 +154,6 @@ static void client_command(string line, int sockfd, Server *&server) {
 		return;
 	}
 
-	
-
 	if(line.find(CMD_DEL_GROUP) == 0) {
 		int group_pos = line.find(" ") + 1;
 		server->remove_group(sockfd,line.substr(group_pos));
@@ -172,9 +170,8 @@ static void client_command(string line, int sockfd, Server *&server) {
 						);
 		return;
 	}
-
 	 
-	 if (line.find(CMD_CONN_CLIENT_TO_CLIENT_REQ) == 0) {
+	if (line.find(CMD_CONN_CLIENT_TO_CLIENT_REQ) == 0) {
 		int username_pos = line.find(" ") + 1;
 		dprintf("[SERVER] processing %s request from %s\n", 
 			CMD_CONN_CLIENT_TO_CLIENT_REQ, ci->get_username().c_str());
@@ -215,6 +212,19 @@ static void client_command(string line, int sockfd, Server *&server) {
 				line.substr(msg_pos));
 		return;
 	}
+	
+	if (line.find(INFO_CLIENT_PORT) == 0) {
+		int	port_pos = line.find(" ") + 1, port;
+		char	port_ch[6];
+		assert(line.copy(port_ch, line.length() - port_pos, port_pos) > 0);
+		port = atoi(port_ch);
+		dprintf("received port %i\n", port);
+		ClientInfo *ci = server->get_clientInfo_by_sockfd(sockfd);
+		assert(ci != NULL);
+		ci->set_port(port);
+		
+		return;
+	}
 
 }
 
@@ -243,9 +253,9 @@ int run_server(int server_port) {
 			if (FD_ISSET(i, &tmp_fds)) {
 				// New connection
 				if (i == sockfd) {
-					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
+					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd);
 					//store information of client connected on newsockfd
-					server->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
+					server->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip));
 					continue;
 				}
 

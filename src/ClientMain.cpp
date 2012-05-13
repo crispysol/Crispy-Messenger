@@ -207,16 +207,21 @@ static void client_command(char * buffer, int sockfd) {
  */
 int run_server(char * server_ip, int server_port) {
 	char buffer[BUFFER_LENGTH];
-	int sockfd, socket_server, fdmax, n, newsockfd, newport;
+	int sockfd, socket_server, fdmax, n, newsockfd;
 	string ip;
 	fd_set read_fds, tmp_fds;
 	FD_ZERO(&tmp_fds);
 
-	// Init localhost server (communication with other clients
+	// Init localhost server (communication with other clients)
 	init_server(client_port, sockfd, fdmax, &read_fds);
 
-	// Connect to main server
+	dprintf("Client has port %i\n", client_port);
+
+	// Connect to main server and send port of this client (port which be server port for the other clients who want
+	// to communicate directly with this server)
 	connect_to_server(server_ip, server_port, socket_server, fdmax, &read_fds);
+	sprintf(buffer, "%s %i", INFO_CLIENT_PORT, client_port);
+	assert(send(socket_server, buffer, strlen(buffer) + 1, 0) >= 0);
 
 	// Client instance
 	client = new Client(socket_server);
@@ -232,7 +237,7 @@ int run_server(char * server_ip, int server_port) {
 				// New connection
 				if (i == sockfd) {
 					dprintf("received new connection on %i\n", i);
-					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
+					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd);
 					continue;
 				}
 

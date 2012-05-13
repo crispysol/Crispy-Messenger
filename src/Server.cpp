@@ -112,7 +112,8 @@ bool Server::send_user_ip(int sockfd, std::string username) {
 	}
 	ClientInfo *ci = get_clientInfo_by_sockfd(newsockfd);
 	
-	if (ci == NULL) {
+	if (ci == NULL || ci->get_port() == -1) {
+		// destination user is not logged in
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 		return false;	
 	}

@@ -28,6 +28,10 @@ using namespace std;
 #define MAX_CLIENTS		100
 #define BANNER			"OK"
 
+ClientInfo::ClientInfo(string ip) : ip(ip), port(-1) 
+{
+}
+
 ClientInfo::ClientInfo(string ip, int port) : ip(ip), port(port)
 {
 	this->set_username("");
@@ -39,6 +43,10 @@ string ClientInfo::get_ip() {
 	return ip;
 }
 
+void ClientInfo::set_port(int _port) {
+	port = _port;
+}
+
 int ClientInfo::get_port() {
 	return port;
 }
@@ -48,9 +56,9 @@ int ClientInfo::get_port() {
  * that the server can keep track of connections (i.e. map with key newsockfd, so that when something is received on 
  * newsockfd, the server can send back the corresponding ip and port).
  */
-void new_connection(int sockfd, int & fdmax, fd_set * read_fds, string &ip, int &newsockfd, int &newport) {
+void new_connection(int sockfd, int & fdmax, fd_set * read_fds, string &ip, int &newsockfd) {
 	struct sockaddr_in cli_addr;
-	int clilen = sizeof(cli_addr);
+	int clilen = sizeof(cli_addr), newport;
 
 	// Accept new connection
 	newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr,
