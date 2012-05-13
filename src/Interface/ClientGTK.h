@@ -36,7 +36,7 @@ struct _general_info {
 	GtkWidget * password2;
 	GtkWidget * email;
 	GtkWidget * entry;
-	std::string client;
+	const char * client;
 };
 
 /**
@@ -138,6 +138,6 @@ void signal_change_group(GtkWidget * widget, gpointer g_client);
 /**
  * Remove user from group
  */
-void signal_remove_user(struct _general_info * g_info);
+void signal_remove_user(GtkWidget * widget, gpointer info);
 
 #endif /* CLIENTGTK_H_ */

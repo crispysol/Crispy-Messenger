@@ -175,13 +175,16 @@ inline static GtkWidget * create_menu_bar_submenu(GtkWidget * menu_bar, gchar * 
 /**
  * Check number of clicks in order to create/focus a chat window
  */
-static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
+static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpointer info) {
+	struct _general_info * ng_info = (struct _general_info *) info;
+	const char * client = ng_info->client;
+	gpointer g_client = (gpointer) client;
+
 	// Check number of left clicks
 	if (GTK_IS_BUTTON(widget) && event->button == 1 &&
 			(event->type == GDK_2BUTTON_PRESS || event->type == GDK_3BUTTON_PRESS)) {
 
 		// Check if chat window already exists
-		char * client = (char *) g_client;
 		map <string, GtkWidget *>::iterator it;
 		it = map_chat_windows.find(client);
 
@@ -204,7 +207,7 @@ static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpoi
 		create_menu_entry(context_menu, (gchar *) "Send file", signal_send_file, g_client);
 		create_menu_entry(context_menu, (gchar *) "Show profile", signal_show_profile, g_client);
 		create_menu_entry(context_menu, (gchar *) "Change group", signal_change_group, g_client);
-		//create_menu_entry(context_menu, (gchar *) "Remove user", signal_remove_user, g_client);
+		create_menu_entry(context_menu, (gchar *) "Remove user", signal_remove_user, ng_info);
 
 		// Create menu
 		gtk_menu_popup(GTK_MENU(context_menu), NULL, NULL, NULL, NULL,
@@ -308,6 +311,12 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 			GtkWidget * hbox = gtk_hbox_new(FALSE, 0);
 			gtk_box_pack_start(GTK_BOX(main_vbox), hbox, FALSE, FALSE, 0);
 
+			// Create client info;
+			struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
+			ng_info->window_top_level = window_top_level;
+			ng_info->vbox_align = vbox;
+			ng_info->client = client.c_str();
+
 			// Create button
 			button = gtk_button_new();
 			gtk_button_get_focus_on_click(GTK_BUTTON(button));
@@ -315,8 +324,7 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 			gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
 
 			// Action on click
-			g_signal_connect(button, "button_press_event", G_CALLBACK(check_friend_clicks),
-					(gpointer) client.c_str());
+			g_signal_connect(button, "button_press_event", G_CALLBACK(check_friend_clicks), (gpointer) ng_info);
 
 			// Button label and it's alignment
 			align = gtk_alignment_new(0, 0.5, 0, 0);
