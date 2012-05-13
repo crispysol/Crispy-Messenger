@@ -204,3 +204,24 @@ bool Client::add_group(std::string group) {
 
 	return true;
 }
+
+Profile Client::get_profile(std::string username) {
+	int rc;
+	char buff[BUFFER_LENGTH];
+
+	//send username to server_socket
+	sprintf(buff, "%s %s", CMD_GET_PROFILE, username.c_str());
+	assert(send(server_socket, buff, strlen(buff) + 1, 0) >= 0);
+
+	memset(buff, 0, BUFFER_LENGTH);
+
+	//receive response form server_socket
+	rc = recv(server_socket, buff, sizeof(buff), 0);
+	assert(rc >= 0);
+	dprintf("Received from server: %s\n", buff);
+}
+
+bool Client::update_profile(std::string name, std::string surname, std::string phone,
+		std::string email, std::string hobbies) {
+	return true;
+}

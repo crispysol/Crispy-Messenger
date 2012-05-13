@@ -657,5 +657,50 @@ bool remove_group(int sockfd, std::string group)
 {
 }
 
+/**
+ * Send profile to user.
+ * username: user to search for in database.
+ * //TODO: Not ready
+ * Liviu
+ */
+bool Server::send_profile(int sockfd, std::string username) {
+	int rc = true;
+	string query = string("SELECT name, surname, phone, email, hobbies"
+			      " FROM users WHERE username = '").append(username).append("';");
+	cout << "Searching for " << username << "\n" << query << "\n";
+	try {
+		sql::ResultSet * res = stmt->executeQuery(query);
+		dprintf("[SERVER] query executed\n");
+		if (res->next()) {
+			char buff[BUFFER_LENGTH];
+			cout << res->getString("name") << " " << res->getString("username") << "\n";
+			sprintf(buff, "%s %s %s %s %s", string(res->getString("name")).c_str(),
+							string(res->getString("surname")).c_str(),
+							string(res->getString("phone")).c_str(),
+							string(res->getString("email")).c_str(),
+							string(res->getString("hobbies")).c_str());
+			assert(send(sockfd, buff, strlen(buff) + 1, 0) >= 0);
+		} else {
+			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+			rc = false;
+		}
+		if (res)
+			delete res;
+	} catch (sql::SQLException &e) {
+		//assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		rc = false;
+	}
 
-	
+	return rc;
+}
+
+/**
+ * Updates a user profile.
+ * //TODO: Not ready.
+ *
+ * Liviu
+ */
+bool Server::update_profile(int sockfd, std::string name, std::string surname,
+			std::string phone, std::string email, std::string hobbies) {
+	return true;
+}

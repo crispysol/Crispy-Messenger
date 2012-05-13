@@ -25,6 +25,8 @@
 #define CMD_REMOVE_USER		"remove_user"
 #define CMD_ADD_GROUP		"add_group"
 #define CMD_DEL_GROUP		"del_group"
+#define CMD_GET_PROFILE		"get_profile"
+#define CMD_UPDATE_PROFILE	"update_profile"
 #define CMD_MV_USER		"move_user_to_group"
 #define EXIT_MSG			"exit"
 
