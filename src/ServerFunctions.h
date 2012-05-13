@@ -33,6 +33,7 @@
 #define CMD_MV_USER			"move_user_to_group"
 #define CMD_CONN_CLIENT_TO_CLIENT_REQ	"connect_with_user"
 #define CMD_CONN_CLIENT_TO_CLIENT_RES	"connect_with_user_res"
+#define CMD_CONN_REQ_FROM		"connect_req_from"
 
 #define EXIT_MSG			"exit"
 

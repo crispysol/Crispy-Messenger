@@ -77,36 +77,39 @@ ClientInfo * Server::get_clientInfo_by_sockfd(int sockfd) {
 	map<int, ClientInfo*>::iterator it_fdcl;
 	
 	it_fdcl = sockfd_to_clients.find(sockfd);
-	assert(it_fdcl != sockfd_to_clients.end());
-	
-	return it_fdcl->second;
-}
-
-ClientInfo* get_clientInfo_by_username(string username) {
-	map<int, ClientInfo*>::iterator it;
-	
-	it = client_to_sockfd.find(username);
-	if (it != client_to_sockfd.end())
-		return it->second;
+	if (it_fdcl != sockfd_to_clients.end())	
+		return it_fdcl->second;
 		
 	return NULL;
 }
 
-bool Server::send_user_ip(int sockfd, std::string username) {
-	int rc;
-	char buffer[BUFFER_LENGTH];
-	ClientInfo *ci;
+int Server::get_clientInfo_by_username(string username) {
+	map<string, int>::iterator it;
 	
-	ci = get_clientInfo_by_username(username);
+	it = clients_to_sockfd.find(username);
+	if (it != clients_to_sockfd.end())
+		return it->second;
+		
+	return 0;
+}
+
+bool Server::send_user_ip(int sockfd, std::string username) {
+//TODO review
+	int rc, newsockfd ;
+	char buffer[BUFFER_LENGTH];
+	
+	newsockfd = get_clientInfo_by_username(username);
+	ClientInfo *ci = get_clientInfo_by_sockfd(newsockfd);
+	
 	if (ci == NULL) {
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 		return false;	
 	}
 	
 	//send "ip port" on sockfd
-	sprintf(buffer, "%s: %s %i", CMD_CONN_CLIENT_TO_CLIENT_RES, ci->get_ip().c_str(), ci->get_port().c_str());
+	sprintf(buffer, "%s: %s %i", CMD_CONN_CLIENT_TO_CLIENT_RES, ci->get_ip().c_str(), ci->get_port());
 	dprintf("[SERVER] sending %s of username %s\n", buffer, username.c_str());
-	assert(send(server_socket, buffer, strlen(buffer) + 1, 0) >= 0);
+	assert(send(sockfd, buffer, strlen(buffer) + 1, 0) >= 0);
 	
 	return true;
 }

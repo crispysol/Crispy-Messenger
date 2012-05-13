@@ -11,7 +11,6 @@
 #include <cstring>
 
 #include <fcntl.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -24,25 +23,15 @@
 using namespace std;
 
 int client_port = 0;
-Client * client;
 
-static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds);
+static void process_server_msg(char * buffer);
 
 /**
  * Process message from server.
  */
 static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds) {
-	if(strstr(buffer, CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
-		// connect with user
-		int sockfd = client->connect_with_user_res(buffer, fdmax, read_fds);
-		// send CONN_REQ_FROM
-		if (sockfd != -1) {
-		//send username, pass, email to server_socket
-		char msg[BUFFER_LENGTH];
-		sprintf(msg, "%s %s", CMD_CONN_REQ_FROM, client->get_username().c_str());
-		assert(send(client->get_server_socket(), msg, strlen(msg) + 1, 0) >= 0);
-		}
-		
+	if(strstr(CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
+		connect_with_user_res(buffer, fdmax, read_fds);
 		return;
 	}
 }
@@ -53,7 +42,7 @@ void stdin_command(Client *client, fd_set * read_fds) {
 	string line;
 	getline(cin, line);
 
-	// Tratarea comenzii de la tastatura
+	// Tratarea comenzii de la tastatura TODO
 	if (line.find(CMD_REGISTER) == 0) {
 		int user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1,
@@ -67,11 +56,9 @@ void stdin_command(Client *client, fd_set * read_fds) {
 	if (line.find(CMD_AUTH) == 0) {
 		int user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1;
-		string username = line.substr(user_pos, pass_pos -1 - user_pos);
 		client->authentication(
-				username,
+				line.substr(user_pos, pass_pos -1 - user_pos),
 				line.substr(pass_pos));
-		client->set_username(username);
 		return;
 	}
 	if(line.find(CMD_ADD_USER) == 0){
@@ -92,12 +79,15 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		client->add_group(line.substr(group_pos));
 		return;
 	}
+<<<<<<< HEAD
 	
 	if(line.find(CMD_CONN_CLIENT_TO_CLIENT_REQ) == 0) {
 		int user_pos = line.find(" ") + 1;
 		client->connect_with_user_req(line.substr(user_pos));
 		return;
 	}
+
+=======
 
 	if (line.find(CMD_GET_PROFILE) == 0) {
 		
@@ -110,24 +100,12 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		//TODO
 	}
 
+>>>>>>> 448948bc620d72fe86278bbf4a0b61b1ad4cc0d2
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
 		//end connection to server
 		end_connection(client->get_server_socket(), read_fds);
 		exit(EXIT_SUCCESS);
-	}
-}
-
-static void client_command(char * buffer, int sockfd) {
-	if (buffer == NULL || strcmp(buffer, ERR_MSG)) {
-		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
-		return;
-	}
-		
-	if (strstr(buffer, CMD_CONN_REQ_FROM) == 0) {
-		//TODO get username
-//		client->insert_in_connected_users(username, sockfd);
-		assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 	}
 }
 
@@ -148,7 +126,7 @@ int run_server(char * server_ip, int server_port) {
 	connect_to_server(server_ip, server_port, socket_server, fdmax, &read_fds);
 
 	// Client instance
-	client = new Client(socket_server);
+	Client *client = new Client(socket_server);
 
 	// Main loop
 	for (;;) {
@@ -161,6 +139,7 @@ int run_server(char * server_ip, int server_port) {
 				// New connection
 				if (i == sockfd) {
 					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
+					//client->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
 					continue;
 				}
 
@@ -175,7 +154,7 @@ int run_server(char * server_ip, int server_port) {
 					n = recv(i, buffer, sizeof(buffer), 0);
 					assert(n >= 0); // TODO test if we have to exit
 					dprintf("[CLIENT]received from SERVER: %s\n", buffer);
-					process_server_msg(buffer, fdmax, &read_fds);
+					process_server_msg(buffer, fdmax, read_fds);
 					continue;
 				}
 
@@ -185,8 +164,9 @@ int run_server(char * server_ip, int server_port) {
 					end_connection(i, &read_fds);
 					//TODO remove connection from connected_users list
 				} else {
-					dprintf("received from client: %s\n", buffer);
-					client_command(buffer, i);
+					//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),
+						//	&database, result); TODO
+					cout << "TODO" << buffer << endl; //
 				}
 			}
 		}

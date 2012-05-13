@@ -25,7 +25,7 @@ class Client : public User {
 	// Server socket
 	int server_socket;
 	// Map <sockfd, username>
-	std::map <std::string, sockfd> connected_users;
+	std::map <std::string, int> connected_users;
 
 public:
 	Client(int server_socket);

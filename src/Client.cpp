@@ -247,16 +247,16 @@ int Client::connect_with_user_res(char* response, int & fdmax, fd_set * read_fds
 	char buffer[BUFFER_LENGTH];
 	
 	//receive port and ip from server	
-	if (response == NULL || strmcp(response, ERR_MSG) == 0)
+	if (response == NULL || strcmp(response, ERR_MSG) == 0)
 		return -1;
 	
-	sscanf(response, "%s: %s %i", buffer, ip, port);
+	sscanf(response, "%s: %s %i", buffer, ip, &port);
 	dprintf("received from server: %s %s %i\n", buffer, ip, port);
 	
 	//connect_to_server(consider the other client the server)
 	connect_to_server(ip, port, newsocket, fdmax, read_fds);
-	insert_in_connected_users(username, newsockfd);
+	insert_in_connected_users(get_username(), newsocket);
 	
 	//return socket from connect_to server
-	return newsockfd;
+	return newsocket;
 }

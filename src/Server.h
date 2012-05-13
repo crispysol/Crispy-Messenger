@@ -36,7 +36,7 @@ class Server {
 	// Map <sockfd, client info>
 	std::map <int, ClientInfo*> sockfd_to_clients;
 	// Map <username, sockfd>
-	std::map <std::string, ClientInfo*> clients_to_sockfd;
+	std::map <std::string, int> clients_to_sockfd;
 	// Database (initialized in constructor)
 	sql::Connection	*con;
 
@@ -54,7 +54,7 @@ public:
 	/* Return value in sockfd_to_clients with key <sockfd> */
 	ClientInfo * get_clientInfo_by_sockfd(int sockfd);
 	/* Return connection info of client <username>  */
-	ClientInfo* get_clientInfo_by_username(std::string username); 
+	int get_clientInfo_by_username(std::string username); 
 
 	//TODO bool process_protocol(std::string username, std::string pass, std::string email); TODO in main and for client too
 	/**
