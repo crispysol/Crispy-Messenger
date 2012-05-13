@@ -77,7 +77,7 @@ C: del_group group_name
 S: OK | ERR
 
 #10 plasare prieten intr-un grup
-C: move_user_to_group user
+C: move_user_to_group user group
 S: OK | ERR
 
 
