@@ -52,7 +52,7 @@ public:
 	
 	void insert_in_sockfd_to_clients(int key, ClientInfo * ci);
 	/* Return value in sockfd_to_clients with key <sockfd> */
-	ClientInfo * get_client_info(int sockfd);
+	ClientInfo * get_clientInfo_by_sockfd(int sockfd);
 
 	//TODO bool process_protocol(std::string username, std::string pass, std::string email); TODO in main and for client too
 	/**
@@ -61,9 +61,9 @@ public:
 	bool register_client(int sockfd, std::string username, std::string pass, std::string email);
 	bool authentication(int sockfd, std::string username, std::string pass, std::string ip, int port);
 
-	bool send_profile(int sockfd, std::string username);
+	bool send_profile(int sockfd, std::string username);//TODO
 	bool update_profile(int sockfd, std::string name, std::string surname,
-			std::string phone, std::string email, std::string hobbies);
+			std::string phone, std::string email, std::string hobbies);//TODO
 
 	// Add/Remove/Search a user for a client
 	bool add_user(int sockfd, std::string username);

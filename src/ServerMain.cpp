@@ -116,7 +116,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 			pass_pos = line.find(" ", user_pos) + 1,
 			ip_pos = line.find(" ", pass_pos) + 1;
 			
-		ClientInfo *ci = server->get_client_info(sockfd);
+		ClientInfo *ci = server->get_clientInfo_by_sockfd(sockfd);
 		
 		server->authentication(sockfd,
 				line.substr(user_pos, pass_pos -1 - user_pos),

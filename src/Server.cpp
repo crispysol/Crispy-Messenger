@@ -72,7 +72,7 @@ void Server::insert_in_sockfd_to_clients(int key, ClientInfo * ci) {
 	sockfd_to_clients.insert(pair<int, ClientInfo*> (key, ci));
 }
 
-ClientInfo * Server::get_client_info(int sockfd) {
+ClientInfo * Server::get_clientInfo_by_sockfd(int sockfd) {
 	map<int, ClientInfo*>::iterator it_fdcl;
 	
 	it_fdcl = sockfd_to_clients.find(sockfd);
@@ -304,7 +304,7 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 				assert(send(sockfd, end, strlen(end) + 1, 0) >= 0);
 
 				//update username (//TODO update status too?) of client with key sockfd
-				ci = get_client_info(sockfd);
+				ci = get_clientInfo_by_sockfd(sockfd);
 				ci->set_username(username);
 				ci->set_state(AVAILABLE);
 				ci->set_status("");
@@ -372,7 +372,7 @@ bool Server::add_user(int sockfd, std::string username) {
 	string myusername;
 	ClientInfo * my_client;
 	dprintf("[SERVER]received adduser request\n");
-	my_client=get_client_info(sockfd);
+	my_client=get_clientInfo_by_sockfd(sockfd);
 	myusername=my_client->get_username();
 	if(myusername == "") {
 					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
@@ -383,7 +383,7 @@ bool Server::add_user(int sockfd, std::string username) {
 	/*if the person i'm trying to add doesn't exist, error
 	*/	
 	if(!username_exists(username)) {
-					dprintf("[SERVER] username i want to add not doesn't exist\n");
+					dprintf("[SERVER] username i want to add doesn't exist\n");
 					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 					return false;
 					
@@ -488,7 +488,7 @@ bool Server::remove_user(int sockfd, std::string username) {
 	string myusername;
 	ClientInfo * my_client;
 	
-	my_client=get_client_info(sockfd);
+	my_client=get_clientInfo_by_sockfd(sockfd);
 	myusername=my_client->get_username();
 	if(myusername == "") {
 					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
@@ -497,16 +497,21 @@ bool Server::remove_user(int sockfd, std::string username) {
 	
 	dprintf("[SERVER]received remove request for '%s' from'%s'\n", username.c_str(), myusername.c_str());
 	/*if the person i'm trying to remove doesn't exist, error
-	*/	
+	*/
+	//TODO	when a user is removed from db, user should be removed also from all lists of friends of other users
 	if(!username_exists(username)) {
-					dprintf("[SERVER] username i want to add not doesn't exist\n");
+					dprintf("[SERVER] username i want to remove doesn't exist\n");
 					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 					return false;
 					
 
-					}			
-	
+					}	
+					
+//	stmt->executeUpdate("DELETE FROM users WHERE username = '" + username + "';");	
+	//m-am apucat sa o completez (andreea)	
+		
 }
+
 bool Server::search_user(int sockfd, std::string name, std::string surname,
 			std::string phone, std::string email, std::string hobbies) 
 {
