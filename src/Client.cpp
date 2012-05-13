@@ -59,34 +59,24 @@ bool Client::register_client(std::string username, std::string pass, std::string
 	return true;
 }
 
+bool Client::receive_friend_list(Json::Value & root) {
+	// Synchronize server / client
+	assert(send(server_socket, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 
-bool Client::authentication(std::string username, std::string pass) {
-	int rc;
+	// Receive friends
 	char buffer[BUFFER_LENGTH];
-
-	// send username, pass, ip, port to server_socket
-	char msg[BUFFER_LENGTH];
-	
-	sprintf(msg, "%s %s %s", CMD_AUTH, username.c_str(), pass.c_str());
-	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
-
-	//receive response from server_socket
-	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	int rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
-	dprintf("received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
-		return false;
-	
-	// receive friends
-	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 
 	// Parse json
-	Json::Value root;
 	Json::Reader reader;
 	if (!reader.parse(buffer, root, false)) {
-		cout  << "Failed to parse JSON"<< endl << reader.getFormatedErrorMessages()<< endl;
+		cout << "Failed to parse JSON" << endl << reader.getFormatedErrorMessages()<< endl;
 		return false;
 	}
+
+	// Erase old map
+	this->groups.clear();
 
 	// Get groups
 	const Json::Value groups = root["groups"];
@@ -104,8 +94,34 @@ bool Client::authentication(std::string username, std::string pass) {
 		this->groups.insert(pair <string, vector <User *> > (group_name, vect));
 	}
 
-	// Get offline messages TODO
+	return true;
+}
 
+
+bool Client::authentication(std::string username, std::string pass) {
+	int rc;
+	char buffer[BUFFER_LENGTH];
+
+	// send username, pass, ip, port to server_socket
+	char msg[BUFFER_LENGTH];
+	
+	sprintf(msg, "%s %s %s", CMD_AUTH, username.c_str(), pass.c_str());
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+
+	//receive response from server_socket
+	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	assert(rc >= 0);
+	dprintf("received from server: %s\n", buffer);
+	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+		return false;
+
+	// Receive friends
+	Json::Value root;
+	if (!receive_friend_list(root)) {
+		return false;
+	}
+
+	// Get offline messages TODO
 	cout << root.toStyledString(); // TODO delete
 
 	return true;
@@ -127,6 +143,15 @@ bool Client::add_user(std::string username)
 	dprintf("[CLIENT]received from server: %s\n", buffer);
 	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0 || strcmp(buffer, USER_ALREADY_IN_LIST) == 0)
 		return false;
+
+	// Receive friends
+	Json::Value root;
+	if (!receive_friend_list(root)) {
+		return false;
+	}
+
+	// Get offline messages TODO
+	cout << root.toStyledString(); // TODO delete
 
 	return true;
 }
