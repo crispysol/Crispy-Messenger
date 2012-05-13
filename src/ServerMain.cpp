@@ -202,7 +202,6 @@ int run_server(int server_port) {
 					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
 					//store information of client connected on newsockfd
 					server->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
-					//send(i, "TEST", strlen("TEST"), 0); // TODO delete
 					continue;
 				}
 

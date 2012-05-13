@@ -278,21 +278,35 @@ void Client::connect_with_user_req(std::string username) {
 /**
  * Returns socket file descriptor of the other user or -1 on error.
  */
-int Client::connect_with_user_res(char* response, int & fdmax, fd_set * read_fds) {
+int Client::connect_with_user_res(string response, int & fdmax, fd_set * read_fds) {
 	int rc, newsocket, port;
 	char ip[16];
-	char buffer[BUFFER_LENGTH];
+	char username[BUFFER_LENGTH];
 	
 	//receive port and ip from server	
-	if (response == NULL || strcmp(response, ERR_MSG) == 0)
+	if (response.compare(ERR_MSG) == 0)
 		return -1;
 	
-	sscanf(response, "%s: %s %i", buffer, ip, &port);
-	dprintf("received from server: %s %s %i\n", buffer, ip, port);
+	vector<string> tokens;
+	tokenize(response, tokens, " ");
+	vector<string>::iterator tok = tokens.begin(), tok_end = tokens.end();
+	assert(tok != tok_end);
+	tok++;
+	assert(tok != tok_end);
+	strcpy(ip, (*tok).c_str());
+	tok++;
+	assert(tok != tok_end);
+	port = atoi((*tok).c_str());
+	tok++;
+	assert(tok != tok_end);
+	strcpy(username, (*tok).c_str());
+	
+	dprintf("received from server: %s, %s, %i\n", username, ip, port);
 	
 	//connect_to_server(consider the other client the server)
 	connect_to_server(ip, port, newsocket, fdmax, read_fds);
-	insert_in_connected_users(get_username(), newsocket);
+	dprintf("connected to %s\n", username);
+	insert_in_connected_users(string(username), newsocket);
 	
 	//return socket from connect_to server
 	return newsocket;

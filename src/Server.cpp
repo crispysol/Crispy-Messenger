@@ -83,6 +83,10 @@ ClientInfo * Server::get_clientInfo_by_sockfd(int sockfd) {
 	return NULL;
 }
 
+void Server::insert_in_clients_to_sockfd(string username, int sockfd) {
+	clients_to_sockfd.insert(pair<string, int> (username, sockfd));
+}
+
 int Server::get_clientInfo_by_username(string username) {
 	map<string, int>::iterator it;
 	
@@ -90,16 +94,22 @@ int Server::get_clientInfo_by_username(string username) {
 	if (it != clients_to_sockfd.end())
 		return it->second;
 		
-	return 0;
+	return -1;
 }
+
+
 
 /* Send ip and port of user <username> to another user which made the request on socket <sockfd>. */
 bool Server::send_user_ip(int sockfd, std::string username) {
 
 	int rc, newsockfd ;
 	char buffer[BUFFER_LENGTH];
-	
+	//TODO check if source of request is friend with <username>; if not, don't send him connection info
 	newsockfd = get_clientInfo_by_username(username);
+	if (newsockfd == -1) {
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		return false;	
+	}
 	ClientInfo *ci = get_clientInfo_by_sockfd(newsockfd);
 	
 	if (ci == NULL) {
@@ -108,8 +118,9 @@ bool Server::send_user_ip(int sockfd, std::string username) {
 	}
 	
 	//send "ip port" on sockfd
-	sprintf(buffer, "%s: %s %i", CMD_CONN_CLIENT_TO_CLIENT_RES, ci->get_ip().c_str(), ci->get_port());
-	dprintf("[SERVER] sending %s of username %s\n", buffer, username.c_str());
+	sprintf(buffer, "%s: %s %i %s", CMD_CONN_CLIENT_TO_CLIENT_RES, ci->get_ip().c_str(), ci->get_port(), 
+		username.c_str());
+	dprintf("[SERVER] sending %s\n", buffer);
 	assert(send(sockfd, buffer, strlen(buffer) + 1, 0) >= 0);
 	
 	return true;
@@ -333,7 +344,8 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 				ci->set_username(username);
 				ci->set_state(AVAILABLE);
 				ci->set_status("");
-
+				insert_in_clients_to_sockfd(username, sockfd);
+				
 				// Send friends list
 				if (rc && !send_friends_list(sockfd, username)) {
 					rc = false;
