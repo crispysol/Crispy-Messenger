@@ -68,7 +68,18 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		client->add_group(line.substr(group_pos));
 		return;
 	}
-	
+
+	if (line.find(CMD_GET_PROFILE) == 0) {
+		
+		//TODO
+		client->get_profile("a");
+		return;
+	}
+
+	if (line.find(CMD_UPDATE_PROFILE) == 0) {
+		//TODO
+	}
+
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
 		//end connection to server
