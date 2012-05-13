@@ -153,12 +153,33 @@ static void client_command(string line, int sockfd, Server *&server) {
 		server->add_group(sockfd, line.substr(group_pos), ci->get_username());
 		return;
 	}
+
+	
+
+	if(line.find(CMD_DEL_GROUP) == 0) {
+		int group_pos = line.find(" ") + 1;
+		server->remove_group(sockfd,line.substr(group_pos));
+		return;
+	}
+
+	if(line.find(CMD_MV_USER) == 0) {
+		int user_pos= line.find(" ") + 1,
+			group_pos = line.find(" ",user_pos) + 1;
+			
+		server-> move_user_to_group(	sockfd,
+						line.substr(user_pos, group_pos-1 - user_pos),
+						line.substr(group_pos)
+						);
+		return;
+	}
+
 	 
 	 if (line.find(CMD_CONN_CLIENT_TO_CLIENT_REQ) == 0) {
 		int username_pos = line.find(" ") + 1;
 		dprintf("[SERVER] processing %s request from %s\n", 
 			CMD_CONN_CLIENT_TO_CLIENT_REQ, ci->get_username().c_str());
 		server->send_user_ip(sockfd, line.substr(username_pos));
+
 		return;
 	}
 
@@ -172,6 +193,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 	if (line.find(CMD_UPDATE_PROFILE) == 0) {
 		//TODO
 	}
+
 }
 
 /**
