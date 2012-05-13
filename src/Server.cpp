@@ -497,6 +497,11 @@ bool Server::add_user(int sockfd, std::string username) {
 
 	else assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 
+	// Send friends list
+	if (rc && !send_friends_list(sockfd, myusername)) {
+		rc = false;
+	}
+
 	return rc;
 
 }
