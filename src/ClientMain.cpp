@@ -50,6 +50,18 @@ static void process_server_msg(string buffer, int & fdmax, fd_set * read_fds) {
 		
 		return;
 	}
+	
+	if (buffer.find(CMD_SEND_MSG) == 0) {
+		int 	src_pos = buffer.find(" ") + 1,
+			msg_pos = buffer.find(" ", src_pos) + 1;
+		string msg, src;
+		
+		src = buffer.substr(src_pos, msg_pos - 1 - src_pos);
+		msg = buffer.substr(msg_pos);
+		dprintf("received message %s from %s\n", msg.c_str(), src.c_str());
+		//TODO send to chat window
+		
+	}
 }
 /**
  * Execute command received from STDIN
@@ -144,6 +156,14 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		return;
 	}
 
+	if (line.find(CMD_SEND_MSG) == 0) {
+		int 	name_dst = line.find(" ") + 1,
+			msg_pos = line.find(" ", name_dst) + 1;
+		//Client communicate through server
+		client->send_message(client->get_server_socket(), 
+			line.substr(name_dst, msg_pos - 1 - name_dst), 
+			line.substr(msg_pos));
+	}
 
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections

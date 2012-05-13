@@ -374,3 +374,15 @@ int Client::connect_with_user_res(string response, int & fdmax, fd_set * read_fd
 	return newsocket;
 
 }
+
+bool Client::send_message(int sockfd, string dst, string message) {
+	char buffer[BUFFER_LENGTH];
+	
+	/* send_msg source destination message */
+	sprintf(buffer, "%s %s %s %s", CMD_SEND_MSG, get_username().c_str(), dst.c_str(), message.c_str());
+	dprintf("sendinf %s to server\n", buffer);
+	
+	assert(send(sockfd, buffer, strlen(buffer) + 1, 0) >= 0);
+	
+	return true;	
+}

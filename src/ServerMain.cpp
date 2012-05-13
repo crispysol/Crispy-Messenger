@@ -101,7 +101,7 @@ static void announce_friends_online_status(int sockfd) {
 static void client_command(string line, int sockfd, Server *&server) {
 
 	if (line.find(CMD_REGISTER) == 0) {
-		int user_pos = line.find(" ") + 1,
+		int 	user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1,
 			email_pos = line.find(" ", pass_pos) + 1;
 		server->register_client(sockfd,
@@ -114,7 +114,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 	ClientInfo *ci = server->get_clientInfo_by_sockfd(sockfd);
 	
 	if (line.find(CMD_AUTH) == 0) {
-		int user_pos = line.find(" ") + 1,
+		int 	user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1,
 			ip_pos = line.find(" ", pass_pos) + 1;
 		
@@ -202,6 +202,17 @@ static void client_command(string line, int sockfd, Server *&server) {
 			line.substr(sname_pos, phone_pos - sname_pos - 1),
 			line.substr(phone_pos, hobb_pos - phone_pos - 1),
 			line.substr(hobb_pos));
+		return;
+	}
+	
+	if (line.find(CMD_SEND_MSG) == 0) {
+		int 	user_src_pos = line.find(" ") + 1,
+			user_dst_pos = line.find(" ", user_src_pos) + 1,
+			msg_pos = line.find(" ", user_dst_pos) + 1;
+			server->send_msg_from_user_to_user(sockfd, 
+				line.substr(user_src_pos, user_dst_pos - user_src_pos - 1),
+				line.substr(user_dst_pos, msg_pos - user_dst_pos - 1),
+				line.substr(msg_pos));
 		return;
 	}
 

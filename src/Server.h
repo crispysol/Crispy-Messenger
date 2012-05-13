@@ -93,6 +93,8 @@ public:
 	bool forgot_password();
 	
 	std::map<std::string, std::string> get_list_of_friends(std::string username);
+	
+	bool send_msg_from_user_to_user(int sockfd, std::string user_src, std::string user_dst, std::string msg);
 };
 
 #endif /* SERVER_H_ */

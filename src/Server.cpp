@@ -1042,3 +1042,24 @@ bool Server::update_profile(int sockfd, std::string name, std::string surname,
 
 	return true;
 }
+
+bool Server::send_msg_from_user_to_user(int sockfd, string src, string dst, string msg) {
+	int rc;
+	char buffer[BUFFER_LENGTH];
+	
+	int skfd_dst = get_clientInfo_by_username(dst.c_str());
+	if (skfd_dst == -1) {
+		// Destination is not online
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		dprintf("%s is not online\n", dst.c_str());
+		return false;
+	}
+			
+	sprintf(buffer, "%s %s %s", CMD_SEND_MSG, src.c_str(), msg.c_str());
+	dprintf("[SERVER] sending %s to %s\n", buffer, dst.c_str());
+	
+	assert(send(skfd_dst, buffer, strlen(buffer) + 1, 0) >= 0);	
+	assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+	
+	return true;
+}
