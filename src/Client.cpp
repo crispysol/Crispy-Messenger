@@ -205,6 +205,11 @@ bool Client::add_group(std::string group) {
 	return true;
 }
 
+/**
+ * Requests profile information from server.
+ *
+ * Liviu
+ */
 Profile Client::get_profile(std::string username) {
 	int rc;
 	char buff[BUFFER_LENGTH];
@@ -219,8 +224,36 @@ Profile Client::get_profile(std::string username) {
 	rc = recv(server_socket, buff, sizeof(buff), 0);
 	assert(rc >= 0);
 	dprintf("Received from server: %s\n", buff);
+
+	string buf = buff;
+
+	int	name_pos = buf.find(" "),
+		sname_pos = buf.find(" ", name_pos) + 1,
+		phone_pos = buf.find(" ", sname_pos) + 1,
+		email_pos = buf.find(" ", phone_pos) + 1,
+		hobb_pos = buf.find(" ", email_pos) + 1;
+	/*
+	//TODO: Remove DEBUG
+	cout	<< "Name: |" << buf.substr(0, name_pos) << "|\n"
+		<< "Surname: |" << buf.substr(pos2, pos3 - pos2 - 1)  << "|\n"
+		<< "Phone: |" << buf.substr(pos3, pos4 - pos3 - 1) << "|\n"
+		<< "email: |" << buf.substr(pos4, pos5 - pos4 - 1) << "|\n"
+		<< "Hobbies: |" << buf.substr(pos5) << "|\n";
+	*/
+	
+	return Profile( buf.substr(0, name_pos),
+			buf.substr(sname_pos, phone_pos - sname_pos - 1),
+			buf.substr(phone_pos, email_pos - phone_pos - 1),
+			buf.substr(email_pos, hobb_pos - email_pos - 1),
+			buf.substr(hobb_pos) );
 }
 
+/**
+ * Updates the client's profile information.
+ * NULL fields will not be updated.
+ *
+ * Liviu
+ */
 bool Client::update_profile(std::string name, std::string surname, std::string phone,
 		std::string email, std::string hobbies) {
 	return true;

@@ -71,13 +71,13 @@ void stdin_command(Client *client, fd_set * read_fds) {
 
 	if (line.find(CMD_GET_PROFILE) == 0) {
 		
-		//TODO
-		client->get_profile("a");
+		client->get_profile(line.substr(line.find(" ") + 1));
 		return;
 	}
 
 	if (line.find(CMD_UPDATE_PROFILE) == 0) {
 		//TODO
+		return;
 	}
 
 	if (line.find(EXIT_MSG) == 0) {

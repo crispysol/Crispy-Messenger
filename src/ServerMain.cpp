@@ -153,7 +153,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 		server->add_group(sockfd,line.substr(group_pos), ci->get_username());
 		return;
 	}
-	
+
 	if (line.find(CMD_GET_PROFILE) == 0) {
 		int user_pos = line.find(" ") + 1;
 
