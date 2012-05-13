@@ -22,6 +22,7 @@
 #define GROUPNOTEMPTY_ERR	"GROUP_NOT_EMPTY"
 #define USER_ALREADY_IN_LIST 	"USER_IN_LIST"
 #define USER_NOT_IN_LIST 	"USER_NOT_IN_LIST"
+#define NO_USER_FOUND		"NO_USER_FOUND"
 #define ERR_MSG				"FAIL"
 #define CMD_REGISTER			"register"
 #define CMD_AUTH			"login"
@@ -40,6 +41,9 @@
 #define CMD_CONN_REQ_FROM		"connect_req_from"
 #define CMD_SEND_MSG			"send_msg"
 #define INFO_CLIENT_PORT		"info_port"
+#define CMD_SET_STATE			"set_state"
+#define CMD_SET_STATUS			"set_status"
+#define CMD_SEARCH_USER 		"search_user"
 
 #define EXIT_MSG			"exit"
 
