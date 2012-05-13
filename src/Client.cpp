@@ -281,6 +281,12 @@ bool Client::remove_group(std::string group) {
 	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
 		return false;
 
+	// Receive friends
+	Json::Value root;
+	if (!receive_friend_list(root)) {
+		return false;
+	}
+
 	return true;
 
 }
@@ -303,9 +309,13 @@ bool Client::move_user_to_group(std::string username, std::string group){
 	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
 		return false;
 
+	// Receive friends
+	Json::Value root;
+	if (!receive_friend_list(root)) {
+		return false;
+	}
+
 	return true;
-
-
 
 }
 /**

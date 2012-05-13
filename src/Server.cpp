@@ -838,6 +838,13 @@ bool Server::move_user_to_group(int sockfd, std::string username, std::string gr
 		rc = false;
 	}
 	if(rc) assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+
+	// Send friends list
+	if (rc && !send_friends_list(sockfd, myusername)) {
+		rc = false;
+	}
+
+	return rc;
 }
 
 /*
@@ -941,9 +948,12 @@ bool Server::remove_group(int sockfd, std::string group)
 		rc = false;
 	}
 
-
+	// Send friends list
+	if (rc && !send_friends_list(sockfd, myusername)) {
+		rc = false;
+	}
 	
-	
+	return rc;
 }
 
 /**
