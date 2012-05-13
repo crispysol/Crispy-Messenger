@@ -69,6 +69,7 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		return;
 	}
 
+
 	if(line.find(CMD_DEL_GROUP) == 0) {
 		int group_pos = line.find(" ") + 1;
 		client->remove_group(line.substr(group_pos));
@@ -86,6 +87,19 @@ void stdin_command(Client *client, fd_set * read_fds) {
 	}
 	
 	
+
+	if (line.find(CMD_GET_PROFILE) == 0) {
+		
+		//TODO
+		client->get_profile("a");
+		return;
+	}
+
+	if (line.find(CMD_UPDATE_PROFILE) == 0) {
+		//TODO
+	}
+
+
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
 		//end connection to server

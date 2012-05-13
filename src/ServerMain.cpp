@@ -154,6 +154,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 		return;
 	}
 	
+
 	if(line.find(CMD_DEL_GROUP) == 0) {
 		int group_pos = line.find(" ") + 1;
 		server->remove_group(sockfd,line.substr(group_pos));
@@ -170,7 +171,18 @@ static void client_command(string line, int sockfd, Server *&server) {
 						);
 		return;
 	}
-	
+
+	if (line.find(CMD_GET_PROFILE) == 0) {
+		int user_pos = line.find(" ") + 1;
+
+		server->send_profile(sockfd, line.substr(user_pos));
+		return;
+	}
+
+	if (line.find(CMD_UPDATE_PROFILE) == 0) {
+		//TODO
+	}
+
 }
 
 /**
