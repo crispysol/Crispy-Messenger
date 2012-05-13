@@ -22,6 +22,7 @@
 #define CMD_AUTH			"login"
 #define CMD_ADD_USER		"add_user"
 #define EXIT_MSG			"exit"
+#define CMD_REMOVE_USER		"remove_user"
 
 #define SQL_DEBUG		"SQL"
 

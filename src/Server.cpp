@@ -183,7 +183,7 @@ bool Server::register_client(int sockfd, string username, string pass, string em
 			
 			if (!add_default_group(username)) {
 				stmt->executeUpdate("DELETE FROM users WHERE username = '" + username + "';");
-				assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);	
+				assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 			}
 			
 			assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
@@ -383,7 +383,7 @@ bool Server::add_user(int sockfd, std::string username) {
 	/*if the person i'm trying to add doesn't exist, error
 	*/	
 	if(!username_exists(username)) {
-					dprintf("[SERVER] username i want to add doesn't exist\n");
+					dprintf("[SERVER] username %s doesn't exist\n", username.c_str());
 					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 					return false;
 					
@@ -443,7 +443,7 @@ bool Server::add_user(int sockfd, std::string username) {
 		{
 			/*add_user to default group
 			*/
-			query=string("UPDATE groups SET ").append( GROUPS_T_FRIENDS_LIST).append("=concat(").append( GROUPS_T_FRIENDS_LIST).append(",\"").append(username).append(" \") where ").append(GROUPS_T_ID_USER_FK).append("=").append(out_id.str()).append(" AND ").append(GROUPS_T_NAME).append(" = \"").append(GROUP_DEFAULT_NAME).append("\";");
+			query=string("UPDATE groups SET ").append( GROUPS_T_FRIENDS_LIST).append("=concat(").append( GROUPS_T_FRIENDS_LIST).append(",\"").append(username).append(",\") where ").append(GROUPS_T_ID_USER_FK).append("=").append(out_id.str()).append(" AND ").append(GROUPS_T_NAME).append(" = \"").append(GROUP_DEFAULT_NAME).append("\";");
 			dprintf("%s\n",query.c_str());\
 			int modified=stmt->executeUpdate(query);
 			dprintf("[%s executed]%s\n", SQL_DEBUG, query.c_str());
@@ -481,9 +481,9 @@ bool Server::add_user(int sockfd, std::string username) {
 bool Server::remove_user(int sockfd, std::string username) {
 
 	int rc = true;
-	int myid,def_group_id;
+	int def_group_id;
 	bool exists=false;
-	std::stringstream out_id;
+	std::stringstream friends_list_q;
 	sql::ResultSet * res;
 	string myusername;
 	ClientInfo * my_client;
@@ -500,16 +500,81 @@ bool Server::remove_user(int sockfd, std::string username) {
 	*/
 	//TODO	when a user is removed from db, user should be removed also from all lists of friends of other users
 	if(!username_exists(username)) {
-					dprintf("[SERVER] username i want to remove doesn't exist\n");
+					dprintf("[SERVER] user %s isn't you friend\n", username.c_str());
 					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 					return false;
 					
 
 					}	
 					
-//	stmt->executeUpdate("DELETE FROM users WHERE username = '" + username + "';");	
-	//m-am apucat sa o completez (andreea)	
+	// Retrieve list of friends containing <username>
+	string friends;
+	friends_list_q << "SELECT " << GROUPS_T_ID << "," << GROUPS_T_FRIENDS_LIST <<  
+		" FROM groups WHERE id_user = (SELECT id FROM users WHERE username = '" << myusername << 
+		"') AND (SELECT friends_list REGEXP '(," << username << ")$|^(" << username << ",)|^" << username << 
+		"$|(.+," << username << ",.+)') = 1;";
 		
+	try {
+		sql::ResultSet *  res = stmt->executeQuery(friends_list_q.str());
+		dprintf("[%s executed]%s\n", SQL_DEBUG, friends_list_q.str().c_str());
+		if(res->next()) {
+			friends = string(res->getString(GROUPS_T_FRIENDS_LIST));
+			def_group_id = atoi(string(res->getString(GROUPS_T_ID)).c_str());
+			
+			// erase <username> in friends list (cases:list is "[other_user,...]<username>[,...]")
+			int pos, maxlen, length;
+			for (pos = friends.find(username), maxlen = friends.length(), length = username.length(); 
+							pos != string::npos; pos = friends.find(username, pos + 1))
+				if (pos + length < maxlen)
+					if (friends[pos + length] == ',')
+						if (pos > 0)
+							if (friends[pos - 1] == ',') {
+								friends.erase(pos, length + 1);
+								break;
+							}
+							else continue;
+						else {
+							friends.erase(pos, length + 1);
+							break;
+						}
+					else continue;
+				else
+					if (pos > 0)
+						if (friends[pos - 1] == ',') {
+							friends.erase(pos - 1, length + 1);
+							break;
+						}
+						else continue;
+					else {
+						friends.clear();
+						break;
+					}
+	
+			// Update db
+			friends_list_q.flush();
+			friends_list_q << "UPDATE groups SET friends_list = '" << friends << "' WHERE " << 
+				GROUPS_T_ID << " = " << def_group_id << ";";
+			dprintf("[%s execute]%s\n", SQL_DEBUG, friends_list_q.str().c_str());
+			if (stmt->executeUpdate(friends_list_q.str()) == 0)
+				rc = false;
+			else 	rc = true;
+		}
+		else
+			rc = false;
+			
+		
+		delete res;
+	}catch(...) {
+		dprintf("Exception in remove_user!!!\n");
+		rc = false;
+	}
+	
+	if (!rc)
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+	else
+		assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+		
+	return rc;
 }
 
 bool Server::search_user(int sockfd, std::string name, std::string surname,
