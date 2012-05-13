@@ -32,16 +32,19 @@ static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds);
  * Process message from server.
  */
 static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds) {
+	if (strstr(buffer, SUCCESS_MSG) == 0)
+		return;
+
 	if(strstr(buffer, CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
 		// connect with user
 		int sockfd = client->connect_with_user_res(buffer, fdmax, read_fds);
-		// send CONN_REQ_FROM
-		if (sockfd != -1) {
-		//send username, pass, email to server_socket
+		if (sockfd == -1)
+			return;
+			
+		//tell the other end (client to connect to) my username
 		char msg[BUFFER_LENGTH];
 		sprintf(msg, "%s %s", CMD_CONN_REQ_FROM, client->get_username().c_str());
-		assert(send(client->get_server_socket(), msg, strlen(msg) + 1, 0) >= 0);
-		}
+		assert(send(sockfd, msg, strlen(msg) + 1, 0) >= 0);
 		
 		return;
 	}
@@ -118,17 +121,33 @@ void stdin_command(Client *client, fd_set * read_fds) {
 	}
 }
 
-static void client_command(char * buffer, int sockfd) {
-	if (buffer == NULL || strcmp(buffer, ERR_MSG)) {
-		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+static void client_command(char * buffer, int sockfd) {	
+
+	if (strstr(buffer, SUCCESS_MSG) == 0) {
+		dprintf("just start tweeting...;)\n");
+		return;
+	}
+	
+	if (strstr(buffer, ERR_MSG) == 0) {
+		dprintf("cannot start tweeting :( error encountered\n");
 		return;
 	}
 		
 	if (strstr(buffer, CMD_CONN_REQ_FROM) == 0) {
-		//TODO get username
-//		client->insert_in_connected_users(username, sockfd);
+		//get username
+		char *username = strchr(buffer, ' ');
+		if (!username) {
+			dprintf("%s wrong format (correct format is '%s username')\n", CMD_CONN_REQ_FROM, CMD_CONN_REQ_FROM);
+			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+			return;
+		}
+		
+		client->insert_in_connected_users(username, sockfd);
 		assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+		
+		return;
 	}
+	
 }
 
 /**
@@ -175,7 +194,7 @@ int run_server(char * server_ip, int server_port) {
 					n = recv(i, buffer, sizeof(buffer), 0);
 					assert(n >= 0); // TODO test if we have to exit
 					dprintf("[CLIENT]received from SERVER: %s\n", buffer);
-					process_server_msg(buffer, fdmax, &read_fds);
+					//process_server_msg(buffer, fdmax, &read_fds);
 					continue;
 				}
 
@@ -183,7 +202,7 @@ int run_server(char * server_ip, int server_port) {
 				if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
 					assert(n == -1);
 					end_connection(i, &read_fds);
-					//TODO remove connection from connected_users list
+					client->remove_from_connected_users(i);
 				} else {
 					dprintf("received from client: %s\n", buffer);
 					client_command(buffer, i);

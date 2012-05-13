@@ -39,6 +39,10 @@ void Client::insert_in_connected_users(std::string username, int sockfd) {
 	connected_users.insert(pair<string, int> (username, sockfd));
 }
 
+void Client::remove_from_connected_users(int sockfd) {
+	//TODO
+}
+
 bool Client::register_client(std::string username, std::string pass, std::string email) {
 	int rc;
 	char buffer[BUFFER_LENGTH];

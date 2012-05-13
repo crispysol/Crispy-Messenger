@@ -156,7 +156,8 @@ static void client_command(string line, int sockfd, Server *&server) {
 	 
 	 if (line.find(CMD_CONN_CLIENT_TO_CLIENT_REQ) == 0) {
 		int username_pos = line.find(" ") + 1;
-		dprintf("[SERVER] processing %s request from %s\n", CMD_CONN_CLIENT_TO_CLIENT_REQ, ci->get_username().c_str());
+		dprintf("[SERVER] processing %s request from %s\n", 
+			CMD_CONN_CLIENT_TO_CLIENT_REQ, ci->get_username().c_str());
 		server->send_user_ip(sockfd, line.substr(username_pos));
 		return;
 	}

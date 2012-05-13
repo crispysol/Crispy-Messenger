@@ -39,6 +39,7 @@ public:
 	int get_port();
 	
 	void insert_in_connected_users(std::string username, int sockfd);
+	void remove_from_connected_users(int sockfd);
 
 	/**
 	 * Communication client-server

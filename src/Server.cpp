@@ -93,8 +93,9 @@ int Server::get_clientInfo_by_username(string username) {
 	return 0;
 }
 
+/* Send ip and port of user <username> to another user which made the request on socket <sockfd>. */
 bool Server::send_user_ip(int sockfd, std::string username) {
-//TODO review
+
 	int rc, newsockfd ;
 	char buffer[BUFFER_LENGTH];
 	
