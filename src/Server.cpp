@@ -909,7 +909,7 @@ bool Server::remove_group(int sockfd, std::string group)
 		
 		if(groupid)
 		{
-			query<<"SELECT "<< GROUPS_T_FRIENDS_LIST <<" FROM groups where "<< 					GROUPS_T_ID_USER_FK << "=" << myid << " AND " << GROUPS_T_NAME <<" = \"" << 					group <<"\";";
+			query<<"SELECT "<< GROUPS_T_FRIENDS_LIST <<" FROM groups where "<< 	GROUPS_T_ID_USER_FK << "=" << myid << " AND " << GROUPS_T_NAME <<" = \"" << 					group <<"\";";
 
 			res = stmt->executeQuery(query.str());
 			dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());
@@ -918,8 +918,8 @@ bool Server::remove_group(int sockfd, std::string group)
 			else{
 				rc = false;
 				dprintf("[SERVER] Group not empty \n");
-				assert(send(sockfd, GROUPNOTEMPTY_ERR, strlen(GROUPNOTEMPTY_ERR) + 1, 0) >= 						0);				
-				}
+				assert(send(sockfd, GROUPNOTEMPTY_ERR, strlen(GROUPNOTEMPTY_ERR) + 1, 0) >= 0);
+			}
 			delete res;
 			
 		}
@@ -934,7 +934,7 @@ bool Server::remove_group(int sockfd, std::string group)
 			dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());	
 			assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 		}
-	    }
+	}
 
 	catch(sql::SQLException &e) {
 

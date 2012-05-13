@@ -30,10 +30,10 @@ static void send_file(GtkWidget * widget, GdkEventButton * event, gpointer g_cli
 static void show_profile(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
 	signal_show_profile(widget, g_client);
 }
-/* Show profile */
-static void change_group(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
-	signal_change_group(widget, g_client);
-}
+///* Show profile */
+//static void change_group(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
+//	signal_change_group(widget, g_client);
+//}
 
 
 /**
@@ -48,8 +48,8 @@ static void create_chat_window_buttons(GtkWidget * vbox, gpointer g_client) {
 	add_button_to_box(hbox, "Send file", TRUE, send_file, g_client);
 	// Create show profile button
 	add_button_to_box(hbox, "Show profile", FALSE, show_profile, g_client);
-	// Create change group button
-	add_button_to_box(hbox, "Change group", FALSE, change_group, g_client);
+//	// Create change group button
+//	add_button_to_box(hbox, "Change group", FALSE, change_group, g_client);
 
 	// Show all widgets
 	gtk_widget_show_all(hbox);

@@ -126,7 +126,7 @@ bool Client::authentication(std::string username, std::string pass) {
 	}
 
 	// Get offline messages TODO
-	cout << root.toStyledString(); // TODO delete
+//	cout << root.toStyledString(); // TODO delete
 
 	return true;
 }
@@ -145,7 +145,7 @@ bool Client::add_user(std::string username)
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
 	dprintf("[CLIENT]received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0 || strcmp(buffer, USER_ALREADY_IN_LIST) == 0)
+	if (rc == 0 || strcmp(buffer, SUCCESS_MSG))
 		return false;
 
 	// Receive friends
@@ -172,7 +172,7 @@ bool Client::remove_user(std::string username) {
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
 	dprintf("[CLIENT]received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+	if (rc == 0 || strcmp(buffer, SUCCESS_MSG))
 		return false;
 
 	// Receive friends
@@ -197,7 +197,7 @@ bool Client::add_group(std::string group) {
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
 	dprintf("[CLIENT]received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+	if (rc == 0 || strcmp(buffer, SUCCESS_MSG))
 		return false;
 
 	// Receive friends
@@ -278,7 +278,7 @@ bool Client::remove_group(std::string group) {
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
 	dprintf("[CLIENT]received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+	if (rc == 0 || strcmp(buffer, SUCCESS_MSG))
 		return false;
 
 	// Receive friends
@@ -306,7 +306,7 @@ bool Client::move_user_to_group(std::string username, std::string group){
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
 	dprintf("[CLIENT]received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+	if (rc == 0 || strcmp(buffer, SUCCESS_MSG))
 		return false;
 
 	// Receive friends
