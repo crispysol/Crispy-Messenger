@@ -182,7 +182,16 @@ void stdin_command(Client *client, fd_set * read_fds) {
 						);
 		return;
 	}
-
+	
+	
+	if(line.find(CMD_SEARCH_USER ) == 0) {
+		int criteria_pos= line.find(" ") + 1;
+			
+			
+		string result=client-> search_user(line.substr(criteria_pos)
+						);
+		return;
+	}
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
 		//end connection to server

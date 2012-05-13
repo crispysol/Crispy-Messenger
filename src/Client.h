@@ -54,7 +54,7 @@ public:
 	// Add/Remove/Search a user
 	bool add_user(std::string username);
 	bool remove_user(std::string username);
-	std::string search_user(Profile profile);
+	std::string search_user(std::string profile);
 
 	// Add/Remove/Edit a group
 	bool add_group(std::string group);

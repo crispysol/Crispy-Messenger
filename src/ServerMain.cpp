@@ -239,6 +239,21 @@ static void client_command(string line, int sockfd, Server *&server) {
 		server->set_status(sockfd, line.substr(status_pos));
 		return;
 	}
+	
+	if (line.find(CMD_SEARCH_USER) == 0) {
+		int 	name_pos = line.find(" ") + 1,
+			surname_pos = line.find(" ", name_pos) + 1,
+			phone_pos = line.find(" ", surname_pos) + 1,
+			email_pos = line.find(" ", phone_pos) + 1;
+		server->search_user(sockfd,
+				line.substr(name_pos, surname_pos -1 - name_pos),
+				line.substr(surname_pos, phone_pos - 1 - surname_pos),
+				line.substr(phone_pos, email_pos - 1 - phone_pos),
+				line.substr(email_pos));
+		
+		return;
+	}
+	
 
 }
 

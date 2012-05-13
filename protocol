@@ -65,7 +65,8 @@ C: remove_user user
 S: OK | ERR
 
 #7 cautare utilizator dupa profil
-C: search_user /* TODO */
+C: search_user name surname phone email 
+none if any not used ex: search user name none none email
 S: OK -> user | ERR
 
 #8 creare grup nou

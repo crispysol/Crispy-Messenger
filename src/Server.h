@@ -72,7 +72,7 @@ public:
 	bool add_user(int sockfd, std::string username);
 	bool remove_user(int sockfd, std::string username);
 	bool search_user(int sockfd, std::string name, std::string surname,
-			std::string phone, std::string email, std::string hobbies);
+			std::string phone, std::string email);
 	bool rmv_user(int  sockfd, std::string username );
 	// Add/Remove/Edit a group
 	bool add_group(int sockfd, std::string group, std::string username);
