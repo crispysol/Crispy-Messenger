@@ -48,8 +48,8 @@ public:
 	bool authentication(std::string username, std::string pass);
 
 	Profile get_profile(std::string username);
-	bool update_profile(std::string name, std::string surname, std::string phone,
-		std::string email, std::string hobbies);
+	bool update_profile(std::string name, std::string surname,
+			    std::string phone, std::string hobbies);
 
 	// Add/Remove/Search a user
 	bool add_user(std::string username);
@@ -75,7 +75,7 @@ public:
 	/**
 	 * Returns socket file descriptor of the other user or -1 on error.
 	 */
-	int connect_with_user_res(char* response, int & fdmax, fd_set * read_fds);
+	int connect_with_user_res(std::string response, int & fdmax, fd_set * read_fds);
 
 	// Receive friend list
 	bool receive_friend_list(Json::Value & root);

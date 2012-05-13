@@ -31,13 +31,15 @@ static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds);
 /**
  * Process message from server.
  */
-static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds) {
-	if (strstr(buffer, SUCCESS_MSG) == 0)
+static void process_server_msg(string buffer, int & fdmax, fd_set * read_fds) {
+	if (buffer.find(SUCCESS_MSG) == 0)
 		return;
 
-	if(strstr(buffer, CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
+	if(buffer.find(CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
 		// connect with user
+		printf("buffer %s\n", buffer.c_str());
 		int sockfd = client->connect_with_user_res(buffer, fdmax, read_fds);
+		dprintf("[DONE, sockfd %i]%s\n", sockfd, buffer.c_str());
 		if (sockfd == -1)
 			return;
 			
@@ -128,7 +130,17 @@ void stdin_command(Client *client, fd_set * read_fds) {
 	}
 
 	if (line.find(CMD_UPDATE_PROFILE) == 0) {
-		//TODO
+		int	name_pos = line.find(" ") + 1,
+			sname_pos = line.find(" ", name_pos) + 1,
+			phone_pos = line.find(" ", sname_pos) + 1,
+			hobb_pos = line.find(" ", phone_pos) + 1;
+
+		client->update_profile(
+			line.substr(name_pos, sname_pos - name_pos - 1),
+			line.substr(sname_pos, phone_pos - sname_pos - 1),
+			line.substr(phone_pos, hobb_pos - phone_pos - 1),
+			line.substr(hobb_pos));
+	
 		return;
 	}
 
@@ -199,6 +211,7 @@ int run_server(char * server_ip, int server_port) {
 			if (FD_ISSET(i, &tmp_fds)) {
 				// New connection
 				if (i == sockfd) {
+					dprintf("received new connection on %i\n", i);
 					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
 					continue;
 				}
@@ -214,7 +227,7 @@ int run_server(char * server_ip, int server_port) {
 					n = recv(i, buffer, sizeof(buffer), 0);
 					assert(n >= 0); // TODO test if we have to exit
 					dprintf("[CLIENT]received from SERVER: %s\n", buffer);
-					//process_server_msg(buffer, fdmax, &read_fds);
+					process_server_msg(string(buffer), fdmax, &read_fds);
 					continue;
 				}
 
