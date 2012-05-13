@@ -394,7 +394,7 @@ bool Server::add_user(int sockfd, std::string username) {
 
 	try {
 		res = stmt->executeQuery(query.str());
-		dprintf("[%s executed]%s\n", SQL_DEBUG, query.c_str());
+		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());
 		if(res->rowsCount()!=1) { dprintf("[SERVER] myuser not good/ problem\n");
 				assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);				
 				return false;
@@ -420,7 +420,7 @@ bool Server::add_user(int sockfd, std::string username) {
 
 				cstr=new char[friends.size()+1];
 				strcpy(cstr,friends.c_str());
-				p=strtok(cstr," ");
+				p=strtok(cstr,",");
 
 				 while (p!=NULL)
   				{
@@ -442,16 +442,19 @@ bool Server::add_user(int sockfd, std::string username) {
 	*/
 		if (!exists)
 		{
+			string separator="";
 			/*see if there are any users in the group
 			*/
 			query.str("");	
 			query<<"SELECT "<<GROUPS_T_FRIENDS_LIST<<" FROM groups where "<< GROUPS_T_ID_USER_FK << "=" << out_id.str() << " AND " << GROUPS_T_NAME <<" = \"" << GROUP_DEFAULT_NAME <<"\";";
 			dprintf(" verify if any users in def group: %s \n",query.str().c_str());
 			res = stmt->executeQuery(query.str());
+			res->next();
+			if(res->getString(1)!="") separator=",";
 			/*add_user to default group
 			*/
 			query.str("");
-			query<<"UPDATE groups SET "<< GROUPS_T_FRIENDS_LIST<<"=concat(" << GROUPS_T_FRIENDS_LIST << ",\"" << username << ",\") where " << GROUPS_T_ID_USER_FK << "=" << out_id.str() << " AND " << GROUPS_T_NAME << " = \"" << GROUP_DEFAULT_NAME <<"\";";
+			query<<"UPDATE groups SET "<< GROUPS_T_FRIENDS_LIST<<"=concat(" << GROUPS_T_FRIENDS_LIST << ",\"" << separator << username  << "\") where " << GROUPS_T_ID_USER_FK << "=" << out_id.str() << " AND " << GROUPS_T_NAME << " = \"" << GROUP_DEFAULT_NAME <<"\";";
 			dprintf("%s\n",query.str().c_str());\
 			int modified=stmt->executeUpdate(query.str());
 			dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());
