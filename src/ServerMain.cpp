@@ -62,6 +62,7 @@ static void announce_friends_online_status(int sockfd) {
 	string friend_name, friends;
 	stringstream announcement;
 	int friend_sockfd, pos, next_pos, len;
+	char buff[BUFFER_LENGTH];
 	
 	map_fdcl = server->get_sockfd_to_clients();
 	it_fdcl = map_fdcl.find(sockfd);
@@ -87,21 +88,29 @@ static void announce_friends_online_status(int sockfd) {
 
 			map_clfd = server->get_clients_to_sockfd();
 			it_clfd = map_clfd.find(friend_name);
-			if (it_clfd == map_clfd.end())
+			if (it_clfd == map_clfd.end()) {
 				//friend is not online, do nothing
+				cout << friend_name << " is not online!\n";
 				continue;
+			}
 
 			friend_sockfd = it_clfd->second;
 		
 			//send to friend_socket (client.username, client.ip, client.port);
-			announcement << "friend_online " << client->get_username() << " " << client->get_ip() << " " <<
+			announcement << FRIEND_IS_ONLINE << " " << client->get_username() << " " << client->get_ip() << " " <<
 					client->get_port();
+
+			cout << "Sending " << announcement << endl;
 			assert(send(friend_sockfd, announcement.str().c_str(), announcement.str().length() + 1, 0) >= 0);
+
+			ClientInfo * ci = server->get_clientInfo_by_sockfd(friend_sockfd);
+
+			sprintf(buff, "%s %s %s %s %s", ONLINE_FRIEND_INFO, it_f->first.c_str(), ci->get_username().c_str(),
+						     ci->get_status().c_str(), ci->get_state_as_string().c_str());
+			cout << "Sending " << buff << endl;
+			assert(send(sockfd, buff, strlen(buff)+1, 0) >= 0);
 		}
 	}
-	
-
-	
 }
 
 static void client_command(string line, int sockfd, Server *&server) {
@@ -231,8 +240,6 @@ static void client_command(string line, int sockfd, Server *&server) {
 				line.substr(msg_pos));
 		return;
 	}
-<<<<<<< HEAD
-=======
 	
 	if (line.find(INFO_CLIENT_PORT) == 0) {
 		int	port_pos = line.find(" ") + 1, port;
@@ -274,9 +281,6 @@ static void client_command(string line, int sockfd, Server *&server) {
 		
 		return;
 	}
-	
-
->>>>>>> 9ac16c41071af23c6ae46ad601cbc9ab7b0855b8
 }
 
 /**
