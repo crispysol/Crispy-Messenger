@@ -36,6 +36,7 @@ struct _general_info {
 	GtkWidget * password2;
 	GtkWidget * email;
 	GtkWidget * entry;
+	std::string client;
 };
 
 /**
@@ -90,21 +91,6 @@ void signal_check_recovery(struct _general_info * g_info);
 void signal_send_file(GtkWidget * widget, gpointer g_client);
 
 /**
- * Show user's profile
- */
-void signal_show_profile(GtkWidget * widget, gpointer g_client);
-
-/**
- * Change user's group
- */
-void signal_change_group(GtkWidget * widget, gpointer g_client);
-
-/**
- * Move user to group
- */
-void signal_remove_user(GtkWidget * widget, gpointer g_client);
-
-/**
  * Logout
  */
 void signal_logout(GtkWidget * widget, gpointer info);
@@ -138,5 +124,20 @@ void signal_change_availability(struct _general_info * g_info);
  * Send text to friend and save it in conversation text view
  */
 gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer g_conversation_chat);
+
+/**
+ * Show user's profile
+ */
+void signal_show_profile(GtkWidget * widget, gpointer g_client);
+
+/**
+ * Change user's group
+ */
+void signal_change_group(GtkWidget * widget, gpointer g_client);
+
+/**
+ * Remove user from group
+ */
+void signal_remove_user(struct _general_info * g_info);
 
 #endif /* CLIENTGTK_H_ */
