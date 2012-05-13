@@ -46,6 +46,8 @@
 #define CMD_SEARCH_USER 		"search_user"
 #define FILE_TRANSFER			"FILE_TRANSFER"
 
+#define NO_INFORMATION			"none"
+
 #define CONNECTED_MSG			"connected_with"
 #define EXIT_MSG			"exit"
 
