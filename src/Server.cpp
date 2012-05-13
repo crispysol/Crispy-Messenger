@@ -91,7 +91,7 @@ static bool add_default_group(string username) {
 	stringstream query;
 
 	try {		
-		query.flush();
+		query.str("");
 		query << "INSERT INTO groups(" << GROUPS_T_ID_USER_FK << ", " <<
 			GROUPS_T_NAME << ") VALUES ((" <<
 			"SELECT id FROM users WHERE username = '" << username << "'), '" <<
@@ -116,7 +116,7 @@ map<string, string> Server::get_list_of_friends(string username) {
 	map<string, string> friends;
 
 	try {			
-		query.flush();
+		query.str("");
 		query << "SELECT " << GROUPS_T_NAME << ", " << GROUPS_T_FRIENDS_LIST << " FROM groups WHERE " <<
 			GROUPS_T_ID_USER_FK << " = " << "(SELECT id FROM users WHERE username = '" << username << "');";
 		
@@ -197,7 +197,7 @@ bool Server::register_client(int sockfd, string username, string pass, string em
 	return rc;
 }
 
-static void tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ") {
+void tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ") {
     // Skip delimiters at beginning.
     string::size_type lastPos = str.find_first_not_of(delimiters, 0);
     // Find first "non-delimiter".
@@ -551,7 +551,7 @@ bool Server::remove_user(int sockfd, std::string username) {
 					}
 	
 			// Update db
-			friends_list_q.flush();
+			friends_list_q.str("");
 			friends_list_q << "UPDATE groups SET friends_list = '" << friends << "' WHERE " << 
 				GROUPS_T_ID << " = " << def_group_id << ";";
 			dprintf("[%s execute]%s\n", SQL_DEBUG, friends_list_q.str().c_str());
