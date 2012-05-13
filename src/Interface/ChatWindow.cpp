@@ -109,7 +109,6 @@ void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
 			G_CALLBACK(signal_send_text), (gpointer) ng_info);
 
 	// Add chat window to map
-	cout << "TEST: " << friend_username << endl;
 	map_chat_windows.insert(pair <string, GtkWidget *> (ng_info->friend_username, chat_window));
 	map_chat_text.insert(pair <string, GtkWidget *> (ng_info->friend_username, conversation_chat));
 

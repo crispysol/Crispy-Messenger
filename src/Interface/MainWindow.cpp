@@ -103,10 +103,60 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 }
 
 /**
- * Search friends TODO
+ * Search friends
  */
-static void search_friends(GtkWidget * widget, gpointer g_client) {
-	printf("TODO\n");
+static void search_friends(GtkWidget * widget, gpointer info) {
+	struct _general_info g_info = * (struct _general_info *) info;
+	gint width = PROFILE_WINDOW_WIDTH, height = PROFILE_WINDOW_HEIGHT;
+
+	// Create new window
+	GtkWidget * window = create_new_window(width, height, (gchar *) "Search friends");
+
+	// Create vbox and it's alignment
+	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.2, 0, 0);
+	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
+
+	// Create name entry
+	create_label_field(new_vbox, string("Enter name"));
+	GtkWidget * name = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(name), MAX_PROFILE_CHARS);
+	add_vbox_row(new_vbox, name, width / 1.5, 0);
+
+	// Create surname entry
+	create_label_field(new_vbox, string("Enter surname"));
+	GtkWidget * surname = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(surname), MAX_PROFILE_CHARS);
+	add_vbox_row(new_vbox, surname, width / 1.5, 0);
+
+	// Create phone entry
+	create_label_field(new_vbox, string("Enter phone"));
+	GtkWidget * phone = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(phone), MAX_PROFILE_CHARS);
+	add_vbox_row(new_vbox, phone, width / 1.5, 0);
+
+	// Create email entry
+	create_label_field(new_vbox, string("Enter email"));
+	GtkWidget * email = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(email), MAX_EMAIL_CHARS);
+	add_vbox_row(new_vbox, email, width / 1.5, 0);
+
+	// Create button
+	GtkWidget * button = gtk_button_new_with_label("Search user");
+	add_vbox_row(new_vbox, button, 0, 0);
+
+	// Action on button
+	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
+	ng_info->window_top_level = g_info.window_top_level;
+	ng_info->window = window;
+	ng_info->profile.name = name;
+	ng_info->profile.surname = surname;
+	ng_info->profile.phone = phone;
+	ng_info->profile.email = email;
+	ng_info->vbox_align = g_info.vbox_align;
+	g_signal_connect_swapped(button, "clicked", (GCallback) signal_search_user, (gpointer) ng_info);
+
+	// Show window
+	gtk_widget_show_all(window);
 }
 
 
@@ -157,7 +207,7 @@ static void change_availability_window(GtkWidget * widget, gpointer info) {
 	struct _general_info * g_info = (struct _general_info *) info;
 	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Change availability",
 			(gchar *) "Choose new availability:", MAX_REGISTER_CHARS, (gchar *) "Change availability",
-			signal_delete_group, *g_info, CHANGE_AVAILABILITY);
+			signal_change_availability, *g_info, CHANGE_AVAILABILITY);
 }
 
 /**
@@ -247,14 +297,6 @@ static void show_my_profile(GtkWidget * widget, gpointer info) {
 	g_info->client = current_client->get_username().c_str();
 	signal_show_profile(g_info);
 }
-
-///**
-// * Create a chat window TODO
-// */
-//static void create_chat_window(GtkWidget * widget, gpointer g_client) {
-//	clientgtk_create_chat_window(g_client);
-//}
-
 
 /**
  * Create a entry for the context menu

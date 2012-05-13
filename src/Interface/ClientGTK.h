@@ -34,6 +34,7 @@ struct _profile_info {
 	GtkWidget * surname;
 	GtkWidget * phone;
 	GtkWidget * hobbies;
+	GtkWidget * email;
 };
 
 /* Structure used to pass window information */
@@ -116,6 +117,12 @@ void signal_logout(GtkWidget * widget, gpointer info);
  * Add a new friend
  */
 void signal_add_friend(struct _general_info * g_info);
+
+
+/**
+ * Create a new group
+ */
+void signal_search_user(struct _general_info * g_info);
 
 /**
  * Create a new group

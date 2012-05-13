@@ -294,7 +294,6 @@ void receive_msg(string friend_username, string message) {
 	gdk_threads_enter();
 	map <string, GtkWidget *>::iterator it = map_chat_text.find(friend_username);
 	if (it == map_chat_text.end()) {
-		cout << "TEST: " << friend_username << endl;
 		clientgtk_create_chat_window(NULL, (gpointer) friend_username.c_str());
 		it = map_chat_text.find(friend_username);
 	}
@@ -391,8 +390,10 @@ void * start_thread(void * ptr_thread) {
  * Main function
  */
 int main(int argc, char *argv[]) {
-	if (argc == 2) // TODO delete
-		port = atoi(argv[1]);
+	if (argc == 3) {// TODO delete
+		ip = argv[1];
+		port = atoi(argv[2]);
+	}
 	// Init localhost server (communication with other clients)
 	init_server(client_port, sockfd, fdmax, &read_fds);
 
