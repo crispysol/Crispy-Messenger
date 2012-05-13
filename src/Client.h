@@ -75,7 +75,7 @@ public:
 	/**
 	 * Returns socket file descriptor of the other user or -1 on error.
 	 */
-	int connect_with_user_res(char* response, int & fdmax, fd_set * read_fds);
+	int connect_with_user_res(std::string response, int & fdmax, fd_set * read_fds);
 
 	// Receive friend list
 	bool receive_friend_list(Json::Value & root);

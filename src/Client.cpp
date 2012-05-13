@@ -270,6 +270,61 @@ bool Client::update_profile(std::string name, std::string surname,
 	return true;
 }
 
+
+
+bool Client::remove_group(std::string group) {
+	int rc;
+	char buffer[BUFFER_LENGTH];
+
+	//send group to delete,  to server_socket
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s", CMD_DEL_GROUP, group.c_str());
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+
+	//receive response from server_socket
+	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	assert(rc >= 0);
+	dprintf("[CLIENT]received from server: %s\n", buffer);
+	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+		return false;
+
+	// Receive friends
+	Json::Value root;
+	if (!receive_friend_list(root)) {
+		return false;
+	}
+
+	return true;
+
+}
+
+
+bool Client::move_user_to_group(std::string username, std::string group){
+	int rc;
+	char buffer[BUFFER_LENGTH];
+
+	//send group to delete,  to server_socket
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s %s", CMD_MV_USER, username.c_str(), group.c_str());
+	dprintf("%s\n",msg);
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+
+	//receive response from server_socket
+	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	assert(rc >= 0);
+	dprintf("[CLIENT]received from server: %s\n", buffer);
+	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+		return false;
+
+	// Receive friends
+	Json::Value root;
+	if (!receive_friend_list(root)) {
+		return false;
+	}
+
+	return true;
+
+}
 /**
  * Asks for port and ip of user <username>.
  */
@@ -285,22 +340,37 @@ void Client::connect_with_user_req(std::string username) {
 /**
  * Returns socket file descriptor of the other user or -1 on error.
  */
-int Client::connect_with_user_res(char* response, int & fdmax, fd_set * read_fds) {
+int Client::connect_with_user_res(string response, int & fdmax, fd_set * read_fds) {
 	int rc, newsocket, port;
 	char ip[16];
-	char buffer[BUFFER_LENGTH];
+	char username[BUFFER_LENGTH];
 	
 	//receive port and ip from server	
-	if (response == NULL || strcmp(response, ERR_MSG) == 0)
+	if (response.compare(ERR_MSG) == 0)
 		return -1;
 	
-	sscanf(response, "%s: %s %i", buffer, ip, &port);
-	dprintf("received from server: %s %s %i\n", buffer, ip, port);
+	vector<string> tokens;
+	tokenize(response, tokens, " ");
+	vector<string>::iterator tok = tokens.begin(), tok_end = tokens.end();
+	assert(tok != tok_end);
+	tok++;
+	assert(tok != tok_end);
+	strcpy(ip, (*tok).c_str());
+	tok++;
+	assert(tok != tok_end);
+	port = atoi((*tok).c_str());
+	tok++;
+	assert(tok != tok_end);
+	strcpy(username, (*tok).c_str());
+	
+	dprintf("received from server: %s, %s, %i\n", username, ip, port);
 	
 	//connect_to_server(consider the other client the server)
 	connect_to_server(ip, port, newsocket, fdmax, read_fds);
-	insert_in_connected_users(get_username(), newsocket);
+	dprintf("connected to %s\n", username);
+	insert_in_connected_users(string(username), newsocket);
 	
 	//return socket from connect_to server
 	return newsocket;
+
 }

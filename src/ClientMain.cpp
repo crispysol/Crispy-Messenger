@@ -31,13 +31,15 @@ static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds);
 /**
  * Process message from server.
  */
-static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds) {
-	if (strstr(buffer, SUCCESS_MSG) == 0)
+static void process_server_msg(string buffer, int & fdmax, fd_set * read_fds) {
+	if (buffer.find(SUCCESS_MSG) == 0)
 		return;
 
-	if(strstr(buffer, CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
+	if(buffer.find(CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
 		// connect with user
+		printf("buffer %s\n", buffer.c_str());
 		int sockfd = client->connect_with_user_res(buffer, fdmax, read_fds);
+		dprintf("[DONE, sockfd %i]%s\n", sockfd, buffer.c_str());
 		if (sockfd == -1)
 			return;
 			
@@ -102,6 +104,25 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		return;
 	}
 
+
+	if(line.find(CMD_DEL_GROUP) == 0) {
+		int group_pos = line.find(" ") + 1;
+		client->remove_group(line.substr(group_pos));
+		return;
+	}
+	if(line.find(CMD_MV_USER) == 0) {
+		int user_pos= line.find(" ") + 1,
+			group_pos = line.find(" ",user_pos) + 1;
+			
+		client-> move_user_to_group(
+						line.substr(user_pos, group_pos-1 - user_pos),
+						line.substr(group_pos)
+						);
+		return;
+	}
+	
+	
+
 	if (line.find(CMD_GET_PROFILE) == 0) {
 		
 		client->get_profile(line.substr(line.find(" ") + 1));
@@ -122,6 +143,7 @@ void stdin_command(Client *client, fd_set * read_fds) {
 	
 		return;
 	}
+
 
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
@@ -189,6 +211,7 @@ int run_server(char * server_ip, int server_port) {
 			if (FD_ISSET(i, &tmp_fds)) {
 				// New connection
 				if (i == sockfd) {
+					dprintf("received new connection on %i\n", i);
 					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
 					continue;
 				}
@@ -204,7 +227,7 @@ int run_server(char * server_ip, int server_port) {
 					n = recv(i, buffer, sizeof(buffer), 0);
 					assert(n >= 0); // TODO test if we have to exit
 					dprintf("[CLIENT]received from SERVER: %s\n", buffer);
-					//process_server_msg(buffer, fdmax, &read_fds);
+					process_server_msg(string(buffer), fdmax, &read_fds);
 					continue;
 				}
 

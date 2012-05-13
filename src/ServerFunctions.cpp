@@ -65,7 +65,7 @@ void new_connection(int sockfd, int & fdmax, fd_set * read_fds, string &ip, int 
 
 	ip = string(inet_ntoa(cli_addr.sin_addr));
 	newport = cli_addr.sin_port;
-	cout << "[SERVER] New connection from: " << ip << endl;
+	cout << "[SERVER] New connection from: " << ip << " on port " << newport << endl;
 
 	// Send 'welcome' message
 	assert(send(newsockfd, BANNER, strlen(BANNER) + 1, 0) >= 0);
@@ -135,6 +135,8 @@ void init_server(int & server_port, int & sockfd, int & fdmax, fd_set * read_fds
 void connect_to_server(char * server_ip, int server_port,  int & socket_server, int & fdmax, fd_set * read_fds) {
 	struct sockaddr_in  serv_addr;
 	struct hostent *server;
+
+	dprintf("establish new connection for ip %s and port %i\n", server_ip, server_port);
 
 	// Create socket
 	socket_server = socket(AF_INET, SOCK_STREAM, 0);

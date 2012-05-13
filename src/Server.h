@@ -51,6 +51,7 @@ public:
 	std::map <std::string, int> & get_clients_to_sockfd();
 	
 	void insert_in_sockfd_to_clients(int key, ClientInfo * ci);
+	void insert_in_clients_to_sockfd(std::string username, int sockfd);
 	/* Return value in sockfd_to_clients with key <sockfd> */
 	ClientInfo * get_clientInfo_by_sockfd(int sockfd);
 	/* Return connection info of client <username>  */
@@ -72,7 +73,7 @@ public:
 	bool remove_user(int sockfd, std::string username);
 	bool search_user(int sockfd, std::string name, std::string surname,
 			std::string phone, std::string email, std::string hobbies);
-
+	bool rmv_user(int  sockfd, std::string username );
 	// Add/Remove/Edit a group
 	bool add_group(int sockfd, std::string group, std::string username);
 	bool remove_group(int sockfd, std::string group);
