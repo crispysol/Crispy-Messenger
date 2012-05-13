@@ -164,6 +164,24 @@ void stdin_command(Client *client, fd_set * read_fds) {
 			line.substr(name_dst, msg_pos - 1 - name_dst), 
 			line.substr(msg_pos));
 	}
+	
+	if(line.find(CMD_SET_STATE) == 0) {
+		int state_pos= line.find(" ") + 1;
+			
+			
+		client-> send_state(line.substr(state_pos)
+						);
+		return;
+	}
+
+	if(line.find(CMD_SET_STATUS) == 0) {
+		int state_pos= line.find(" ") + 1;
+			
+			
+		client-> send_status(line.substr(state_pos)
+						);
+		return;
+	}
 
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections

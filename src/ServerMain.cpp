@@ -226,6 +226,20 @@ static void client_command(string line, int sockfd, Server *&server) {
 		return;
 	}
 
+	if (line.find(CMD_SET_STATE) == 0) {
+		int state_pos = line.find(" ") + 1;
+
+		server->set_state(sockfd, line.substr(state_pos));
+		return;
+	}
+	
+	if (line.find(CMD_SET_STATUS) == 0) {
+		int status_pos = line.find(" ") + 1;
+
+		server->set_status(sockfd, line.substr(status_pos));
+		return;
+	}
+
 }
 
 /**

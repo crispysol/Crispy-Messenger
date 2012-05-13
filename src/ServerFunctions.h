@@ -40,6 +40,9 @@
 #define CMD_CONN_REQ_FROM		"connect_req_from"
 #define CMD_SEND_MSG			"send_msg"
 #define INFO_CLIENT_PORT		"info_port"
+//from a client point of view
+#define CMD_SET_STATE			"set_state"
+#define CMD_SET_STATUS			"set_status"
 
 #define EXIT_MSG			"exit"
 

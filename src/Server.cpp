@@ -1082,3 +1082,27 @@ bool Server::set_offline(int sockfd)
 	
 
 }
+
+
+
+// Status/State (+ TODO send message to all friends that client changed status/state)
+bool Server::set_status(int sockfd, std::string status){
+	
+	ClientInfo * my_client;
+
+	my_client=get_clientInfo_by_sockfd(sockfd);
+	my_client->set_status(status);
+	my_client->set_state_from_string("online"); //if I have a status, i'm online
+	assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+	dprintf("[SERVER] set status %s\n", status.c_str());
+}
+bool Server::set_state(int sockfd, std::string state){
+	
+	ClientInfo * my_client;
+
+	my_client=get_clientInfo_by_sockfd(sockfd);
+	my_client->set_state_from_string(state);
+	dprintf("[SERVER] set state %s\n", state.c_str());
+	assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+	
+}

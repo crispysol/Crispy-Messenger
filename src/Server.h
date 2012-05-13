@@ -81,7 +81,7 @@ public:
 
 	// Status/State (+ send message to all friends that client changed status/state)
 	bool set_status(int sockfd, std::string status);
-	bool set_state(int sockfd, State state);
+	bool set_state(int sockfd, std::string state);
 
 	// Send user's ip and port in the following format "connect_with_user_res: ip port" 
 	bool send_user_ip(int sockfd, std::string username);
