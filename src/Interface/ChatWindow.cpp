@@ -45,23 +45,34 @@ static GtkWidget * scrolled_chat_text_view(GtkWidget * vbox, gboolean from_start
 	return text_view;
 }
 
-// TODO delete
-static void todo_change(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
-
+/* Send a file */
+static void send_file(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
+	signal_send_file(widget, g_client);
+}
+/* Show profile */
+static void show_profile(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
+	signal_show_profile(widget, g_client);
+}
+/* Show profile */
+static void change_group(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
+	signal_change_group(widget, g_client);
 }
 
+
 /**
- * Create buttons for a chat window TODO
+ * Create buttons for a chat window
  */
-static void create_chat_window_buttons(GtkWidget * vbox) {
+static void create_chat_window_buttons(GtkWidget * vbox, gpointer g_client) {
 	// Create hbox
 	GtkWidget * hbox = gtk_hbox_new(FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-	// Create send button TODO
-	add_button_to_box(hbox, "Send file", TRUE, todo_change, FALSE);
-	// Create test button TODO
-	add_button_to_box(hbox, "Test", FALSE, todo_change, FALSE);
+	// Create send button
+	add_button_to_box(hbox, "Send file", TRUE, send_file, g_client);
+	// Create show profile button
+	add_button_to_box(hbox, "Show profile", FALSE, show_profile, g_client);
+	// Create change group button
+	add_button_to_box(hbox, "Change group", FALSE, change_group, g_client);
 
 	// Show all widgets
 	gtk_widget_show_all(hbox);
@@ -101,7 +112,7 @@ void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
 	gtk_widget_show(conversation_chat);
 
 	// Create buttons
-	create_chat_window_buttons(chat_vbox);
+	create_chat_window_buttons(chat_vbox, g_client);
 
 	// Create text view used for input
 	GtkWidget * entry_chat = scrolled_chat_text_view(chat_vbox, FALSE);

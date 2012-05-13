@@ -41,7 +41,7 @@ class Server {
 	sql::Connection	*con;
 
 	// TODO
-	bool send_initial_info(int sockfd, std::string username);
+	bool send_friends_list(int sockfd, std::string username);
 
 public:
 	Server();

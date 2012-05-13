@@ -233,26 +233,10 @@ bool Server::register_client(int sockfd, string username, string pass, string em
 	return rc;
 }
 
-void tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ") {
-    // Skip delimiters at beginning.
-    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-    // Find first "non-delimiter".
-    string::size_type pos     = str.find_first_of(delimiters, lastPos);
-
-    while (string::npos != pos || string::npos != lastPos) {
-        // Found a token, add it to the vector.
-        tokens.push_back(str.substr(lastPos, pos - lastPos));
-        // Skip delimiters.  Note the "not_of"
-        lastPos = str.find_first_not_of(delimiters, pos);
-        // Find next "non-delimiter"
-        pos = str.find_first_of(delimiters, lastPos);
-    }
-}
-
 /**
  * Send initial info at login to user that just logged
  */
-bool Server::send_initial_info(int sockfd, string username) {
+bool Server::send_friends_list(int sockfd, string username) {
 	stringstream ss;
 
 	// Retrieve friends
@@ -306,13 +290,14 @@ bool Server::send_initial_info(int sockfd, string username) {
 		}
 		ss << "]}";
 	}
-	ss << endl << "]," << endl;
+	ss << endl << "]}" << "\n";
 
-	// Add offline messages TODO
-	ss << "\"offline_messages\": \"TODO\"" << endl << "}" << endl;
+	// Synchronize server / client
+	char buffer[strlen(SUCCESS_MSG) + 1];
+	assert(recv(sockfd, buffer, sizeof(buffer), 0) >= 0);
 
-	// Send message
-	assert(send(sockfd, ss.str().c_str(), ss.str().length() + 1, 0) >= 0);
+	// Send friends list
+	assert(send(sockfd, ss.str().c_str(), strlen(ss.str().c_str()) + 1, 0) >= 0);
 
 	return true;
 }
@@ -345,8 +330,12 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 				ci->set_state(AVAILABLE);
 				ci->set_status("");
 
-				// Send initial info TODO
-				send_initial_info(sockfd, username);
+				// Send friends list
+				if (rc && !send_friends_list(sockfd, username)) {
+					rc = false;
+				}
+
+				// Send offline messages TODO
 		}
 		else {
 			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
@@ -521,6 +510,11 @@ bool Server::add_user(int sockfd, std::string username) {
 
 	else assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 
+	// Send friends list
+	if (rc && !send_friends_list(sockfd, myusername)) {
+		rc = false;
+	}
+
 	return rc;
 
 }
@@ -620,6 +614,11 @@ bool Server::remove_user(int sockfd, std::string username) {
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 	else
 		assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+
+	// Send friends list
+	if (rc && !send_friends_list(sockfd, myusername)) {
+		rc = false;
+	}
 		
 	return rc;
 }
@@ -660,6 +659,77 @@ bool Server::add_group(int sockfd, std::string group, string username) {
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 	else
 		assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+
+	// Send friends list
+	if (rc && !send_friends_list(sockfd, username)) {
+		rc = false;
+	}
 		
 	return rc;
+}
+
+
+/*
+* Move user to group 
+* (Radu)
+*/
+bool move_user_to_group(int sockfd, std::string username, std::string group)
+{
+	
+}
+
+/*
+* Remove a group. Make sure group is empty
+* (Radu)
+*/
+bool remove_group(int sockfd, std::string group)
+{
+}
+
+/**
+ * Send profile to user.
+ * username: user to search for in database.
+ * //TODO: Not ready
+ * Liviu
+ */
+bool Server::send_profile(int sockfd, std::string username) {
+	int rc = true;
+	string query = string("SELECT name, surname, phone, email, hobbies"
+			      " FROM users WHERE username = '").append(username).append("';");
+	cout << "Searching for " << username << "\n" << query << "\n";
+	try {
+		sql::ResultSet * res = stmt->executeQuery(query);
+		dprintf("[SERVER] query executed\n");
+		if (res->next()) {
+			char buff[BUFFER_LENGTH];
+			cout << res->getString("name") << " " << res->getString("username") << "\n";
+			sprintf(buff, "%s %s %s %s %s", string(res->getString("name")).c_str(),
+							string(res->getString("surname")).c_str(),
+							string(res->getString("phone")).c_str(),
+							string(res->getString("email")).c_str(),
+							string(res->getString("hobbies")).c_str());
+			assert(send(sockfd, buff, strlen(buff) + 1, 0) >= 0);
+		} else {
+			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+			rc = false;
+		}
+		if (res)
+			delete res;
+	} catch (sql::SQLException &e) {
+		//assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		rc = false;
+	}
+
+	return rc;
+}
+
+/**
+ * Updates a user profile.
+ * //TODO: Not ready.
+ *
+ * Liviu
+ */
+bool Server::update_profile(int sockfd, std::string name, std::string surname,
+			std::string phone, std::string email, std::string hobbies) {
+	return true;
 }

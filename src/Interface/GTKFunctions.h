@@ -32,6 +32,6 @@ void create_label_field(GtkWidget * vbox, std::string label_text);
  * Create a button and add it to a box
  */
 void add_button_to_box(GtkWidget * box, std::string label_text, gboolean aligned,
-		void (* handler)(GtkWidget *, GdkEventButton *, gpointer), gboolean no_background);
+		void (* handler)(GtkWidget *, GdkEventButton *, gpointer), gpointer g_client);
 
 #endif /* GTKFUNCTIONS_H_ */

@@ -79,6 +79,7 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		client->add_group(line.substr(group_pos));
 		return;
 	}
+<<<<<<< HEAD
 	
 	if(line.find(CMD_CONN_CLIENT_TO_CLIENT_REQ) == 0) {
 		int user_pos = line.find(" ") + 1;
@@ -86,6 +87,20 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		return;
 	}
 
+=======
+
+	if (line.find(CMD_GET_PROFILE) == 0) {
+		
+		//TODO
+		client->get_profile("a");
+		return;
+	}
+
+	if (line.find(CMD_UPDATE_PROFILE) == 0) {
+		//TODO
+	}
+
+>>>>>>> 448948bc620d72fe86278bbf4a0b61b1ad4cc0d2
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
 		//end connection to server

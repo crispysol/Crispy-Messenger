@@ -68,20 +68,18 @@ void create_label_field(GtkWidget * vbox, string label_text) {
  * Create a button and add it to a box
  */
 void add_button_to_box(GtkWidget * box, string label_text, gboolean aligned,
-		void (* handler)(GtkWidget *, GdkEventButton *, gpointer), gboolean no_background) {
+		void (* handler)(GtkWidget *, GdkEventButton *, gpointer), gpointer g_client) {
 	GtkWidget * align, * button, * label;
 	// Create button
 	button = gtk_button_new();
-	if (no_background) {
-		gtk_button_get_focus_on_click(GTK_BUTTON(button));
-		gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
-	}
+	gtk_button_get_focus_on_click(GTK_BUTTON(button));
+	gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
 	gtk_box_pack_start(GTK_BOX(box), button, aligned, aligned, 0);
 
 	// Action on click
-	g_signal_connect(button, "button_press_event", G_CALLBACK(handler), (gpointer) label_text.c_str());
+	g_signal_connect(button, "button_press_event", G_CALLBACK(handler), (gpointer) g_client);
 
-	// Send button label and it's alignment
+	// Button label and it's alignment
 	align = gtk_alignment_new(0, 0.5, 0, 0);
 	gtk_container_add(GTK_CONTAINER(button), align);
 	label = gtk_label_new("");
