@@ -135,9 +135,8 @@ static void client_command(string line, int sockfd, Server *&server) {
 		server->add_user(sockfd,line.substr(user_pos));
 		return;
 	}
-	cout << "[SERVER] received from client " << line << endl << flush;
+
 	if (line.find(CMD_REMOVE_USER) == 0) {
-		dprintf("sending remove_user command\n");
 		int user_pos = line.find(" ") + 1;
 		server->remove_user(sockfd,line.substr(user_pos));
 		return;
