@@ -1003,3 +1003,20 @@ bool Server::update_profile(int sockfd, std::string name, std::string surname,
 			std::string phone, std::string email, std::string hobbies) {
 	return true;
 }
+
+
+
+/*
+*
+*
+*/
+bool Server::set_offline(int sockfd)
+{
+
+	ClientInfo * my_client;
+
+	my_client=get_clientInfo_by_sockfd(sockfd);
+	my_client->set_state_from_string("offline");
+	
+
+}

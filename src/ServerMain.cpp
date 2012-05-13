@@ -237,6 +237,8 @@ int run_server(int server_port) {
 				// Received data from client
 				if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
 					//assert(n == 0); TODO
+					//set client status offline
+					server->set_offline(i); 
 					end_connection(i, &read_fds);
 				} else {
 					//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),

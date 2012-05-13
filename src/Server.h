@@ -90,7 +90,8 @@ public:
 	
 	//TODO
 	bool forgot_password();
-	
+	//set user offline
+	bool set_offline(int sockfd);
 	std::map<std::string, std::string> get_list_of_friends(std::string username);
 };
 
