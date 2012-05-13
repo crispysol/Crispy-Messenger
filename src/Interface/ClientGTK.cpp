@@ -301,7 +301,6 @@ void idle(gpointer data) {
 			// New connection
 			if (i == sockfd) {
 				new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
-				//current_client->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
 				continue;
 			}
 
@@ -339,15 +338,15 @@ int main(int argc, char *argv[]) {
 	if (argc == 2) // TODO delete
 		port = atoi(argv[1]);
 	// Init localhost server (communication with other clients)
-//	init_server(client_port, sockfd, fdmax, &read_fds);
-//
-//	// Connect to main server
-//	char aux_ip[strlen(ip.c_str()) + 1];
-//	strcpy(aux_ip, ip.c_str());
-//	connect_to_server(aux_ip, port, socket_server, fdmax, &read_fds);
-//
-//	// Create current client
-//	current_client = new Client(socket_server);
+	init_server(client_port, sockfd, fdmax, &read_fds);
+
+	// Connect to main server
+	char aux_ip[strlen(ip.c_str()) + 1];
+	strcpy(aux_ip, ip.c_str());
+	connect_to_server(aux_ip, port, socket_server, fdmax, &read_fds);
+
+	// Create current client
+	current_client = new Client(socket_server);
 
 	// Init GTK
 	gtk_init(&argc, &argv);
@@ -374,7 +373,7 @@ int main(int argc, char *argv[]) {
 	clientgtk_create_login_window(window_top_level);
 
 	// Add idle function
-//	g_idle_add((GSourceFunc) idle, 0);
+	g_idle_add((GSourceFunc) idle, 0);
 
 	// Main gtk loop
 	gtk_main();

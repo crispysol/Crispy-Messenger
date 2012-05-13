@@ -160,10 +160,6 @@ static void create_update_profile_window(GtkWidget * widget, gpointer info) {
 	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.2, 0, 0);
 	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
 
-	// Create hobbies entry
-	create_label_field(new_vbox, string("Enter hobbies"));
-	GtkWidget * hobbies = scrolled_chat_text_view(new_vbox, TRUE);
-
 	// Create name entry
 	create_label_field(new_vbox, string("Enter name"));
 	GtkWidget * name = gtk_entry_new();
@@ -181,6 +177,16 @@ static void create_update_profile_window(GtkWidget * widget, gpointer info) {
 	GtkWidget * phone = gtk_entry_new();
 	gtk_entry_set_max_length(GTK_ENTRY(phone), MAX_PROFILE_CHARS);
 	add_vbox_row(new_vbox, phone, width / 1.5, 0);
+
+	// Create hobbies entry
+	GtkWidget * hobbies = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(hobbies),
+			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	GtkWidget * text_view = gtk_text_view_new();
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
+	gtk_container_add(GTK_CONTAINER(hobbies), text_view);
+	create_label_field(new_vbox, string("Enter hobbies"));
+	add_vbox_row(new_vbox, hobbies, width / 1.5, height / 3);
 
 	// Create button
 	GtkWidget * button = gtk_button_new_with_label("Update profile");
