@@ -640,8 +640,9 @@ bool Server::add_group(int sockfd, std::string group, string username) {
 * Move user to group 
 * (Radu)
 */
-bool move_user_to_group(int sockfd, std::string username, std::string group)
+bool Server::move_user_to_group(int sockfd, std::string username, std::string group)
 {
+	dprintf("[SERVER]received move user to group request %s to %s \n",username.c_str(),group.c_str());
 	
 }
 
@@ -649,8 +650,10 @@ bool move_user_to_group(int sockfd, std::string username, std::string group)
 * Remove a group. Make sure group is empty
 * (Radu)
 */
-bool remove_group(int sockfd, std::string group)
+bool Server::remove_group(int sockfd, std::string group)
 {
+	dprintf("[SERVER] receive remove group request %s",group.c_str());
+
 }
 
 

@@ -168,3 +168,48 @@ bool Client::add_group(std::string group) {
 
 	return true;
 }
+
+
+bool Client::remove_group(std::string group) {
+	int rc;
+	char buffer[BUFFER_LENGTH];
+
+	//send group to delete,  to server_socket
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s", CMD_DEL_GROUP, group.c_str());
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+
+	//receive response from server_socket
+	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	assert(rc >= 0);
+	dprintf("[CLIENT]received from server: %s\n", buffer);
+	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+		return false;
+
+	return true;
+
+}
+
+
+bool Client::move_user_to_group(std::string username, std::string group){
+	int rc;
+	char buffer[BUFFER_LENGTH];
+
+	//send group to delete,  to server_socket
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s %s", CMD_MV_USER, username.c_str(), group.c_str());
+	dprintf("%s\n",msg);
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+
+	//receive response from server_socket
+	rc = recv(server_socket, buffer, sizeof(buffer), 0);
+	assert(rc >= 0);
+	dprintf("[CLIENT]received from server: %s\n", buffer);
+	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+		return false;
+
+	return true;
+
+
+
+}

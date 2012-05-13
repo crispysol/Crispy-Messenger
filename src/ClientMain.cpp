@@ -68,6 +68,23 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		client->add_group(line.substr(group_pos));
 		return;
 	}
+
+	if(line.find(CMD_DEL_GROUP) == 0) {
+		int group_pos = line.find(" ") + 1;
+		client->remove_group(line.substr(group_pos));
+		return;
+	}
+	if(line.find(CMD_MV_USER) == 0) {
+		int user_pos= line.find(" ") + 1,
+			group_pos = line.find(" ",user_pos) + 1;
+			
+		client-> move_user_to_group(
+						line.substr(user_pos, group_pos-1 - user_pos),
+						line.substr(group_pos)
+						);
+		return;
+	}
+	
 	
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
