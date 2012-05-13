@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <pthread.h>
 #include <regex.h>
 
 #include "../ServerFunctions.h"
@@ -46,6 +47,11 @@ Client * current_client;
 
 // Map used for correspondence between client - chat window
 map <string, GtkWidget *> map_chat_windows;
+map <string, GtkWidget *> map_chat_text;
+
+// TODO
+bool create_window_ok = false;
+string global_friend_username;
 
 /**
  * Check login values and execute create main interface if everything is ok
@@ -220,13 +226,14 @@ void signal_send_file(GtkWidget * widget, gpointer g_client) {
 /**
  * Send text to friend and save it in conversation text view // TODO
  */
-gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
-		gpointer info) {
+gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer info) {
 	if (event->keyval == GDK_Return || event->keyval == GDK_KP_Enter) {
 		struct _general_info * g_info = (struct _general_info *) info;
 		GtkWidget * conversation_chat = (GtkWidget *) g_info->window;
 
+		// TODO lock
 		// Get text from input
+//		gdk_threads_enter();
 		GtkTextBuffer * buffer1 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(entry_chat));
 		GtkTextIter start, end;
 		gtk_text_buffer_get_bounds(buffer1, &start, &end);
@@ -254,6 +261,7 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
 
 		// Delete all text from input
 		gtk_text_buffer_set_text(buffer1, "", -1);
+//		gdk_threads_leave();
 
 		return TRUE;
 	}
@@ -286,53 +294,103 @@ void signal_logout(GtkWidget * widget, gpointer info) {
 }
 
 /**
- * Function that runs in gtk main loop
+ * Receive a message
  */
-void idle(gpointer data) {
+void receive_msg(string friend_username, string message) {
+	gdk_threads_enter();
+	map <string, GtkWidget *>::iterator it = map_chat_text.find(friend_username);
+	if (it == map_chat_text.end()) {
+		cout << "TEST: " << friend_username << endl;
+		clientgtk_create_chat_window(NULL, (gpointer) friend_username.c_str());
+		it = map_chat_text.find(friend_username);
+	}
+
+	// Set text to conversation box
+	GtkWidget * conversation_chat = it->second;
+	GtkTextIter start, end;
+	GtkTextBuffer * buffer2 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(conversation_chat));
+	gtk_text_buffer_get_bounds(buffer2, &start, &end);
+	gchar * old_text = gtk_text_buffer_get_text(buffer2, &start, &end, FALSE);
+	string text;
+	string username = current_client->get_username();
+	if (strcmp(old_text, "") == 0) {
+		text = friend_username + ": " + message;
+	} else {
+		text = string(old_text) + "\n" + friend_username + ": " + message;
+	}
+	gtk_text_buffer_set_text(buffer2, text.c_str(), -1);
+	gdk_threads_leave();
+
+	// Free space
+	free(old_text);
+}
+
+// Declare buffer
+char buffer[BUFFER_LENGTH];
+
+// TODO
+void * start_thread(void * ptr_thread) {
 	// Run local server
-	char buffer[BUFFER_LENGTH];
-	int n, newsockfd, newport;
+	int n, newsockfd;
 	string ip;
 
 	FD_ZERO(&tmp_fds);
-	tmp_fds = read_fds;
-	assert(select(fdmax + 1, &tmp_fds, NULL, NULL, NULL) != -1);
 
-	// Check every socket for new data
-	for (int i = 0; i <= fdmax; i++) {
-		if (FD_ISSET(i, &tmp_fds)) {
-			// New connection
-			if (i == sockfd) {
-				new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
-				continue;
-			}
+	// Main loop
+	for (;;) {
+		tmp_fds = read_fds;
+		assert(select(fdmax + 1, &tmp_fds, NULL, NULL, NULL) != -1);
 
-			// Command from STDIN (doesn't apply for GTK client)
-			if (i == STDIN_FILENO) {
-				continue;
-			}
+		// Check every socket for new data
+		for (int i = 0; i <= fdmax; i++) {
+			if (FD_ISSET(i, &tmp_fds)) {
+				// New connection
+				if (i == sockfd) {
+					dprintf("received new connection on %i\n", i);
+					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd);
+					continue;
+				}
 
-			// Receive data from server
-			if (i == socket_server) {
-				// TODO if (i == server_port) => quit application and free all resource (sockets + etc)
-				n = recv(i, buffer, sizeof(buffer), 0);
-				assert(n >= 0); // TODO test if we have to exit
+				// Execute command from STDIN
+				if (i == STDIN_FILENO) {
+//					stdin_command(client, &read_fds); TODO
+					continue;
+				}
 
-				cout << buffer << " | RECEIVED" << endl << flush;
-				continue;
-			}
+				// Receive data from server
+				if (i == socket_server) {
+					n = recv(i, buffer, sizeof(buffer), 0);
+					assert(n >= 0); // TODO test if we have to exit
 
-			// Received data from another client
-			if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
-				assert(n == 0);
-				end_connection(i, &read_fds);
-				current_client->remove_from_connected_users(i);
-			} else {
-				cout << "received from client: " << buffer << endl << flush;
-				// TODO
+					// Received message from another client
+					string str = buffer;
+					printf("received from client: %s\n", buffer);
+					if (str.find(CMD_SEND_MSG) == 0) {
+						int name_dst = str.find(" ") + 1;
+						int msg_pos = str.find(" ", name_dst) + 1;
+
+						receive_msg(str.substr(name_dst, msg_pos - 1 - name_dst), str.substr(msg_pos));
+					} else {
+						// TODO
+					}
+
+					continue;
+				}
+
+				// Received data from another client
+				if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
+					assert(n == -1);
+					end_connection(i, &read_fds);
+					current_client->remove_from_connected_users(i);
+				} else {
+					printf("received from client: %s\n", buffer);
+//					client_command(buffer, i);
+				}
 			}
 		}
 	}
+
+	return 0;
 }
 
 /**
@@ -353,6 +411,9 @@ int main(int argc, char *argv[]) {
 	current_client = new Client(socket_server);
 
 	// Init GTK
+	g_thread_init(NULL);
+	gdk_threads_init();
+	gdk_threads_enter();
 	gtk_init(&argc, &argv);
 
 	// Create main window
@@ -376,11 +437,13 @@ int main(int argc, char *argv[]) {
 	// Create login interface
 	clientgtk_create_login_window(window_top_level);
 
-	// Add idle function
-	g_idle_add((GSourceFunc) idle, 0);
+	// Add thread
+	pthread_t tread_id;
+	pthread_create(&tread_id, NULL, start_thread, NULL);
 
 	// Main gtk loop
 	gtk_main();
+	gdk_threads_leave();
 
 	return 0;
 }
