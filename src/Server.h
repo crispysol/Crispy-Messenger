@@ -72,7 +72,7 @@ public:
 	bool add_user(int sockfd, std::string username);
 	bool remove_user(int sockfd, std::string username);
 	bool search_user(int sockfd, std::string name, std::string surname,
-			std::string phone, std::string email, std::string hobbies);
+			std::string phone, std::string email);
 	bool rmv_user(int  sockfd, std::string username );
 	// Add/Remove/Edit a group
 	bool add_group(int sockfd, std::string group, std::string username);
@@ -81,7 +81,7 @@ public:
 
 	// Status/State (+ send message to all friends that client changed status/state)
 	bool set_status(int sockfd, std::string status);
-	bool set_state(int sockfd, State state);
+	bool set_state(int sockfd, std::string state);
 
 	// Send user's ip and port in the following format "connect_with_user_res: ip port" 
 	bool send_user_ip(int sockfd, std::string username);
@@ -91,7 +91,8 @@ public:
 	
 	//TODO
 	bool forgot_password();
-	
+	//set user offline
+	bool set_offline(int sockfd);
 	std::map<std::string, std::string> get_list_of_friends(std::string username);
 	
 	bool send_msg_from_user_to_user(int sockfd, std::string user_src, std::string user_dst, std::string msg);

@@ -248,6 +248,14 @@ static void show_my_profile(GtkWidget * widget, gpointer info) {
 	signal_show_profile(g_info);
 }
 
+///**
+// * Create a chat window TODO
+// */
+//static void create_chat_window(GtkWidget * widget, gpointer g_client) {
+//	clientgtk_create_chat_window(g_client);
+//}
+
+
 /**
  * Create a entry for the context menu
  */

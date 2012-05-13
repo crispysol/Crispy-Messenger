@@ -48,6 +48,7 @@ struct _general_info {
 	GtkWidget * entry;
 	struct _profile_info profile;
 	const char * client;
+	char * friend_username;
 };
 
 /**

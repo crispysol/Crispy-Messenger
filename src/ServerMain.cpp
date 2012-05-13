@@ -231,6 +231,52 @@ static void client_command(string line, int sockfd, Server *&server) {
 				line.substr(msg_pos));
 		return;
 	}
+<<<<<<< HEAD
+=======
+	
+	if (line.find(INFO_CLIENT_PORT) == 0) {
+		int	port_pos = line.find(" ") + 1, port;
+		char	port_ch[6];
+		assert(line.copy(port_ch, line.length() - port_pos, port_pos) > 0);
+		port = atoi(port_ch);
+		dprintf("received port %i\n", port);
+		ClientInfo *ci = server->get_clientInfo_by_sockfd(sockfd);
+		assert(ci != NULL);
+		ci->set_port(port);
+		
+		return;
+	}
+
+	if (line.find(CMD_SET_STATE) == 0) {
+		int state_pos = line.find(" ") + 1;
+
+		server->set_state(sockfd, line.substr(state_pos));
+		return;
+	}
+	
+	if (line.find(CMD_SET_STATUS) == 0) {
+		int status_pos = line.find(" ") + 1;
+
+		server->set_status(sockfd, line.substr(status_pos));
+		return;
+	}
+	
+	if (line.find(CMD_SEARCH_USER) == 0) {
+		int 	name_pos = line.find(" ") + 1,
+			surname_pos = line.find(" ", name_pos) + 1,
+			phone_pos = line.find(" ", surname_pos) + 1,
+			email_pos = line.find(" ", phone_pos) + 1;
+		server->search_user(sockfd,
+				line.substr(name_pos, surname_pos -1 - name_pos),
+				line.substr(surname_pos, phone_pos - 1 - surname_pos),
+				line.substr(phone_pos, email_pos - 1 - phone_pos),
+				line.substr(email_pos));
+		
+		return;
+	}
+	
+
+>>>>>>> 9ac16c41071af23c6ae46ad601cbc9ab7b0855b8
 }
 
 /**
@@ -273,6 +319,8 @@ int run_server(int server_port) {
 				// Received data from client
 				if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
 					//assert(n == 0); TODO
+					//set client status offline
+					server->set_offline(i); 
 					end_connection(i, &read_fds);
 				} else {
 					//client_command(buffer, i, inet_ntoa(cli_addr.sin_addr),

@@ -417,3 +417,53 @@ bool Client::send_message(string username_dst, string message) {
 	
 	return true;	
 }
+
+
+bool Client::send_status(std::string status)
+{
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s", CMD_SET_STATUS, status.c_str());
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+	
+	//receive response from server_socket
+	int rc = recv(server_socket, msg, sizeof(msg), 0);
+	assert(rc >= 0);
+	dprintf("[CLIENT]received from server: %s\n", msg);
+	if (rc == 0 || strcmp(msg, SUCCESS_MSG))
+		return false;
+
+	return true;
+}	
+
+bool Client::send_state(std::string state)
+{
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s", CMD_SET_STATE, state.c_str());
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+	
+	//receive response from server_socket
+	int rc = recv(server_socket, msg, sizeof(msg), 0);
+	assert(rc >= 0);
+	dprintf("[CLIENT]received from server: %s\n", msg);
+	if (rc == 0 || strcmp(msg, SUCCESS_MSG))
+		return false;
+
+	return true;
+}	
+
+
+std::string Client::search_user(std::string profile){
+
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s", CMD_SEARCH_USER, profile.c_str());
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+	
+	//receive response from server_socket
+	int rc = recv(server_socket, msg, sizeof(msg), 0);
+	assert(rc >= 0);
+	dprintf("[CLIENT]received from server: %s\n", msg);
+	if (rc == 0 || strcmp(msg, ERR_MSG)==0 ||strcmp(msg, NO_USER_FOUND)==0)
+		return NO_USER_FOUND;
+
+	return msg;
+}

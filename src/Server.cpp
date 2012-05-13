@@ -656,11 +656,6 @@ bool Server::remove_user(int sockfd, std::string username) {
 	return rc;
 }
 
-bool Server::search_user(int sockfd, std::string name, std::string surname,
-			std::string phone, std::string email, std::string hobbies) 
-{
-	//TODO
-}
 
 /**
  * Add group for client who sent the command. Caller function must verify username is valid.
@@ -1064,4 +1059,104 @@ bool Server::send_msg_from_user_to_user(int sockfd, string src, string dst, stri
 	assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 	
 	return true;
+}
+
+
+
+/*
+*
+*
+*/
+bool Server::set_offline(int sockfd)
+{
+
+	ClientInfo * my_client;
+
+	my_client=get_clientInfo_by_sockfd(sockfd);
+	my_client->set_state_from_string("offline");
+	
+
+}
+
+
+
+// Status/State (+ TODO send message to all friends that client changed status/state)
+bool Server::set_status(int sockfd, std::string status){
+	
+	ClientInfo * my_client;
+
+	my_client=get_clientInfo_by_sockfd(sockfd);
+	my_client->set_status(status);
+	my_client->set_state_from_string("online"); //if I have a status, i'm online
+	assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+	dprintf("[SERVER] set status %s\n", status.c_str());
+}
+bool Server::set_state(int sockfd, std::string state){
+	
+	ClientInfo * my_client;
+
+	my_client=get_clientInfo_by_sockfd(sockfd);
+	my_client->set_state_from_string(state);
+	dprintf("[SERVER] set state %s\n", state.c_str());
+	assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+	
+}
+
+bool Server::search_user(int sockfd, std::string name, std::string surname, 
+	std::string phone, std::string email){
+
+	int first=true;
+	int rc = true;
+	std::stringstream  query;
+	sql::ResultSet * res;
+	string username;
+	dprintf("[SERVER]Recieved search query\n");
+	query<<"select username from users where ";
+	if(strcmp(name.c_str(),"none")) {
+						query << "name = \""<<name<<"\" ";
+						first = false;
+					}
+		
+	if(strcmp(surname.c_str(),"none")) {
+						query << (first ? "" : "AND ") << "surname = \""<< surname << "\" ";
+						first = false;
+					}
+	if(strcmp(phone.c_str(),"none")) {
+						query << (first ? "" : "AND ") << "phone = \""<< phone <<"\" ";
+						first = false;
+					}
+	if(strcmp(email.c_str(),"none")) {
+						query << (first ? "" : "AND ") << "email = \""<< email <<"\" ";
+						first = false;
+					}
+	if(first) {
+			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+			rc = false;
+			}
+	if(rc) try {
+		res = stmt->executeQuery(query.str());
+		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());
+		if(res->rowsCount()==0) {
+						assert(send(sockfd, NO_USER_FOUND, strlen(NO_USER_FOUND) + 1, 0) >= 0);	
+						rc = false;
+					}
+		else {
+			res->next();
+			username= res-> getString(1);
+			assert(send(sockfd, username.c_str(), strlen( username.c_str()) + 1, 0) >= 0);	
+			}
+		}
+	catch(sql::SQLException &e) {
+
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		
+		dprintf("sql exception\n");
+		cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+		rc = false;
+	}
+	
+	return rc;
 }

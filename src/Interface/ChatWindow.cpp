@@ -21,6 +21,7 @@ using namespace std;
 
 // Map used for correspondence between client - chat window
 extern map <string, GtkWidget *> map_chat_windows;
+extern map <string, GtkWidget *> map_chat_text;
 
 /* Send a file */
 static void send_file(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
@@ -59,20 +60,24 @@ static void create_chat_window_buttons(GtkWidget * vbox, gpointer g_client) {
  * Destroy a chat window
  */
 inline static void destroy_chat_window(GtkWidget * chat_window, struct _general_info * ng_info) {
-	map_chat_windows.erase(ng_info->client);
+//	gdk_threads_enter();
+	map_chat_windows.erase(ng_info->friend_username);
+	map_chat_text.erase(ng_info->friend_username);
 	gtk_widget_destroy(chat_window);
+	free(ng_info->friend_username);
 	free(ng_info);
+//	gdk_threads_leave();
 }
 
 /**
  * Create a chat window
  */
 void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
-	const char * client = (const char * ) g_client;
+	char * friend_username = strdup((const char * ) g_client);
 
 	// Chat window
 	GtkWidget * chat_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title(GTK_WINDOW(chat_window), client);
+	gtk_window_set_title(GTK_WINDOW(chat_window), friend_username);
 	gtk_window_set_default_size(GTK_WINDOW(chat_window),
 			CHAT_WINDOW_WIDTH, CHAT_WINDOW_HEIGHT);
 	gtk_widget_show(chat_window);
@@ -99,12 +104,14 @@ void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
 	// Action on key press
 	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
 	ng_info->window = conversation_chat;
-	ng_info->client = client;
+	ng_info->friend_username = friend_username;
 	g_signal_connect(entry_chat, "key-press-event",
 			G_CALLBACK(signal_send_text), (gpointer) ng_info);
 
 	// Add chat window to map
-	map_chat_windows.insert(pair <string, GtkWidget *> (client, chat_window));
+	cout << "TEST: " << friend_username << endl;
+	map_chat_windows.insert(pair <string, GtkWidget *> (ng_info->friend_username, chat_window));
+	map_chat_text.insert(pair <string, GtkWidget *> (ng_info->friend_username, conversation_chat));
 
 	// Signal to kill window
 	g_signal_connect(chat_window, "destroy", G_CALLBACK(destroy_chat_window), ng_info);
