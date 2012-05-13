@@ -68,11 +68,11 @@ static void create_chat_window_buttons(GtkWidget * vbox, gpointer g_client) {
 	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
 	// Create send button
-	add_button_to_box(hbox, "Send file", TRUE, send_file, g_client, FALSE);
+	add_button_to_box(hbox, "Send file", TRUE, send_file, g_client);
 	// Create show profile button
-	add_button_to_box(hbox, "Show profile", FALSE, show_profile, g_client, FALSE);
+	add_button_to_box(hbox, "Show profile", FALSE, show_profile, g_client);
 	// Create change group button
-	add_button_to_box(hbox, "Change group", FALSE, change_group, g_client, FALSE);
+	add_button_to_box(hbox, "Change group", FALSE, change_group, g_client);
 
 	// Show all widgets
 	gtk_widget_show_all(hbox);

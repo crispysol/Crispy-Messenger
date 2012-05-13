@@ -176,22 +176,41 @@ void signal_change_availability(struct _general_info * g_info) {
 }
 
 /**
- * Show user profile
+ * Show user's profile
  */
 void signal_show_profile(GtkWidget * widget, gpointer g_client) {
 	// TODO
 }
 
 /**
- * Move user to group
+ * Change user's group
  */
 void signal_change_group(GtkWidget * widget, gpointer g_client) {
 	// TODO
 }
 
 /**
- * Move user to group
+ * Remove user from list
  */
-void signal_remove_user(GtkWidget * widget, gpointer g_client) {
-	// TODO
+void signal_remove_user(GtkWidget * widget, gpointer info) {
+	struct _general_info * g_info = (struct _general_info *) info;
+	GtkWidget * window_top_level = (GtkWidget *) g_info->window_top_level;
+
+	// Save friend's username
+	const char * username = g_info->client;
+
+	// Add friend to user list
+	if (!current_client->remove_user(username)) {
+		clientgtk_create_message_dialog("Invalid username", "Warning", GTK_MESSAGE_WARNING);
+		return;
+	}
+
+	// Destroy windows
+	gtk_widget_destroy(g_info->vbox_align);
+
+	// Free space
+	free(g_info);
+
+	// Remake main interface
+	clientgtk_create_main_window(window_top_level);
 }

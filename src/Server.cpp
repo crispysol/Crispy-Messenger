@@ -2,7 +2,7 @@
  * server.cpp
  *
  *  Created on: Mar 10, 2012
- *      Author: andreea
+ *      Author: andreea, mihail, radu
  */
 
 #include <iostream>
@@ -80,6 +80,35 @@ ClientInfo * Server::get_clientInfo_by_sockfd(int sockfd) {
 	assert(it_fdcl != sockfd_to_clients.end());
 	
 	return it_fdcl->second;
+}
+
+ClientInfo* get_clientInfo_by_username(string username) {
+	map<int, ClientInfo*>::iterator it;
+	
+	it = client_to_sockfd.find(username);
+	if (it != client_to_sockfd.end())
+		return it->second;
+		
+	return NULL;
+}
+
+bool Server::send_user_ip(int sockfd, std::string username) {
+	int rc;
+	char buffer[BUFFER_LENGTH];
+	ClientInfo *ci;
+	
+	ci = get_clientInfo_by_username(username);
+	if (ci == NULL) {
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		return false;	
+	}
+	
+	//send "ip port" on sockfd
+	sprintf(buffer, "%s: %s %i", CMD_CONN_CLIENT_TO_CLIENT_RES, ci->get_ip().c_str(), ci->get_port().c_str());
+	dprintf("[SERVER] sending %s of username %s\n", buffer, username.c_str());
+	assert(send(server_socket, buffer, strlen(buffer) + 1, 0) >= 0);
+	
+	return true;
 }
 
 /**

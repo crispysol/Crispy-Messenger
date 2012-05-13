@@ -2,7 +2,7 @@
  * Server.h
  *
  *  Created on: Mar 11, 2012
- *      Author: mihail, andreea
+ *      Author: mihail, andreea, radu, liviu
  */
 
 #ifndef SERVER_H_
@@ -36,7 +36,7 @@ class Server {
 	// Map <sockfd, client info>
 	std::map <int, ClientInfo*> sockfd_to_clients;
 	// Map <username, sockfd>
-	std::map <std::string, int> clients_to_sockfd;
+	std::map <std::string, ClientInfo*> clients_to_sockfd;
 	// Database (initialized in constructor)
 	sql::Connection	*con;
 
@@ -53,6 +53,8 @@ public:
 	void insert_in_sockfd_to_clients(int key, ClientInfo * ci);
 	/* Return value in sockfd_to_clients with key <sockfd> */
 	ClientInfo * get_clientInfo_by_sockfd(int sockfd);
+	/* Return connection info of client <username>  */
+	ClientInfo* get_clientInfo_by_username(std::string username); 
 
 	//TODO bool process_protocol(std::string username, std::string pass, std::string email); TODO in main and for client too
 	/**
@@ -80,7 +82,7 @@ public:
 	bool set_status(int sockfd, std::string status);
 	bool set_state(int sockfd, State state);
 
-	// Send user's ip and port
+	// Send user's ip and port in the following format "connect_with_user_res: ip port" 
 	bool send_user_ip(int sockfd, std::string username);
 
 	// Receive message for an offline user so it can be sent at login
