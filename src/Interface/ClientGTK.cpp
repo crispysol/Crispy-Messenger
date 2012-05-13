@@ -221,8 +221,11 @@ void signal_send_file(GtkWidget * widget, gpointer g_client) {
  * Send text to friend and save it in conversation text view // TODO
  */
 gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
-		gpointer g_conversation_chat) {
+		gpointer info) {
 	if (event->keyval == GDK_Return || event->keyval == GDK_KP_Enter) {
+		struct _general_info * g_info = (struct _general_info *) info;
+		GtkWidget * conversation_chat = (GtkWidget *) g_info->window;
+
 		// Get text from input
 		GtkTextBuffer * buffer1 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(entry_chat));
 		GtkTextIter start, end;
@@ -230,7 +233,6 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
 		gchar * new_text = gtk_text_buffer_get_text(buffer1, &start, &end, FALSE);
 
 		// Set text to conversation box
-		GtkWidget * conversation_chat = (GtkWidget *) g_conversation_chat;
 		GtkTextBuffer * buffer2 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(conversation_chat));
 		gtk_text_buffer_get_bounds(buffer2, &start, &end);
 		gchar * old_text = gtk_text_buffer_get_text(buffer2, &start, &end, FALSE);
@@ -243,14 +245,15 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event,
 		}
 		gtk_text_buffer_set_text(buffer2, text.c_str(), -1);
 
+		// Send message to friend
+		current_client->send_message(g_info->client, new_text);
+
 		// Free space
 		free(old_text);
 		free(new_text);
 
 		// Delete all text from input
 		gtk_text_buffer_set_text(buffer1, "", -1);
-
-		// Send new text + username to friend TODO
 
 		return TRUE;
 	}
@@ -315,7 +318,7 @@ void idle(gpointer data) {
 				n = recv(i, buffer, sizeof(buffer), 0);
 				assert(n >= 0); // TODO test if we have to exit
 
-				cout << buffer << " | RECEIVED" << endl;
+				cout << buffer << " | RECEIVED" << endl << flush;
 				continue;
 			}
 
@@ -323,9 +326,10 @@ void idle(gpointer data) {
 			if ((n = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
 				assert(n == 0);
 				end_connection(i, &read_fds);
-				//TODO remove connection from connected_users list
+				current_client->remove_from_connected_users(i);
 			} else {
-				cout << "TODO" << endl; // TODO
+				cout << "received from client: " << buffer << endl << flush;
+				// TODO
 			}
 		}
 	}

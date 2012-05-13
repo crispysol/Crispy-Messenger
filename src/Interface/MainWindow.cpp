@@ -33,13 +33,6 @@ extern Client * current_client;
 // Map used for correspondence between client - chat window
 extern map <string, GtkWidget *> map_chat_windows;
 
-/**
- * TODO
- */
-static void execute_menu_item(GtkWidget * widget, gpointer g_client) {
-	printf("test\n");
-}
-
 enum one_entry_type {NORMAL_ENTRY, DELETE_GROUP, CHANGE_AVAILABILITY, CHANGE_GROUP};
 
 /**
@@ -105,8 +98,17 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 	ng_info->vbox_align = g_info.vbox_align;
 	g_signal_connect_swapped(button, "clicked", (GCallback) handler, (gpointer) ng_info);
 
+	// Show window
 	gtk_widget_show_all(window);
 }
+
+/**
+ * Search friends TODO
+ */
+static void search_friends(GtkWidget * widget, gpointer g_client) {
+	printf("TODO\n");
+}
+
 
 /**
  * Add a new friend
@@ -169,6 +171,14 @@ static void change_group(GtkWidget * widget, gpointer info) {
 }
 
 /**
+ * Change user's group
+ */
+static void show_profile(GtkWidget * widget, gpointer info) {
+	struct _general_info * g_info = (struct _general_info *) info;
+	signal_show_profile(g_info);
+}
+
+/**
  * Create update profile window
  */
 static void create_update_profile_window(GtkWidget * widget, gpointer info) {
@@ -225,7 +235,17 @@ static void create_update_profile_window(GtkWidget * widget, gpointer info) {
 	ng_info->vbox_align = g_info.vbox_align;
 	g_signal_connect_swapped(button, "clicked", (GCallback) signal_update_profile, (gpointer) ng_info);
 
+	// Show window
 	gtk_widget_show_all(window);
+}
+
+/**
+ * Show my profile
+ */
+static void show_my_profile(GtkWidget * widget, gpointer info) {
+	struct _general_info * g_info = (struct _general_info *) info;
+	g_info->client = current_client->get_username().c_str();
+	signal_show_profile(g_info);
 }
 
 /**
@@ -287,7 +307,7 @@ static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpoi
 		// Create context menu entries
 		create_menu_entry(context_menu, (gchar *) "Start chat", clientgtk_create_chat_window, g_client);
 		create_menu_entry(context_menu, (gchar *) "Send file", signal_send_file, g_client);
-		create_menu_entry(context_menu, (gchar *) "Show profile", signal_show_profile, ng_info);
+		create_menu_entry(context_menu, (gchar *) "Show profile", show_profile, ng_info);
 		create_menu_entry(context_menu, (gchar *) "Change group", change_group, ng_info);
 		create_menu_entry(context_menu, (gchar *) "Remove user", signal_remove_user, ng_info);
 
@@ -317,7 +337,7 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 
 	GtkWidget * submenu1 = create_menu_bar_submenu(menu_bar, (gchar *) "Friends");
 	create_menu_entry(submenu1, (gchar *) "Add friend", add_friend_window, (gpointer) g_info);
-	create_menu_entry(submenu1, (gchar *) "Search friends", execute_menu_item, (gpointer) g_info);
+	create_menu_entry(submenu1, (gchar *) "Search friends", search_friends, (gpointer) g_info);
 	create_menu_entry(submenu1, (gchar *) "Create group", create_group_window, (gpointer) g_info);
 	create_menu_entry(submenu1, (gchar *) "Delete group", delete_group_window, (gpointer) g_info);
 
@@ -325,7 +345,7 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	create_menu_entry(submenu2, (gchar *) "Change status", change_status_window, (gpointer) g_info);
 	create_menu_entry(submenu2, (gchar *) "Change availability", change_availability_window,
 			(gpointer) g_info);
-	create_menu_entry(submenu2, (gchar *) "Show my profile", execute_menu_item, (gpointer) g_info);
+	create_menu_entry(submenu2, (gchar *) "Show my profile", show_my_profile, (gpointer) g_info);
 	create_menu_entry(submenu2, (gchar *) "Update profile", create_update_profile_window, (gpointer) g_info);
 
 	GtkWidget * submenu3 = create_menu_bar_submenu(menu_bar, (gchar *) "Settings");

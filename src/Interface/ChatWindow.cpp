@@ -26,10 +26,10 @@ extern map <string, GtkWidget *> map_chat_windows;
 static void send_file(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
 	signal_send_file(widget, g_client);
 }
-/* Show profile */
-static void show_profile(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
-	signal_show_profile(widget, g_client);
-}
+///* Show profile */ TODO
+//static void show_profile(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
+//	signal_show_profile(widget, g_client);
+//}
 ///* Show profile */
 //static void change_group(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
 //	signal_change_group(widget, g_client);
@@ -46,8 +46,8 @@ static void create_chat_window_buttons(GtkWidget * vbox, gpointer g_client) {
 
 	// Create send button
 	add_button_to_box(hbox, "Send file", TRUE, send_file, g_client);
-	// Create show profile button
-	add_button_to_box(hbox, "Show profile", FALSE, show_profile, g_client);
+//	// Create show profile button TODO
+//	add_button_to_box(hbox, "Show profile", FALSE, show_profile, g_client);
 //	// Create change group button
 //	add_button_to_box(hbox, "Change group", FALSE, change_group, g_client);
 
@@ -58,17 +58,17 @@ static void create_chat_window_buttons(GtkWidget * vbox, gpointer g_client) {
 /**
  * Destroy a chat window
  */
-inline static void destroy_chat_window(GtkWidget * chat_window, gpointer g_client) {
-	char * client = (char *) g_client;
-	map_chat_windows.erase(client);
+inline static void destroy_chat_window(GtkWidget * chat_window, struct _general_info * ng_info) {
+	map_chat_windows.erase(ng_info->client);
 	gtk_widget_destroy(chat_window);
+	free(ng_info);
 }
 
 /**
  * Create a chat window
  */
 void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
-	char * client = (char *) g_client;
+	const char * client = (const char * ) g_client;
 
 	// Chat window
 	GtkWidget * chat_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -95,12 +95,17 @@ void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
 	GtkWidget * entry_chat = scrolled_chat_text_view(chat_vbox, FALSE);
 	gtk_widget_grab_focus(entry_chat);
 	gtk_widget_show(entry_chat);
+
+	// Action on key press
+	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
+	ng_info->window = conversation_chat;
+	ng_info->client = client;
 	g_signal_connect(entry_chat, "key-press-event",
-			G_CALLBACK(signal_send_text), (gpointer) conversation_chat);
+			G_CALLBACK(signal_send_text), (gpointer) ng_info);
 
 	// Add chat window to map
 	map_chat_windows.insert(pair <string, GtkWidget *> (client, chat_window));
 
 	// Signal to kill window
-	g_signal_connect(chat_window, "destroy", G_CALLBACK(destroy_chat_window), client);
+	g_signal_connect(chat_window, "destroy", G_CALLBACK(destroy_chat_window), ng_info);
 }

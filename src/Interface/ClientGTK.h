@@ -139,7 +139,7 @@ void signal_change_availability(struct _general_info * g_info);
 /**
  * Show user's profile
  */
-void signal_show_profile(GtkWidget * widget, gpointer g_client);
+void signal_show_profile(struct _general_info *);
 
 /**
  * Update user's profile
