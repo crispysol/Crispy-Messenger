@@ -971,6 +971,7 @@ bool Server::remove_group(int sockfd, std::string group)
 /**
  * Send profile to user.
  * username: user to search for in database.
+ * TODO: Don't overwrite data with null strings.
  *
  * Liviu
  */
