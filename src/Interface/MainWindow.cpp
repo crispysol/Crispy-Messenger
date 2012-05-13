@@ -33,14 +33,7 @@ extern Client * current_client;
 // Map used for correspondence between client - chat window
 extern map <string, GtkWidget *> map_chat_windows;
 
-/**
- * TODO
- */
-static void execute_menu_item(GtkWidget * widget, gpointer g_client) {
-	printf("test\n");
-}
-
-enum one_entry_type {NORMAL_ENTRY, DELETE_GROUP, CHANGE_AVAILABILITY};
+enum one_entry_type {NORMAL_ENTRY, DELETE_GROUP, CHANGE_AVAILABILITY, CHANGE_GROUP};
 
 /**
  * Create a window with only one entry
@@ -65,6 +58,9 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 			groups = current_client->get_groups();
 			for (map <string, vector <User *> >::iterator it = groups.begin(); it != groups.end();
 					it++) {
+				if (it->first == GROUP_DEFAULT_NAME) {
+					continue;
+				}
 				gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(entry), it->first.c_str());
 			}
 			break;
@@ -73,6 +69,14 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 			gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(entry), "available");
 			gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(entry), "away");
 			gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(entry), "busy");
+			break;
+		case CHANGE_GROUP:
+			entry = gtk_combo_box_text_new();
+			groups = current_client->get_groups();
+			for (map <string, vector <User *> >::iterator it = groups.begin(); it != groups.end();
+					it++) {
+				gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(entry), it->first.c_str());
+			}
 			break;
 		default:
 			entry = gtk_entry_new();
@@ -90,11 +94,21 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 	ng_info->window_top_level = g_info.window_top_level;
 	ng_info->window = window;
 	ng_info->entry = entry;
+	ng_info->client = g_info.client;
 	ng_info->vbox_align = g_info.vbox_align;
 	g_signal_connect_swapped(button, "clicked", (GCallback) handler, (gpointer) ng_info);
 
+	// Show window
 	gtk_widget_show_all(window);
 }
+
+/**
+ * Search friends TODO
+ */
+static void search_friends(GtkWidget * widget, gpointer g_client) {
+	printf("TODO\n");
+}
+
 
 /**
  * Add a new friend
@@ -147,12 +161,30 @@ static void change_availability_window(GtkWidget * widget, gpointer info) {
 }
 
 /**
+ * Change user's group
+ */
+static void change_group(GtkWidget * widget, gpointer info) {
+	struct _general_info * g_info = (struct _general_info *) info;
+	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Change group",
+			(gchar *) "Choose new group:", MAX_REGISTER_CHARS, (gchar *) "Change group",
+			signal_change_group, *g_info, CHANGE_GROUP);
+}
+
+/**
+ * Change user's group
+ */
+static void show_profile(GtkWidget * widget, gpointer info) {
+	struct _general_info * g_info = (struct _general_info *) info;
+	signal_show_profile(g_info);
+}
+
+/**
  * Create update profile window
  */
 static void create_update_profile_window(GtkWidget * widget, gpointer info) {
 	struct _general_info g_info = * (struct _general_info *) info;
-
 	gint width = PROFILE_WINDOW_WIDTH, height = PROFILE_WINDOW_HEIGHT;
+
 	// Create new window
 	GtkWidget * window = create_new_window(width, height, (gchar *) "Update profile");
 
@@ -179,14 +211,14 @@ static void create_update_profile_window(GtkWidget * widget, gpointer info) {
 	add_vbox_row(new_vbox, phone, width / 1.5, 0);
 
 	// Create hobbies entry
-	GtkWidget * hobbies = gtk_scrolled_window_new (NULL, NULL);
-	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(hobbies),
+	GtkWidget * swindow = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swindow),
 			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	GtkWidget * text_view = gtk_text_view_new();
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
-	gtk_container_add(GTK_CONTAINER(hobbies), text_view);
+	gtk_container_add(GTK_CONTAINER(swindow), text_view);
 	create_label_field(new_vbox, string("Enter hobbies"));
-	add_vbox_row(new_vbox, hobbies, width / 1.5, height / 3);
+	add_vbox_row(new_vbox, swindow, width / 1.5, height / 3);
 
 	// Create button
 	GtkWidget * button = gtk_button_new_with_label("Update profile");
@@ -196,11 +228,24 @@ static void create_update_profile_window(GtkWidget * widget, gpointer info) {
 	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
 	ng_info->window_top_level = g_info.window_top_level;
 	ng_info->window = window;
-	// TODO more entries
+	ng_info->profile.name = name;
+	ng_info->profile.surname = surname;
+	ng_info->profile.phone = phone;
+	ng_info->profile.hobbies = text_view;
 	ng_info->vbox_align = g_info.vbox_align;
 	g_signal_connect_swapped(button, "clicked", (GCallback) signal_update_profile, (gpointer) ng_info);
 
+	// Show window
 	gtk_widget_show_all(window);
+}
+
+/**
+ * Show my profile
+ */
+static void show_my_profile(GtkWidget * widget, gpointer info) {
+	struct _general_info * g_info = (struct _general_info *) info;
+	g_info->client = current_client->get_username().c_str();
+	signal_show_profile(g_info);
 }
 
 /**
@@ -262,8 +307,8 @@ static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpoi
 		// Create context menu entries
 		create_menu_entry(context_menu, (gchar *) "Start chat", clientgtk_create_chat_window, g_client);
 		create_menu_entry(context_menu, (gchar *) "Send file", signal_send_file, g_client);
-		create_menu_entry(context_menu, (gchar *) "Show profile", signal_show_profile, g_client);
-		create_menu_entry(context_menu, (gchar *) "Change group", signal_change_group, g_client);
+		create_menu_entry(context_menu, (gchar *) "Show profile", show_profile, ng_info);
+		create_menu_entry(context_menu, (gchar *) "Change group", change_group, ng_info);
 		create_menu_entry(context_menu, (gchar *) "Remove user", signal_remove_user, ng_info);
 
 		// Create menu
@@ -273,7 +318,7 @@ static void check_friend_clicks(GtkWidget * widget, GdkEventButton * event, gpoi
 }
 
 /**
- * Create main interface which contains friends // TODO change strings into defines and functions
+ * Create main interface which contains friends
  */
 void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	// Create a vbox that contains the menu bar and the scrolled window
@@ -292,7 +337,7 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 
 	GtkWidget * submenu1 = create_menu_bar_submenu(menu_bar, (gchar *) "Friends");
 	create_menu_entry(submenu1, (gchar *) "Add friend", add_friend_window, (gpointer) g_info);
-	create_menu_entry(submenu1, (gchar *) "Search friends", execute_menu_item, (gpointer) g_info);
+	create_menu_entry(submenu1, (gchar *) "Search friends", search_friends, (gpointer) g_info);
 	create_menu_entry(submenu1, (gchar *) "Create group", create_group_window, (gpointer) g_info);
 	create_menu_entry(submenu1, (gchar *) "Delete group", delete_group_window, (gpointer) g_info);
 
@@ -300,7 +345,7 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	create_menu_entry(submenu2, (gchar *) "Change status", change_status_window, (gpointer) g_info);
 	create_menu_entry(submenu2, (gchar *) "Change availability", change_availability_window,
 			(gpointer) g_info);
-	create_menu_entry(submenu2, (gchar *) "Show my profile", execute_menu_item, (gpointer) g_info);
+	create_menu_entry(submenu2, (gchar *) "Show my profile", show_my_profile, (gpointer) g_info);
 	create_menu_entry(submenu2, (gchar *) "Update profile", create_update_profile_window, (gpointer) g_info);
 
 	GtkWidget * submenu3 = create_menu_bar_submenu(menu_bar, (gchar *) "Settings");

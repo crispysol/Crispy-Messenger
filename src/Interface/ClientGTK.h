@@ -26,10 +26,17 @@
 #define MAX_STATUS_CHARS		100
 #define MAX_PROFILE_CHARS		15
 
+#define GROUP_DEFAULT_NAME		"friends"
 
-/**
- * Structure used to pass login information
- */
+/* Structure used to pass profile information */
+struct _profile_info {
+	GtkWidget * name;
+	GtkWidget * surname;
+	GtkWidget * phone;
+	GtkWidget * hobbies;
+};
+
+/* Structure used to pass window information */
 struct _general_info {
 	GtkWidget * window_top_level;
 	GtkWidget * window;
@@ -39,6 +46,7 @@ struct _general_info {
 	GtkWidget * password2;
 	GtkWidget * email;
 	GtkWidget * entry;
+	struct _profile_info profile;
 	const char * client;
 };
 
@@ -131,17 +139,17 @@ void signal_change_availability(struct _general_info * g_info);
 /**
  * Show user's profile
  */
-void signal_show_profile(GtkWidget * widget, gpointer g_client);
+void signal_show_profile(struct _general_info *);
 
 /**
  * Update user's profile
  */
-void signal_update_profile(GtkWidget * widget, gpointer g_client);
+void signal_update_profile(struct _general_info * g_info);
 
 /**
  * Change user's group
  */
-void signal_change_group(GtkWidget * widget, gpointer g_client);
+void signal_change_group(struct _general_info * g_info);
 
 /**
  * Remove user from group

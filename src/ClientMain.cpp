@@ -31,13 +31,15 @@ static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds);
 /**
  * Process message from server.
  */
-static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds) {
-	if (strstr(buffer, SUCCESS_MSG) == 0)
+static void process_server_msg(string buffer, int & fdmax, fd_set * read_fds) {
+	if (buffer.find(SUCCESS_MSG) == 0)
 		return;
 
-	if(strstr(buffer, CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
+	if(buffer.find(CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
 		// connect with user
+		printf("buffer %s\n", buffer.c_str());
 		int sockfd = client->connect_with_user_res(buffer, fdmax, read_fds);
+		dprintf("[DONE, sockfd %i]%s\n", sockfd, buffer.c_str());
 		if (sockfd == -1)
 			return;
 			
@@ -47,6 +49,18 @@ static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds) {
 		assert(send(sockfd, msg, strlen(msg) + 1, 0) >= 0);
 		
 		return;
+	}
+	
+	if (buffer.find(CMD_SEND_MSG) == 0) {
+		int 	src_pos = buffer.find(" ") + 1,
+			msg_pos = buffer.find(" ", src_pos) + 1;
+		string msg, src;
+		
+		src = buffer.substr(src_pos, msg_pos - 1 - src_pos);
+		msg = buffer.substr(msg_pos);
+		dprintf("received message %s from %s\n", msg.c_str(), src.c_str());
+		//TODO send to chat window
+		
 	}
 }
 /**
@@ -128,10 +142,28 @@ void stdin_command(Client *client, fd_set * read_fds) {
 	}
 
 	if (line.find(CMD_UPDATE_PROFILE) == 0) {
-		//TODO
+		int	name_pos = line.find(" ") + 1,
+			sname_pos = line.find(" ", name_pos) + 1,
+			phone_pos = line.find(" ", sname_pos) + 1,
+			hobb_pos = line.find(" ", phone_pos) + 1;
+
+		client->update_profile(
+			line.substr(name_pos, sname_pos - name_pos - 1),
+			line.substr(sname_pos, phone_pos - sname_pos - 1),
+			line.substr(phone_pos, hobb_pos - phone_pos - 1),
+			line.substr(hobb_pos));
+	
 		return;
 	}
 
+	if (line.find(CMD_SEND_MSG) == 0) {
+		int 	name_dst = line.find(" ") + 1,
+			msg_pos = line.find(" ", name_dst) + 1;
+		//Client communicate through server
+		client->send_message( 
+			line.substr(name_dst, msg_pos - 1 - name_dst), 
+			line.substr(msg_pos));
+	}
 
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
@@ -175,16 +207,21 @@ static void client_command(char * buffer, int sockfd) {
  */
 int run_server(char * server_ip, int server_port) {
 	char buffer[BUFFER_LENGTH];
-	int sockfd, socket_server, fdmax, n, newsockfd, newport;
+	int sockfd, socket_server, fdmax, n, newsockfd;
 	string ip;
 	fd_set read_fds, tmp_fds;
 	FD_ZERO(&tmp_fds);
 
-	// Init localhost server (communication with other clients
+	// Init localhost server (communication with other clients)
 	init_server(client_port, sockfd, fdmax, &read_fds);
 
-	// Connect to main server
+	dprintf("Client has port %i\n", client_port);
+
+	// Connect to main server and send port of this client (port which be server port for the other clients who want
+	// to communicate directly with this server)
 	connect_to_server(server_ip, server_port, socket_server, fdmax, &read_fds);
+	sprintf(buffer, "%s %i", INFO_CLIENT_PORT, client_port);
+	assert(send(socket_server, buffer, strlen(buffer) + 1, 0) >= 0);
 
 	// Client instance
 	client = new Client(socket_server);
@@ -199,7 +236,8 @@ int run_server(char * server_ip, int server_port) {
 			if (FD_ISSET(i, &tmp_fds)) {
 				// New connection
 				if (i == sockfd) {
-					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
+					dprintf("received new connection on %i\n", i);
+					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd);
 					continue;
 				}
 
@@ -214,7 +252,7 @@ int run_server(char * server_ip, int server_port) {
 					n = recv(i, buffer, sizeof(buffer), 0);
 					assert(n >= 0); // TODO test if we have to exit
 					dprintf("[CLIENT]received from SERVER: %s\n", buffer);
-					//process_server_msg(buffer, fdmax, &read_fds);
+					process_server_msg(string(buffer), fdmax, &read_fds);
 					continue;
 				}
 

@@ -126,7 +126,7 @@ bool Client::authentication(std::string username, std::string pass) {
 	}
 
 	// Get offline messages TODO
-	cout << root.toStyledString(); // TODO delete
+//	cout << root.toStyledString(); // TODO delete
 
 	return true;
 }
@@ -145,7 +145,7 @@ bool Client::add_user(std::string username)
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
 	dprintf("[CLIENT]received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0 || strcmp(buffer, USER_ALREADY_IN_LIST) == 0)
+	if (rc == 0 || strcmp(buffer, SUCCESS_MSG))
 		return false;
 
 	// Receive friends
@@ -172,7 +172,7 @@ bool Client::remove_user(std::string username) {
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
 	dprintf("[CLIENT]received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+	if (rc == 0 || strcmp(buffer, SUCCESS_MSG))
 		return false;
 
 	// Receive friends
@@ -197,7 +197,7 @@ bool Client::add_group(std::string group) {
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
 	dprintf("[CLIENT]received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+	if (rc == 0 || strcmp(buffer, SUCCESS_MSG))
 		return false;
 
 	// Receive friends
@@ -236,14 +236,6 @@ Profile Client::get_profile(std::string username) {
 		phone_pos = buf.find(" ", sname_pos) + 1,
 		email_pos = buf.find(" ", phone_pos) + 1,
 		hobb_pos = buf.find(" ", email_pos) + 1;
-	/*
-	//TODO: Remove DEBUG
-	cout	<< "Name: |" << buf.substr(0, name_pos) << "|\n"
-		<< "Surname: |" << buf.substr(pos2, pos3 - pos2 - 1)  << "|\n"
-		<< "Phone: |" << buf.substr(pos3, pos4 - pos3 - 1) << "|\n"
-		<< "email: |" << buf.substr(pos4, pos5 - pos4 - 1) << "|\n"
-		<< "Hobbies: |" << buf.substr(pos5) << "|\n";
-	*/
 	
 	return Profile( buf.substr(0, name_pos),
 			buf.substr(sname_pos, phone_pos - sname_pos - 1),
@@ -258,8 +250,23 @@ Profile Client::get_profile(std::string username) {
  *
  * Liviu
  */
-bool Client::update_profile(std::string name, std::string surname, std::string phone,
-		std::string email, std::string hobbies) {
+bool Client::update_profile(std::string name, std::string surname,
+			    std::string phone, std::string hobbies) {
+	
+	char buff[BUFFER_LENGTH];
+
+	sprintf(buff, "%s %s %s %s %s", CMD_UPDATE_PROFILE, name.c_str(), surname.c_str(),
+					phone.c_str(), hobbies.c_str());
+	cout << "Sending: " << buff << endl;
+	assert(send(server_socket, buff, strlen(buff)+1, 0) >= 0);
+	
+	memset(buff, 0, BUFFER_LENGTH);
+
+	//receive response form server_socket
+	int rc = recv(server_socket, buff, sizeof(buff), 0);
+	assert(rc >= 0);
+	dprintf("Received from server: %s\n", buff);
+
 	return true;
 }
 
@@ -278,7 +285,7 @@ bool Client::remove_group(std::string group) {
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
 	dprintf("[CLIENT]received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+	if (rc == 0 || strcmp(buffer, SUCCESS_MSG))
 		return false;
 
 	// Receive friends
@@ -306,7 +313,7 @@ bool Client::move_user_to_group(std::string username, std::string group){
 	rc = recv(server_socket, buffer, sizeof(buffer), 0);
 	assert(rc >= 0);
 	dprintf("[CLIENT]received from server: %s\n", buffer);
-	if (rc == 0 || strcmp(buffer, ERR_MSG) == 0)
+	if (rc == 0 || strcmp(buffer, SUCCESS_MSG))
 		return false;
 
 	// Receive friends
@@ -333,23 +340,49 @@ void Client::connect_with_user_req(std::string username) {
 /**
  * Returns socket file descriptor of the other user or -1 on error.
  */
-int Client::connect_with_user_res(char* response, int & fdmax, fd_set * read_fds) {
+int Client::connect_with_user_res(string response, int & fdmax, fd_set * read_fds) {
 	int rc, newsocket, port;
 	char ip[16];
-	char buffer[BUFFER_LENGTH];
+	char username[BUFFER_LENGTH];
 	
 	//receive port and ip from server	
-	if (response == NULL || strcmp(response, ERR_MSG) == 0)
+	if (response.compare(ERR_MSG) == 0)
 		return -1;
 	
-	sscanf(response, "%s: %s %i", buffer, ip, &port);
-	dprintf("received from server: %s %s %i\n", buffer, ip, port);
+	vector<string> tokens;
+	tokenize(response, tokens, " ");
+	vector<string>::iterator tok = tokens.begin(), tok_end = tokens.end();
+	assert(tok != tok_end);
+	tok++;
+	assert(tok != tok_end);
+	strcpy(ip, (*tok).c_str());
+	tok++;
+	assert(tok != tok_end);
+	port = atoi((*tok).c_str());
+	tok++;
+	assert(tok != tok_end);
+	strcpy(username, (*tok).c_str());
+	
+	dprintf("received from server: %s, %s, %i\n", username, ip, port);
 	
 	//connect_to_server(consider the other client the server)
 	connect_to_server(ip, port, newsocket, fdmax, read_fds);
-	insert_in_connected_users(get_username(), newsocket);
+	dprintf("connected to %s\n", username);
+	insert_in_connected_users(string(username), newsocket);
 	
 	//return socket from connect_to server
 	return newsocket;
 
+}
+
+bool Client::send_message(string username_dst, string message) {
+	char buffer[BUFFER_LENGTH];
+	
+	/* send_msg source destination message */
+	sprintf(buffer, "%s %s %s %s", CMD_SEND_MSG, get_username().c_str(), username_dst.c_str(), message.c_str());
+	dprintf("sendinf %s to server\n", buffer);
+	
+	assert(send(server_socket, buffer, strlen(buffer) + 1, 0) >= 0);
+	
+	return true;	
 }

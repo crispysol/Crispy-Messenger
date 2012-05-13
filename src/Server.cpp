@@ -83,6 +83,10 @@ ClientInfo * Server::get_clientInfo_by_sockfd(int sockfd) {
 	return NULL;
 }
 
+void Server::insert_in_clients_to_sockfd(string username, int sockfd) {
+	clients_to_sockfd.insert(pair<string, int> (username, sockfd));
+}
+
 int Server::get_clientInfo_by_username(string username) {
 	map<string, int>::iterator it;
 	
@@ -90,26 +94,34 @@ int Server::get_clientInfo_by_username(string username) {
 	if (it != clients_to_sockfd.end())
 		return it->second;
 		
-	return 0;
+	return -1;
 }
+
+
 
 /* Send ip and port of user <username> to another user which made the request on socket <sockfd>. */
 bool Server::send_user_ip(int sockfd, std::string username) {
 
 	int rc, newsockfd ;
 	char buffer[BUFFER_LENGTH];
-	
+	//TODO check if source of request is friend with <username>; if not, don't send him connection info
 	newsockfd = get_clientInfo_by_username(username);
+	if (newsockfd == -1) {
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		return false;	
+	}
 	ClientInfo *ci = get_clientInfo_by_sockfd(newsockfd);
 	
-	if (ci == NULL) {
+	if (ci == NULL || ci->get_port() == -1) {
+		// destination user is not logged in
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 		return false;	
 	}
 	
 	//send "ip port" on sockfd
-	sprintf(buffer, "%s: %s %i", CMD_CONN_CLIENT_TO_CLIENT_RES, ci->get_ip().c_str(), ci->get_port());
-	dprintf("[SERVER] sending %s of username %s\n", buffer, username.c_str());
+	sprintf(buffer, "%s: %s %i %s", CMD_CONN_CLIENT_TO_CLIENT_RES, ci->get_ip().c_str(), ci->get_port(), 
+		username.c_str());
+	dprintf("[SERVER] sending %s\n", buffer);
 	assert(send(sockfd, buffer, strlen(buffer) + 1, 0) >= 0);
 	
 	return true;
@@ -333,7 +345,8 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 				ci->set_username(username);
 				ci->set_state(AVAILABLE);
 				ci->set_status("");
-
+				insert_in_clients_to_sockfd(username, sockfd);
+				
 				// Send friends list
 				if (rc && !send_friends_list(sockfd, username)) {
 					rc = false;
@@ -909,7 +922,7 @@ bool Server::remove_group(int sockfd, std::string group)
 		
 		if(groupid)
 		{
-			query<<"SELECT "<< GROUPS_T_FRIENDS_LIST <<" FROM groups where "<< 					GROUPS_T_ID_USER_FK << "=" << myid << " AND " << GROUPS_T_NAME <<" = \"" << 					group <<"\";";
+			query<<"SELECT "<< GROUPS_T_FRIENDS_LIST <<" FROM groups where "<< 	GROUPS_T_ID_USER_FK << "=" << myid << " AND " << GROUPS_T_NAME <<" = \"" << 					group <<"\";";
 
 			res = stmt->executeQuery(query.str());
 			dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());
@@ -918,8 +931,8 @@ bool Server::remove_group(int sockfd, std::string group)
 			else{
 				rc = false;
 				dprintf("[SERVER] Group not empty \n");
-				assert(send(sockfd, GROUPNOTEMPTY_ERR, strlen(GROUPNOTEMPTY_ERR) + 1, 0) >= 						0);				
-				}
+				assert(send(sockfd, GROUPNOTEMPTY_ERR, strlen(GROUPNOTEMPTY_ERR) + 1, 0) >= 0);
+			}
 			delete res;
 			
 		}
@@ -934,7 +947,7 @@ bool Server::remove_group(int sockfd, std::string group)
 			dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());	
 			assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 		}
-	    }
+	}
 
 	catch(sql::SQLException &e) {
 
@@ -959,6 +972,7 @@ bool Server::remove_group(int sockfd, std::string group)
 /**
  * Send profile to user.
  * username: user to search for in database.
+ * TODO: Don't overwrite data with null strings.
  *
  * Liviu
  */
@@ -994,13 +1008,61 @@ bool Server::send_profile(int sockfd, std::string username) {
 }
 
 /**
- * Updates a user profile.
- * //TODO: Not ready.
+ * Updates the client profile.
+ * Sends an "OK" message back to the client.
  *
  * Liviu
  */
 bool Server::update_profile(int sockfd, std::string name, std::string surname,
-			std::string phone, std::string email, std::string hobbies) {
+			    std::string phone, std::string hobbies) {
+
+	std::string username, query;
+	map<int, ClientInfo*>::iterator it_fdcl;
+	
+	it_fdcl = sockfd_to_clients.find(sockfd);
+	if (it_fdcl != sockfd_to_clients.end())	
+		username = it_fdcl->second->get_username();
+
+	query = string("UPDATE users SET name = '").append(name).
+		append("', surname = '").append(surname).
+		append("', phone = '").append(phone).
+		append("', hobbies = '").append(hobbies).
+		append("' WHERE username = '").append(username).append("';");
+
+	cout << "Running update query: " << "\n" << query << "\n";
+
+	try {
+		char buff[BUFFER_LENGTH];
+		stmt->executeUpdate(query);
+		sprintf(buff, "OK");
+		assert(send(sockfd, buff, strlen(buff) + 1, 0) >= 0);
+
+	} catch (sql::SQLException &e) {
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		return false;
+	}
+
+	return true;
+}
+
+bool Server::send_msg_from_user_to_user(int sockfd, string src, string dst, string msg) {
+	int rc;
+	char buffer[BUFFER_LENGTH];
+	
+	int skfd_dst = get_clientInfo_by_username(dst.c_str());
+	if (skfd_dst == -1) {
+		// Destination is not online
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		dprintf("%s is not online\n", dst.c_str());
+		return false;
+	}
+			
+	sprintf(buffer, "%s %s %s", CMD_SEND_MSG, src.c_str(), msg.c_str());
+	dprintf("[SERVER] sending %s to %s\n", buffer, dst.c_str());
+	
+	assert(send(skfd_dst, buffer, strlen(buffer) + 1, 0) >= 0);	
+	assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+	
 	return true;
 }
 

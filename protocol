@@ -98,7 +98,8 @@ S: OK -> { ip:port } | ERR
 
 #14 send message
 -> atentie, incercare apelare connect_with_user if online
-C: send_msg username msg
+C->S: send_msg username_src username_dst msg
+C->C: send_msg username_dst msg:
 
 #15 receive message (server receives if client offline)
 C: recv_msg msg

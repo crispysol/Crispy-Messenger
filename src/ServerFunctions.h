@@ -38,6 +38,8 @@
 #define CMD_CONN_CLIENT_TO_CLIENT_REQ	"connect_with_user"
 #define CMD_CONN_CLIENT_TO_CLIENT_RES	"connect_with_user_res"
 #define CMD_CONN_REQ_FROM		"connect_req_from"
+#define CMD_SEND_MSG			"send_msg"
+#define INFO_CLIENT_PORT		"info_port"
 
 #define EXIT_MSG			"exit"
 
@@ -54,20 +56,21 @@ class ClientInfo : public User {
 	int port;
 
 public:
+	ClientInfo(std::string ip);
 	ClientInfo(std::string ip, int port);
 	virtual ~ClientInfo();
 
 	void set_ip(std::string ip);
 	std::string get_ip();
 
-	void set_port(int port);
+	void set_port(int _port);
 	int get_port();
 };
 
 /**
  * Receive a new connection and add it to read_fds
  */
-void new_connection(int sockfd, int & fdmax, fd_set * read_fds, std::string &ip, int &newsockfd, int &newport);
+void new_connection(int sockfd, int & fdmax, fd_set * read_fds, std::string &ip, int &newsockfd);
 
 /**
  * End a connection and remove it from read_fds

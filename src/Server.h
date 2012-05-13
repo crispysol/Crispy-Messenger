@@ -51,6 +51,7 @@ public:
 	std::map <std::string, int> & get_clients_to_sockfd();
 	
 	void insert_in_sockfd_to_clients(int key, ClientInfo * ci);
+	void insert_in_clients_to_sockfd(std::string username, int sockfd);
 	/* Return value in sockfd_to_clients with key <sockfd> */
 	ClientInfo * get_clientInfo_by_sockfd(int sockfd);
 	/* Return connection info of client <username>  */
@@ -63,9 +64,9 @@ public:
 	bool register_client(int sockfd, std::string username, std::string pass, std::string email);
 	bool authentication(int sockfd, std::string username, std::string pass, std::string ip, int port);
 
-	bool send_profile(int sockfd, std::string username);//TODO
+	bool send_profile(int sockfd, std::string username);
 	bool update_profile(int sockfd, std::string name, std::string surname,
-			std::string phone, std::string email, std::string hobbies);//TODO
+			std::string phone, std::string hobbies);
 
 	// Add/Remove/Search a user for a client
 	bool add_user(int sockfd, std::string username);
@@ -93,6 +94,8 @@ public:
 	//set user offline
 	bool set_offline(int sockfd);
 	std::map<std::string, std::string> get_list_of_friends(std::string username);
+	
+	bool send_msg_from_user_to_user(int sockfd, std::string user_src, std::string user_dst, std::string msg);
 };
 
 #endif /* SERVER_H_ */

@@ -101,7 +101,7 @@ static void announce_friends_online_status(int sockfd) {
 static void client_command(string line, int sockfd, Server *&server) {
 
 	if (line.find(CMD_REGISTER) == 0) {
-		int user_pos = line.find(" ") + 1,
+		int 	user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1,
 			email_pos = line.find(" ", pass_pos) + 1;
 		server->register_client(sockfd,
@@ -114,7 +114,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 	ClientInfo *ci = server->get_clientInfo_by_sockfd(sockfd);
 	
 	if (line.find(CMD_AUTH) == 0) {
-		int user_pos = line.find(" ") + 1,
+		int 	user_pos = line.find(" ") + 1,
 			pass_pos = line.find(" ", user_pos) + 1,
 			ip_pos = line.find(" ", pass_pos) + 1;
 		
@@ -154,8 +154,6 @@ static void client_command(string line, int sockfd, Server *&server) {
 		return;
 	}
 
-	
-
 	if(line.find(CMD_DEL_GROUP) == 0) {
 		int group_pos = line.find(" ") + 1;
 		server->remove_group(sockfd,line.substr(group_pos));
@@ -172,9 +170,8 @@ static void client_command(string line, int sockfd, Server *&server) {
 						);
 		return;
 	}
-
 	 
-	 if (line.find(CMD_CONN_CLIENT_TO_CLIENT_REQ) == 0) {
+	if (line.find(CMD_CONN_CLIENT_TO_CLIENT_REQ) == 0) {
 		int username_pos = line.find(" ") + 1;
 		dprintf("[SERVER] processing %s request from %s\n", 
 			CMD_CONN_CLIENT_TO_CLIENT_REQ, ci->get_username().c_str());
@@ -191,7 +188,42 @@ static void client_command(string line, int sockfd, Server *&server) {
 	}
 
 	if (line.find(CMD_UPDATE_PROFILE) == 0) {
-		//TODO
+		int	name_pos = line.find(" ") + 1,
+			sname_pos = line.find(" ", name_pos) + 1,
+			phone_pos = line.find(" ", sname_pos) + 1,
+			hobb_pos = line.find(" ", phone_pos) + 1;
+
+		server->update_profile(
+			sockfd,
+			line.substr(name_pos, sname_pos - name_pos - 1),
+			line.substr(sname_pos, phone_pos - sname_pos - 1),
+			line.substr(phone_pos, hobb_pos - phone_pos - 1),
+			line.substr(hobb_pos));
+		return;
+	}
+	
+	if (line.find(CMD_SEND_MSG) == 0) {
+		int 	user_src_pos = line.find(" ") + 1,
+			user_dst_pos = line.find(" ", user_src_pos) + 1,
+			msg_pos = line.find(" ", user_dst_pos) + 1;
+			server->send_msg_from_user_to_user(sockfd, 
+				line.substr(user_src_pos, user_dst_pos - user_src_pos - 1),
+				line.substr(user_dst_pos, msg_pos - user_dst_pos - 1),
+				line.substr(msg_pos));
+		return;
+	}
+	
+	if (line.find(INFO_CLIENT_PORT) == 0) {
+		int	port_pos = line.find(" ") + 1, port;
+		char	port_ch[6];
+		assert(line.copy(port_ch, line.length() - port_pos, port_pos) > 0);
+		port = atoi(port_ch);
+		dprintf("received port %i\n", port);
+		ClientInfo *ci = server->get_clientInfo_by_sockfd(sockfd);
+		assert(ci != NULL);
+		ci->set_port(port);
+		
+		return;
 	}
 
 }
@@ -221,10 +253,9 @@ int run_server(int server_port) {
 			if (FD_ISSET(i, &tmp_fds)) {
 				// New connection
 				if (i == sockfd) {
-					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
+					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd);
 					//store information of client connected on newsockfd
-					server->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
-					//send(i, "TEST", strlen("TEST"), 0); // TODO delete
+					server->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip));
 					continue;
 				}
 
