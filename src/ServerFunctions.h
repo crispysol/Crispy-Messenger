@@ -2,7 +2,7 @@
  * Functions.h
  *
  *  Created on: May 5, 2011
- *      Author: cmihail, andreea
+ *      Author: cmihail, andreea, liviu, radu
  */
 
 #ifndef SERVER_FUNCTIONS_H_
@@ -12,20 +12,22 @@
 
 #include "User.h"
 
-#define BUFFER_LENGTH		20000
+#define BUFFER_LENGTH			20000
 #define SUCCESS_MSG			"OK"
-#define USEDUSER_ERR		"USEDUSER"
-#define USEDEMAIL_ERR		"USEDMAIL"
-#define USER_ALREADY_IN_LIST 	"USER_IN_LIST"
+#define USEDUSER_ERR			"USEDUSER"
+#define USEDEMAIL_ERR			"USEDMAIL"
+#define USER_ALREADY_IN_LIST 		"USER_IN_LIST"
 #define ERR_MSG				"FAIL"
-#define CMD_REGISTER		"register"
+#define CMD_REGISTER			"register"
 #define CMD_AUTH			"login"
-#define CMD_ADD_USER		"add_user"
-#define CMD_REMOVE_USER		"remove_user"
-#define CMD_ADD_GROUP		"add_group"
+#define CMD_ADD_USER			"add_user"
+#define CMD_REMOVE_USER			"remove_user"
+#define CMD_ADD_GROUP			"add_group"
+#define CMD_CONN_CLIENT_TO_CLIENT_REQ	"connect_with_user"
+#define CMD_CONN_CLIENT_TO_CLIENT_RES	"connect_with_user_res"
 #define EXIT_MSG			"exit"
 
-#define SQL_DEBUG		"SQL"
+#define SQL_DEBUG			"SQL"
 
 #ifdef _DEBUG
 # define dprintf(...) {printf(__VA_ARGS__); fflush(stdout);}

@@ -2,7 +2,7 @@
  * Functions.cpp
  *
  *  Created on: May 5, 2011
- *      Author: cmihail, andreea
+ *      Author: cmihail, andreea, liviu, radu
  */
 
 #include <iostream>

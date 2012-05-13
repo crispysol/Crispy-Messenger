@@ -2,7 +2,7 @@
  * client.cpp
  *
  *  Created on: Mar 10, 2012
- *      Author: mihail
+ *      Author: mihail, andreea, radu
  */
 
 #include <iostream>
@@ -24,6 +24,17 @@ using namespace std;
 
 int client_port = 0;
 
+static void process_server_msg(char * buffer);
+
+/**
+ * Process message from server.
+ */
+static void process_server_msg(char * buffer, int & fdmax, fd_set * read_fds) {
+	if(strstr(CMD_CONN_CLIENT_TO_CLIENT_RES) == 0) {
+		connect_with_user_res(buffer, fdmax, read_fds);
+		return;
+	}
+}
 /**
  * Execute command received from STDIN
  */
@@ -69,6 +80,12 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		return;
 	}
 	
+	if(line.find(CMD_CONN_CLIENT_TO_CLIENT_REQ) == 0) {
+		int user_pos = line.find(" ") + 1;
+		client->connect_with_user_req(line.substr(user_pos));
+		return;
+	}
+
 	if (line.find(EXIT_MSG) == 0) {
 		//TODO end all connections
 		//end connection to server
@@ -107,7 +124,7 @@ int run_server(char * server_ip, int server_port) {
 				// New connection
 				if (i == sockfd) {
 					new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
-					client->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
+					//client->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
 					continue;
 				}
 
@@ -122,6 +139,7 @@ int run_server(char * server_ip, int server_port) {
 					n = recv(i, buffer, sizeof(buffer), 0);
 					assert(n >= 0); // TODO test if we have to exit
 					dprintf("[CLIENT]received from SERVER: %s\n", buffer);
+					process_server_msg(buffer, fdmax, read_fds);
 					continue;
 				}
 

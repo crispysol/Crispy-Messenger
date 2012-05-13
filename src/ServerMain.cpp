@@ -2,7 +2,7 @@
  * server.cpp
  *
  *  Created on: Mar 10, 2012
- *      Author: mihail, andreea
+ *      Author: mihail, andreea, radu
  */
 
 #include <iostream>
@@ -137,20 +137,27 @@ static void client_command(string line, int sockfd, Server *&server) {
 	
 		dprintf("sending add_user command\n");
 		int user_pos = line.find(" ") + 1;
-		server->add_user(sockfd,line.substr(user_pos));
+		server->add_user(sockfd, line.substr(user_pos));
 		return;
 	}
 
 	if (line.find(CMD_REMOVE_USER) == 0) {
 		int user_pos = line.find(" ") + 1;
-		server->remove_user(sockfd,line.substr(user_pos));
+		server->remove_user(sockfd, line.substr(user_pos));
 		return;
 	}
 	
 	if (line.find(CMD_ADD_GROUP) == 0) {
 		int group_pos = line.find(" ") + 1;
 		
-		server->add_group(sockfd,line.substr(group_pos), ci->get_username());
+		server->add_group(sockfd, line.substr(group_pos), ci->get_username());
+		return;
+	}
+	 
+	 if (line.find(CMD_CONN_CLIENT_TO_CLIENT_REQ) == 0) {
+		int username_pos = line.find(" ") + 1;
+		dprintf("[SERVER] processing %s request from %s\n", CMD_CONN_CLIENT_TO_CLIENT_REQ, ci->get_username());
+		server->send_user_ip(sockfd, line.substr(username_pos));
 		return;
 	}
 }

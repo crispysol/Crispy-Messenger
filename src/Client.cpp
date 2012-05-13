@@ -2,7 +2,7 @@
  * client.cpp
  *
  *  Created on: Apr 8, 2012
- *      Author: andreea
+ *      Author: andreea, mihail, radu
  */
 
 #include <iostream>
@@ -35,8 +35,8 @@ int Client::get_server_socket() {
 	return server_socket;
 }
 
-void Client::insert_in_sockfd_to_clients(int key, ClientInfo * ci) {
-	sockfd_to_clients.insert(pair<int, ClientInfo*> (key, ci));
+void Client::insert_in_connected_users(std::string username, int sockfd) {
+	connected_users.insert(pair<string, int> (username, sockfd));
 }
 
 bool Client::register_client(std::string username, std::string pass, std::string email) {
@@ -167,4 +167,39 @@ bool Client::add_group(std::string group) {
 		return false;
 
 	return true;
+}
+
+/**
+ * Asks for port and ip of user <username>.
+ */
+void Client::connect_with_user_req(std::string username) {
+	char buffer[BUFFER_LENGTH];
+
+	//send request to server for (ip, port) of user <username>
+	char msg[BUFFER_LENGTH];
+	sprintf(msg, "%s %s", CMD_CONN_CLIENT_TO_CLIENT_REQ, username.c_str());
+	assert(send(server_socket, msg, strlen(msg) + 1, 0) >= 0);
+}
+
+/**
+ * Returns socket file descriptor of the other user or -1 on error.
+ */
+int Client::connect_with_user_res(char* response, int & fdmax, fd_set * read_fds) {
+	int rc, newsocket, port;
+	char ip[16];
+	char buffer[BUFFER_LENGTH];
+	
+	//receive port and ip from server	
+	if (response == NULL || strmcp(response, ERR_MSG) == 0)
+		return -1;
+	
+	sscanf(response, "%s: %s %i", buffer, ip, port);
+	dprintf("received from server: %s %s %i\n", buffer, ip, port);
+	
+	//connect_to_server(consider the other client the server)
+	connect_to_server(ip, port, newsocket, fdmax, read_fds);
+	insert_in_connected_users(username, newsockfd);
+	
+	//return socket from connect_to server
+	return newsockfd;
 }
