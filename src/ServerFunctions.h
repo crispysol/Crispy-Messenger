@@ -20,6 +20,7 @@
 #define GROUPNAME_ERR		"BAD_GROUP_NAME"
 #define GROUPNOTEMPTY_ERR	"GROUP_NOT_EMPTY"
 #define USER_ALREADY_IN_LIST 	"USER_IN_LIST"
+#define USER_NOT_IN_LIST 	"USER_NOT_IN_LIST"
 #define ERR_MSG				"FAIL"
 #define CMD_REGISTER		"register"
 #define CMD_AUTH			"login"
