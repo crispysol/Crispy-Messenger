@@ -15,6 +15,7 @@
 #include "ServerFunctions.h"
 #include "Profile.h"
 #include "User.h"
+#include "jsoncpp/json.h"
 
 class Client : public User {
 	// Map <group, list of friends>
@@ -70,6 +71,9 @@ public:
 
 	// Returns socket file descriptor of the other user
 	int connect_with_user(std::string username);
+
+	// Receive friend list
+	bool receive_friend_list(Json::Value & root);
 
 	/**
 	 * Communication client-client
