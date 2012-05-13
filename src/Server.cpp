@@ -223,7 +223,7 @@ void tokenize(const string& str, vector<string>& tokens, const string& delimiter
 /**
  * Send initial info at login to user that just logged
  */
-bool Server::send_initial_info(int sockfd, string username) {
+bool Server::send_friends_list(int sockfd, string username) {
 	stringstream ss;
 
 	// Retrieve friends
@@ -277,13 +277,14 @@ bool Server::send_initial_info(int sockfd, string username) {
 		}
 		ss << "]}";
 	}
-	ss << endl << "]," << endl;
+	ss << endl << "]}" << "\n";
 
-	// Add offline messages TODO
-	ss << "\"offline_messages\": \"TODO\"" << endl << "}" << endl;
+	// Synchronize server / client
+	char buffer[strlen(SUCCESS_MSG) + 1];
+	assert(recv(sockfd, buffer, sizeof(buffer), 0) >= 0);
 
-	// Send message
-	assert(send(sockfd, ss.str().c_str(), ss.str().length() + 1, 0) >= 0);
+	// Send friends list
+	assert(send(sockfd, ss.str().c_str(), strlen(ss.str().c_str()) + 1, 0) >= 0);
 
 	return true;
 }
@@ -316,8 +317,12 @@ bool Server::authentication(int sockfd, std::string username, std::string pass, 
 				ci->set_state(AVAILABLE);
 				ci->set_status("");
 
-				// Send initial info TODO
-				send_initial_info(sockfd, username);
+				// Send friends list
+				if (rc && !send_friends_list(sockfd, username)) {
+					rc = false;
+				}
+
+				// Send offline messages TODO
 		}
 		else {
 			assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
@@ -491,6 +496,11 @@ bool Server::add_user(int sockfd, std::string username) {
 	if(rc == true) assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
 
 	else assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+
+	// Send friends list
+	if (rc && !send_friends_list(sockfd, myusername)) {
+		rc = false;
+	}
 
 	return rc;
 

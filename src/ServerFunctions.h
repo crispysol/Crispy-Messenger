@@ -9,6 +9,7 @@
 #define SERVER_FUNCTIONS_H_
 
 #include <stdio.h>
+#include <vector>
 
 #include "User.h"
 
@@ -69,6 +70,11 @@ void init_server(int & server_port, int & sockfd, int & fdmax, fd_set * read_fds
  * Connect to a server (only for client)
  */
 void connect_to_server(char * server_ip, int server_port,  int & socket_server, int & fdmax, fd_set * read_fds);
+
+/**
+ * Tokenizer
+ */
+void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters);
 
 
 #endif //define SERVER_FUNCTIONS_H_
