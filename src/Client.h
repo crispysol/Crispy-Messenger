@@ -83,7 +83,7 @@ public:
 	/**
 	 * Communication client-client
 	 */
-	bool send_message(int sockfd, std::string dst, std::string message);
+	bool send_message(std::string username_dst, std::string message);
 	//TODO not needed recv_message(int sockfd, std::string message); not needed
 };
 

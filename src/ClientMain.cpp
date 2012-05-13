@@ -160,7 +160,7 @@ void stdin_command(Client *client, fd_set * read_fds) {
 		int 	name_dst = line.find(" ") + 1,
 			msg_pos = line.find(" ", name_dst) + 1;
 		//Client communicate through server
-		client->send_message(client->get_server_socket(), 
+		client->send_message( 
 			line.substr(name_dst, msg_pos - 1 - name_dst), 
 			line.substr(msg_pos));
 	}
