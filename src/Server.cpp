@@ -480,7 +480,10 @@ bool Server::add_user(int sockfd, std::string username) {
 			
 */
 		}
-		else assert(send(sockfd, USER_ALREADY_IN_LIST, strlen(USER_ALREADY_IN_LIST) + 1, 0) >= 0);
+		else {
+			assert(send(sockfd, USER_ALREADY_IN_LIST, strlen(USER_ALREADY_IN_LIST) + 1, 0) >= 0);
+			rc=false;
+			}
 	}
 	catch(sql::SQLException &e) {
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
@@ -662,8 +665,99 @@ bool Server::move_user_to_group(int sockfd, std::string username, std::string gr
 */
 bool Server::remove_group(int sockfd, std::string group)
 {
-	dprintf("[SERVER] receive remove group request %s",group.c_str());
+	int rc = true;
+	int myid;
+	bool empty=false;
+	std::stringstream  query;
+	sql::ResultSet * res;
+	string myusername;
+	ClientInfo * my_client;
 
+	my_client=get_clientInfo_by_sockfd(sockfd);
+	myusername=my_client->get_username();
+	if(myusername == "") {
+					assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+					return false;
+				}
+	dprintf("[SERVER] receive remove group request %s from client %s",group.c_str(),myusername.c_str());
+	//find out my id
+	query << "SELECT id from users where username = \"" << myusername <<"\";";
+
+
+	try {
+		res = stmt->executeQuery(query.str());
+		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());
+		if(res->rowsCount()!=1) { dprintf("[SERVER] myuser not good/ problem\n");
+				assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);				
+				return false;
+				}
+		res->next();
+		myid=res->getInt(1);
+		dprintf("[SERVER]myid query executed myid=%i\n",myid);
+		delete res;
+		query.str("");
+		delete res;
+		int groupid;
+
+		//find out if the group exists
+
+		query<<"SELECT "<<GROUPS_T_ID<<" FROM groups where "<< GROUPS_T_ID_USER_FK << "=" << myid << " AND " << GROUPS_T_NAME <<" = \"" << group <<"\";";
+		res = stmt->executeQuery(query.str());
+		dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());
+		if(res->rowsCount()!=1) { dprintf("[SERVER] Group name doesn't exist/duplicate \n");
+				assert(send(sockfd, GROUPNAME_ERR, strlen(GROUPNAME_ERR) + 1, 0) >= 0);				
+				return false;
+				}
+		query.str("");
+		res->next();
+		groupid=res->getInt(1);
+		delete res;
+
+		//find out if the group is empty
+		
+		if(groupid)
+		{
+			query<<"SELECT "<< GROUPS_T_FRIENDS_LIST <<" FROM groups where "<< 					GROUPS_T_ID_USER_FK << "=" << myid << " AND " << GROUPS_T_NAME <<" = \"" << 					group <<"\";";
+
+			res = stmt->executeQuery(query.str());
+			dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());
+			res->next();
+			if(res->getString(1)!="") empty =true;
+			else{
+				rc = false;
+				dprintf("[SERVER] Group not empty \n");
+				assert(send(sockfd, GROUPNOTEMPTY_ERR, strlen(GROUPNOTEMPTY_ERR) + 1, 0) >= 						0);				
+				}
+			delete res;
+			
+		}
+
+		//if empty, erase
+
+		if(empty)
+		{	
+			query.str("");
+			query << "DELETE from groups where "<< GROUPS_T_ID <<" = "<< groupid <<" ;";
+			stmt->executeUpdate(query.str());
+			dprintf("[%s executed]%s\n", SQL_DEBUG, query.str().c_str());	
+		}
+	    }
+
+	catch(sql::SQLException &e) {
+
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		
+		dprintf("sql exception\n");
+		cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+		cout << "# ERR: " << e.what();
+		cout << " (MySQL error code: " << e.getErrorCode();
+		cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+		rc = false;
+	}
+
+
+
+	
 }
 
 
