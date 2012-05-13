@@ -48,8 +48,8 @@ public:
 	bool authentication(std::string username, std::string pass);
 
 	Profile get_profile(std::string username);
-	bool update_profile(std::string name, std::string surname, std::string phone,
-		std::string email, std::string hobbies);
+	bool update_profile(std::string name, std::string surname,
+			    std::string phone, std::string hobbies);
 
 	// Add/Remove/Search a user
 	bool add_user(std::string username);

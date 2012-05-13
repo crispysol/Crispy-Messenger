@@ -170,7 +170,18 @@ static void client_command(string line, int sockfd, Server *&server) {
 	}
 
 	if (line.find(CMD_UPDATE_PROFILE) == 0) {
-		//TODO
+		int	name_pos = line.find(" ") + 1,
+			sname_pos = line.find(" ", name_pos) + 1,
+			phone_pos = line.find(" ", sname_pos) + 1,
+			hobb_pos = line.find(" ", phone_pos) + 1;
+
+		server->update_profile(
+			sockfd,
+			line.substr(name_pos, sname_pos - name_pos - 1),
+			line.substr(sname_pos, phone_pos - sname_pos - 1),
+			line.substr(phone_pos, hobb_pos - phone_pos - 1),
+			line.substr(hobb_pos));
+		return;
 	}
 }
 

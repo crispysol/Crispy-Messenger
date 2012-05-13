@@ -728,12 +728,39 @@ bool Server::send_profile(int sockfd, std::string username) {
 }
 
 /**
- * Updates a user profile.
- * //TODO: Not ready.
+ * Updates the client profile.
+ * Sends an "OK" message back to the client.
  *
  * Liviu
  */
 bool Server::update_profile(int sockfd, std::string name, std::string surname,
-			std::string phone, std::string email, std::string hobbies) {
+			    std::string phone, std::string hobbies) {
+
+	std::string username, query;
+	map<int, ClientInfo*>::iterator it_fdcl;
+	
+	it_fdcl = sockfd_to_clients.find(sockfd);
+	if (it_fdcl != sockfd_to_clients.end())	
+		username = it_fdcl->second->get_username();
+
+	query = string("UPDATE users SET name = '").append(name).
+		append("', surname = '").append(surname).
+		append("', phone = '").append(phone).
+		append("', hobbies = '").append(hobbies).
+		append("' WHERE username = '").append(username).append("';");
+
+	cout << "Running update query: " << "\n" << query << "\n";
+
+	try {
+		char buff[BUFFER_LENGTH];
+		stmt->executeUpdate(query);
+		sprintf(buff, "OK");
+		assert(send(sockfd, buff, strlen(buff) + 1, 0) >= 0);
+
+	} catch (sql::SQLException &e) {
+		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
+		return false;
+	}
+
 	return true;
 }

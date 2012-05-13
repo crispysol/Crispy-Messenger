@@ -236,14 +236,6 @@ Profile Client::get_profile(std::string username) {
 		phone_pos = buf.find(" ", sname_pos) + 1,
 		email_pos = buf.find(" ", phone_pos) + 1,
 		hobb_pos = buf.find(" ", email_pos) + 1;
-	/*
-	//TODO: Remove DEBUG
-	cout	<< "Name: |" << buf.substr(0, name_pos) << "|\n"
-		<< "Surname: |" << buf.substr(pos2, pos3 - pos2 - 1)  << "|\n"
-		<< "Phone: |" << buf.substr(pos3, pos4 - pos3 - 1) << "|\n"
-		<< "email: |" << buf.substr(pos4, pos5 - pos4 - 1) << "|\n"
-		<< "Hobbies: |" << buf.substr(pos5) << "|\n";
-	*/
 	
 	return Profile( buf.substr(0, name_pos),
 			buf.substr(sname_pos, phone_pos - sname_pos - 1),
@@ -258,8 +250,23 @@ Profile Client::get_profile(std::string username) {
  *
  * Liviu
  */
-bool Client::update_profile(std::string name, std::string surname, std::string phone,
-		std::string email, std::string hobbies) {
+bool Client::update_profile(std::string name, std::string surname,
+			    std::string phone, std::string hobbies) {
+	
+	char buff[BUFFER_LENGTH];
+
+	sprintf(buff, "%s %s %s %s %s", CMD_UPDATE_PROFILE, name.c_str(), surname.c_str(),
+					phone.c_str(), hobbies.c_str());
+	cout << "Sending: " << buff << endl;
+	assert(send(server_socket, buff, strlen(buff)+1, 0) >= 0);
+	
+	memset(buff, 0, BUFFER_LENGTH);
+
+	//receive response form server_socket
+	int rc = recv(server_socket, buff, sizeof(buff), 0);
+	assert(rc >= 0);
+	dprintf("Received from server: %s\n", buff);
+
 	return true;
 }
 
