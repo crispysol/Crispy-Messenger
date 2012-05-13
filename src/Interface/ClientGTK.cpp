@@ -301,7 +301,7 @@ void idle(gpointer data) {
 			// New connection
 			if (i == sockfd) {
 				new_connection(sockfd, fdmax, &read_fds, ip, newsockfd, newport);
-				current_client->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
+				//current_client->insert_in_sockfd_to_clients(newsockfd, new ClientInfo(ip, newport));
 				continue;
 			}
 

@@ -86,3 +86,26 @@ void add_button_to_box(GtkWidget * box, string label_text, gboolean aligned,
 	gtk_label_set_markup(GTK_LABEL(label), ("<big>" + label_text + "</big>").c_str());
 	gtk_container_add(GTK_CONTAINER(align), label);
 }
+
+/**
+ * Create chat text in a scrolled window
+ */
+GtkWidget * scrolled_chat_text_view(GtkWidget * vbox, gboolean from_start) {
+	// Scrolled window for text view
+	GtkWidget * swindow = gtk_scrolled_window_new (NULL, NULL);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swindow),
+			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+	if (from_start == TRUE) {
+		gtk_box_pack_start(GTK_BOX(vbox), swindow, TRUE, TRUE, 0);
+	} else {
+		gtk_box_pack_end(GTK_BOX(vbox), swindow, FALSE, FALSE, 0);
+	}
+	gtk_widget_show(swindow);
+
+	// Create text view
+	GtkWidget * text_view = gtk_text_view_new();
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
+	gtk_container_add(GTK_CONTAINER(swindow), text_view);
+
+	return text_view;
+}

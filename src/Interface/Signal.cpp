@@ -21,7 +21,6 @@ extern Client * current_client;
 
 using namespace std;
 
-
 /**
  * Add a new friend
  */

@@ -34,4 +34,9 @@ void create_label_field(GtkWidget * vbox, std::string label_text);
 void add_button_to_box(GtkWidget * box, std::string label_text, gboolean aligned,
 		void (* handler)(GtkWidget *, GdkEventButton *, gpointer), gpointer g_client);
 
+/**
+ * Create chat text in a scrolled window
+ */
+GtkWidget * scrolled_chat_text_view(GtkWidget * vbox, gboolean from_start);
+
 #endif /* GTKFUNCTIONS_H_ */

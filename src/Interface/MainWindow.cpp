@@ -81,7 +81,7 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 	}
 	add_vbox_row(new_vbox, entry, width / 1.5, 0);
 
-	// Create recovery button
+	// Create button
 	GtkWidget * button = gtk_button_new_with_label(button_text);
 	add_vbox_row(new_vbox, button, 0, 0);
 
@@ -144,6 +144,55 @@ static void change_availability_window(GtkWidget * widget, gpointer info) {
 	create_one_entry_window(AUX_WINDOW_WIDTH, AUX_WINDOW_HEIGHT, (gchar *) "Change availability",
 			(gchar *) "Choose new availability:", MAX_REGISTER_CHARS, (gchar *) "Change availability",
 			signal_delete_group, *g_info, CHANGE_AVAILABILITY);
+}
+
+/**
+ * Create update profile window
+ */
+static void create_update_profile_window(GtkWidget * widget, gpointer info) {
+//	struct _general_info g_info = * (struct _general_info *) info;
+//
+//	// Create new window
+//	GtkWidget * window = create_new_window(width, height, title);
+//
+//	// Create vbox and it's alignment
+//	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
+//	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
+//
+//	// Create name entry
+//	GtkWidget * name = gtk_entry_new();
+//	gtk_entry_set_max_length(GTK_ENTRY(name), MAX_PROFILE_CHARS);
+//	add_vbox_row(new_vbox, name, width / 2, 0);
+//
+//	// Create surname entry
+//	GtkWidget * surname = gtk_entry_new();
+//	gtk_entry_set_max_length(GTK_ENTRY(surname), MAX_PROFILE_CHARS);
+//	add_vbox_row(new_vbox, surname, width / 2, 0);
+//
+//	// Create phone entry
+//	GtkWidget * phone = gtk_entry_new();
+//	gtk_entry_set_max_length(GTK_ENTRY(phone), MAX_PROFILE_CHARS);
+//	add_vbox_row(new_vbox, phone, width / 2, 0);
+//
+//	// Create hobbies entry
+//	GtkWidget * hobbies = scrolled_chat_text_view(new_vbox, FALSE);
+//	add_vbox_row(new_vbox, hobbies, width / 2, 0);
+//
+//	// Create button
+//	GtkWidget * button = gtk_button_new_with_label(button_text);
+//	add_vbox_row(new_vbox, button, 0, 0);
+//
+//	// Action on button
+//	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
+//	ng_info->window_top_level = g_info.window_top_level;
+//	ng_info->window = window;
+//	ng_info->entry = entry;
+//	// TODO more entries
+//	ng_info->vbox_align = g_info.vbox_align;
+//	g_signal_connect_swapped(button, "clicked", (GCallback) TODO, (gpointer) ng_info);
+//
+//	gtk_widget_show_all(window);
+
 }
 
 /**
@@ -244,7 +293,7 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 	create_menu_entry(submenu2, (gchar *) "Change availability", change_availability_window,
 			(gpointer) g_info);
 	create_menu_entry(submenu2, (gchar *) "Show my profile", execute_menu_item, (gpointer) g_info);
-	create_menu_entry(submenu2, (gchar *) "Update profile", execute_menu_item,(gpointer) g_info);
+	create_menu_entry(submenu2, (gchar *) "Update profile", create_update_profile_window, (gpointer) g_info);
 
 	GtkWidget * submenu3 = create_menu_bar_submenu(menu_bar, (gchar *) "Settings");
 	create_menu_entry(submenu3, (gchar *) "Logout", signal_logout, (gpointer) g_info);
