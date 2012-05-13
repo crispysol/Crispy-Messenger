@@ -182,6 +182,13 @@ void signal_show_profile(GtkWidget * widget, gpointer g_client) {
 }
 
 /**
+ * Update user's profile
+ */
+void signal_update_profile(GtkWidget * widget, gpointer g_client) {
+	// TODO
+}
+
+/**
  * Change user's group
  */
 void signal_change_group(GtkWidget * widget, gpointer g_client) {

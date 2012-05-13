@@ -150,49 +150,51 @@ static void change_availability_window(GtkWidget * widget, gpointer info) {
  * Create update profile window
  */
 static void create_update_profile_window(GtkWidget * widget, gpointer info) {
-//	struct _general_info g_info = * (struct _general_info *) info;
-//
-//	// Create new window
-//	GtkWidget * window = create_new_window(width, height, title);
-//
-//	// Create vbox and it's alignment
-//	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.4, 0, 0);
-//	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
-//
-//	// Create name entry
-//	GtkWidget * name = gtk_entry_new();
-//	gtk_entry_set_max_length(GTK_ENTRY(name), MAX_PROFILE_CHARS);
-//	add_vbox_row(new_vbox, name, width / 2, 0);
-//
-//	// Create surname entry
-//	GtkWidget * surname = gtk_entry_new();
-//	gtk_entry_set_max_length(GTK_ENTRY(surname), MAX_PROFILE_CHARS);
-//	add_vbox_row(new_vbox, surname, width / 2, 0);
-//
-//	// Create phone entry
-//	GtkWidget * phone = gtk_entry_new();
-//	gtk_entry_set_max_length(GTK_ENTRY(phone), MAX_PROFILE_CHARS);
-//	add_vbox_row(new_vbox, phone, width / 2, 0);
-//
-//	// Create hobbies entry
-//	GtkWidget * hobbies = scrolled_chat_text_view(new_vbox, FALSE);
-//	add_vbox_row(new_vbox, hobbies, width / 2, 0);
-//
-//	// Create button
-//	GtkWidget * button = gtk_button_new_with_label(button_text);
-//	add_vbox_row(new_vbox, button, 0, 0);
-//
-//	// Action on button
-//	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
-//	ng_info->window_top_level = g_info.window_top_level;
-//	ng_info->window = window;
-//	ng_info->entry = entry;
-//	// TODO more entries
-//	ng_info->vbox_align = g_info.vbox_align;
-//	g_signal_connect_swapped(button, "clicked", (GCallback) TODO, (gpointer) ng_info);
-//
-//	gtk_widget_show_all(window);
+	struct _general_info g_info = * (struct _general_info *) info;
 
+	gint width = PROFILE_WINDOW_WIDTH, height = PROFILE_WINDOW_HEIGHT;
+	// Create new window
+	GtkWidget * window = create_new_window(width, height, (gchar *) "Update profile");
+
+	// Create vbox and it's alignment
+	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.2, 0, 0);
+	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
+
+	// Create hobbies entry
+	create_label_field(new_vbox, string("Enter hobbies"));
+	GtkWidget * hobbies = scrolled_chat_text_view(new_vbox, TRUE);
+
+	// Create name entry
+	create_label_field(new_vbox, string("Enter name"));
+	GtkWidget * name = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(name), MAX_PROFILE_CHARS);
+	add_vbox_row(new_vbox, name, width / 1.5, 0);
+
+	// Create surname entry
+	create_label_field(new_vbox, string("Enter surname"));
+	GtkWidget * surname = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(surname), MAX_PROFILE_CHARS);
+	add_vbox_row(new_vbox, surname, width / 1.5, 0);
+
+	// Create phone entry
+	create_label_field(new_vbox, string("Enter phone"));
+	GtkWidget * phone = gtk_entry_new();
+	gtk_entry_set_max_length(GTK_ENTRY(phone), MAX_PROFILE_CHARS);
+	add_vbox_row(new_vbox, phone, width / 1.5, 0);
+
+	// Create button
+	GtkWidget * button = gtk_button_new_with_label("Update profile");
+	add_vbox_row(new_vbox, button, 0, 0);
+
+	// Action on button
+	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
+	ng_info->window_top_level = g_info.window_top_level;
+	ng_info->window = window;
+	// TODO more entries
+	ng_info->vbox_align = g_info.vbox_align;
+	g_signal_connect_swapped(button, "clicked", (GCallback) signal_update_profile, (gpointer) ng_info);
+
+	gtk_widget_show_all(window);
 }
 
 /**
