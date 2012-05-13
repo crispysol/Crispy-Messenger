@@ -44,6 +44,7 @@
 #define CMD_SET_STATE			"set_state"
 #define CMD_SET_STATUS			"set_status"
 #define CMD_SEARCH_USER 		"search_user"
+#define FILE_TRANSFER			"FILE_TRANSFER"
 
 #define CONNECTED_MSG			"connected_with"
 #define EXIT_MSG			"exit"
