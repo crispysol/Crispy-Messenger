@@ -51,9 +51,6 @@ static GtkWidget * create_link_button(GtkWidget * vbox, string text) {
 	return button;
 }
 
-// TEST
-
-
 /**
  * Create a vbox used for login interface
  */
