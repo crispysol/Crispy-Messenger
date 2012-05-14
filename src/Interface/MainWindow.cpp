@@ -33,7 +33,12 @@ extern Client * current_client;
 // Map used for correspondence between client - chat window
 extern map <string, GtkWidget *> map_chat_windows;
 
-enum one_entry_type {NORMAL_ENTRY, DELETE_GROUP, CHANGE_AVAILABILITY, CHANGE_GROUP};
+// Gtk widgets
+extern GtkWidget * main_window_top_level;
+extern GtkWidget * main_window_vbox;
+
+enum one_entry_type {NORMAL_ENTRY, DELETE_GROUP, CHANGE_AVAILABILITY, CHANGE_GROUP,
+	SEARCH_USER, UPDATE_PROFILE};
 
 /**
  * Create a window with only one entry
@@ -103,14 +108,13 @@ static void create_one_entry_window(gint width, gint height, gchar * title, gcha
 }
 
 /**
- * Search friends
+ * Create a window with only one entry
  */
-static void search_friends(GtkWidget * widget, gpointer info) {
-	struct _general_info g_info = * (struct _general_info *) info;
-	gint width = PROFILE_WINDOW_WIDTH, height = PROFILE_WINDOW_HEIGHT;
-
+static void create_more_entries_window(gint width, gint height, gchar * title, gchar * label_text,
+		gchar * button_text, void (* handler)(struct _general_info *),
+		struct _general_info g_info, one_entry_type type) {
 	// Create new window
-	GtkWidget * window = create_new_window(width, height, (gchar *) "Search friends");
+	GtkWidget * window = create_new_window(width, height, title);
 
 	// Create vbox and it's alignment
 	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.2, 0, 0);
@@ -135,13 +139,32 @@ static void search_friends(GtkWidget * widget, gpointer info) {
 	add_vbox_row(new_vbox, phone, width / 1.5, 0);
 
 	// Create email entry
-	create_label_field(new_vbox, string("Enter email"));
-	GtkWidget * email = gtk_entry_new();
-	gtk_entry_set_max_length(GTK_ENTRY(email), MAX_EMAIL_CHARS);
-	add_vbox_row(new_vbox, email, width / 1.5, 0);
+	GtkWidget * email = NULL, * swindow = NULL, * text_view = NULL;
+	switch (type) {
+		case SEARCH_USER:
+			create_label_field(new_vbox, string("Enter email"));
+			email = gtk_entry_new();
+			gtk_entry_set_max_length(GTK_ENTRY(email), MAX_EMAIL_CHARS);
+			add_vbox_row(new_vbox, email, width / 1.5, 0);
+			break;
+		case UPDATE_PROFILE:
+			// Create hobbies entry
+			swindow = gtk_scrolled_window_new (NULL, NULL);
+			gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swindow),
+					GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+			text_view = gtk_text_view_new();
+			gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
+			gtk_container_add(GTK_CONTAINER(swindow), text_view);
+			create_label_field(new_vbox, string("Enter hobbies"));
+			add_vbox_row(new_vbox, swindow, width / 1.5, height / 3);
+			break;
+		default:
+			return;
+	}
+
 
 	// Create button
-	GtkWidget * button = gtk_button_new_with_label("Search user");
+	GtkWidget * button = gtk_button_new_with_label(label_text);
 	add_vbox_row(new_vbox, button, 0, 0);
 
 	// Action on button
@@ -152,11 +175,22 @@ static void search_friends(GtkWidget * widget, gpointer info) {
 	ng_info->profile.surname = surname;
 	ng_info->profile.phone = phone;
 	ng_info->profile.email = email;
+	ng_info->profile.hobbies = text_view;
 	ng_info->vbox_align = g_info.vbox_align;
-	g_signal_connect_swapped(button, "clicked", (GCallback) signal_search_user, (gpointer) ng_info);
+	g_signal_connect_swapped(button, "clicked", (GCallback) handler, (gpointer) ng_info);
 
 	// Show window
 	gtk_widget_show_all(window);
+}
+
+/**
+ * Search friends
+ */
+static void search_friends(GtkWidget * widget, gpointer info) {
+	struct _general_info * g_info = (struct _general_info *) info;
+	create_more_entries_window(PROFILE_WINDOW_WIDTH, PROFILE_WINDOW_HEIGHT, (gchar *) "Search friend",
+			(gchar *) "Search friend", (gchar *) "Search friend",
+			signal_search_user, *g_info, SEARCH_USER);
 }
 
 
@@ -232,61 +266,10 @@ static void show_profile(GtkWidget * widget, gpointer info) {
  * Create update profile window
  */
 static void create_update_profile_window(GtkWidget * widget, gpointer info) {
-	struct _general_info g_info = * (struct _general_info *) info;
-	gint width = PROFILE_WINDOW_WIDTH, height = PROFILE_WINDOW_HEIGHT;
-
-	// Create new window
-	GtkWidget * window = create_new_window(width, height, (gchar *) "Update profile");
-
-	// Create vbox and it's alignment
-	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.2, 0, 0);
-	GtkWidget * new_vbox = create_aligned_vbox(window, new_vbox_align);
-
-	// Create name entry
-	create_label_field(new_vbox, string("Enter name"));
-	GtkWidget * name = gtk_entry_new();
-	gtk_entry_set_max_length(GTK_ENTRY(name), MAX_PROFILE_CHARS);
-	add_vbox_row(new_vbox, name, width / 1.5, 0);
-
-	// Create surname entry
-	create_label_field(new_vbox, string("Enter surname"));
-	GtkWidget * surname = gtk_entry_new();
-	gtk_entry_set_max_length(GTK_ENTRY(surname), MAX_PROFILE_CHARS);
-	add_vbox_row(new_vbox, surname, width / 1.5, 0);
-
-	// Create phone entry
-	create_label_field(new_vbox, string("Enter phone"));
-	GtkWidget * phone = gtk_entry_new();
-	gtk_entry_set_max_length(GTK_ENTRY(phone), MAX_PROFILE_CHARS);
-	add_vbox_row(new_vbox, phone, width / 1.5, 0);
-
-	// Create hobbies entry
-	GtkWidget * swindow = gtk_scrolled_window_new (NULL, NULL);
-	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swindow),
-			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	GtkWidget * text_view = gtk_text_view_new();
-	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
-	gtk_container_add(GTK_CONTAINER(swindow), text_view);
-	create_label_field(new_vbox, string("Enter hobbies"));
-	add_vbox_row(new_vbox, swindow, width / 1.5, height / 3);
-
-	// Create button
-	GtkWidget * button = gtk_button_new_with_label("Update profile");
-	add_vbox_row(new_vbox, button, 0, 0);
-
-	// Action on button
-	struct _general_info * ng_info = (struct _general_info *) malloc(sizeof(struct _general_info));
-	ng_info->window_top_level = g_info.window_top_level;
-	ng_info->window = window;
-	ng_info->profile.name = name;
-	ng_info->profile.surname = surname;
-	ng_info->profile.phone = phone;
-	ng_info->profile.hobbies = text_view;
-	ng_info->vbox_align = g_info.vbox_align;
-	g_signal_connect_swapped(button, "clicked", (GCallback) signal_update_profile, (gpointer) ng_info);
-
-	// Show window
-	gtk_widget_show_all(window);
+	struct _general_info * g_info = (struct _general_info *) info;
+	create_more_entries_window(PROFILE_WINDOW_WIDTH, PROFILE_WINDOW_HEIGHT, (gchar *) "Update profile",
+			(gchar *) "Update profile", (gchar *) "Update profile",
+			signal_update_profile, *g_info, UPDATE_PROFILE);
 }
 
 /**
@@ -383,7 +366,9 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 
 	struct _general_info * g_info = (struct _general_info *) malloc(sizeof(struct _general_info));
 	g_info->window_top_level = window_top_level;
+	main_window_top_level = window_top_level;
 	g_info->vbox_align = vbox;
+	main_window_vbox = vbox;
 
 	GtkWidget * submenu1 = create_menu_bar_submenu(menu_bar, (gchar *) "Friends");
 	create_menu_entry(submenu1, (gchar *) "Add friend", add_friend_window, (gpointer) g_info);
@@ -482,7 +467,13 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 			align = gtk_alignment_new(0, 0.5, 0, 0);
 			gtk_container_add(GTK_CONTAINER(button), align);
 			label = gtk_label_new("");
-			gtk_label_set_markup(GTK_LABEL(label), ("<big>" + client + "</big>").c_str());
+			string status;
+			if ((*user)->get_status() == "" || (*user)->get_status() == NO_STATUS) {
+				status = ("<big>" + client + "</big>");
+			} else {
+				 status = ("<big>" + client + " (" + (*user)->get_status().substr(0, MAX_PROFILE_CHAR) + "...)</big>");
+			}
+			gtk_label_set_markup(GTK_LABEL(label), status.c_str());
 			gtk_container_add(GTK_CONTAINER(align), label);
 
 			// Create state label

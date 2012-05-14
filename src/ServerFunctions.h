@@ -49,6 +49,7 @@
 #define FILE_TRANSFER			"FILE_TRANSFER"
 
 #define NO_INFORMATION			"none"
+#define NO_STATUS				"NONE"
 
 #define CONNECTED_MSG			"connected_with"
 #define EXIT_MSG			"exit"

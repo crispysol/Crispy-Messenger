@@ -28,8 +28,9 @@ using namespace std;
 #define MAX_CLIENTS		100
 #define BANNER			"WELCOME"
 
-ClientInfo::ClientInfo(string ip) : ip(ip), port(-1) 
-{
+ClientInfo::ClientInfo(string ip) : ip(ip), port(-1) {
+	this->set_state(OFFLINE);
+	this->set_status("");
 }
 
 ClientInfo::ClientInfo(string ip, int port) : ip(ip), port(port)

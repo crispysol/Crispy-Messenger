@@ -30,8 +30,6 @@
 #define GROUPS_T_FRIENDS_LIST	"friends_list"
 #define GROUP_DEFAULT_NAME	"friends"
 
-#define NO_STATUS	"NONE"
-
 class Server {
 	// Map <sockfd, client info>
 	std::map <int, ClientInfo*> sockfd_to_clients;
@@ -39,9 +37,6 @@ class Server {
 	std::map <std::string, int> clients_to_sockfd;
 	// Database (initialized in constructor)
 	sql::Connection	*con;
-
-	// Send friend list
-	bool send_friends_list(int sockfd, std::string username);
 
 public:
 	Server();
@@ -96,6 +91,9 @@ public:
 	std::map<std::string, std::string> get_list_of_friends(std::string username);
 	
 	bool send_msg_from_user_to_user(int sockfd, std::string user_src, std::string user_dst, std::string msg);
+
+	// Send friend list
+	bool send_friends_list(int sockfd, std::string username);
 };
 
 #endif /* SERVER_H_ */

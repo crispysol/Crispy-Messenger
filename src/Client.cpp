@@ -150,7 +150,7 @@ bool Client::authentication(std::string username, std::string pass) {
 	}
 
 	// Get offline messages TODO
-//	cout << root.toStyledString(); // TODO delete
+	cout << root.toStyledString(); // TODO delete
 
 	return true;
 }

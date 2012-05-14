@@ -10,6 +10,7 @@
 
 User::User() {
 	this->status = "";
+	this->state = OFFLINE;
 }
 
 User::~User() {}

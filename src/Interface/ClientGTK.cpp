@@ -49,8 +49,12 @@ Client * current_client;
 map <string, GtkWidget *> map_chat_windows;
 map <string, GtkWidget *> map_chat_text;
 
+// Gtk widgets
+GtkWidget * main_window_top_level;
+GtkWidget * main_window_vbox;
+
 /**
- * Check login values and execute create main interface if everything is ok
+ * Check login values and executte create main interface if everything is ok
  */
 void signal_check_login(struct _general_info * g_info) {
 	// Save window top level
@@ -344,9 +348,8 @@ void * start_thread(void * ptr_thread) {
 					continue;
 				}
 
-				// Execute command from STDIN
+				// Execute command from STDIN (none for GTK)
 				if (i == STDIN_FILENO) {
-//					stdin_command(client, &read_fds); TODO
 					continue;
 				}
 
@@ -363,8 +366,19 @@ void * start_thread(void * ptr_thread) {
 						int msg_pos = str.find(" ", name_dst) + 1;
 
 						receive_msg(str.substr(name_dst, msg_pos - 1 - name_dst), str.substr(msg_pos));
-					} else {
-						// TODO
+					} else if (str.find(FRIEND_IS_ONLINE) == 0) {
+						gdk_threads_enter();
+
+						// Receive friends
+						Json::Value root;
+						if (!current_client->receive_friend_list(root)) {
+							continue;
+						}
+
+						// Remake main interface
+						gtk_widget_destroy(main_window_vbox);
+						clientgtk_create_main_window(main_window_top_level);
+						gdk_threads_leave();
 					}
 
 					continue;
@@ -377,7 +391,6 @@ void * start_thread(void * ptr_thread) {
 					current_client->remove_from_connected_users(i);
 				} else {
 					printf("received from client: %s\n", buffer);
-//					client_command(buffer, i);
 				}
 			}
 		}

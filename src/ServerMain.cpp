@@ -103,12 +103,7 @@ static void announce_friends_online_status(int sockfd) {
 			cout << "Sending " << announcement << endl;
 			assert(send(friend_sockfd, announcement.str().c_str(), announcement.str().length() + 1, 0) >= 0);
 
-			ClientInfo * ci = server->get_clientInfo_by_sockfd(friend_sockfd);
-
-			sprintf(buff, "%s %s %s %s %s", ONLINE_FRIEND_INFO, it_f->first.c_str(), ci->get_username().c_str(),
-						     ci->get_status().c_str(), ci->get_state_as_string().c_str());
-			cout << "Sending " << buff << endl;
-			assert(send(sockfd, buff, strlen(buff)+1, 0) >= 0);
+			server->send_friends_list(friend_sockfd, friend_name);
 		}
 	}
 }
@@ -258,6 +253,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 		int state_pos = line.find(" ") + 1;
 
 		server->set_state(sockfd, line.substr(state_pos));
+		announce_friends_online_status(sockfd);
 		return;
 	}
 	
@@ -265,6 +261,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 		int status_pos = line.find(" ") + 1;
 
 		server->set_status(sockfd, line.substr(status_pos));
+		announce_friends_online_status(sockfd);
 		return;
 	}
 	
