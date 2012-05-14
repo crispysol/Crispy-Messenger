@@ -106,7 +106,7 @@ bool Client::receive_friend_list(Json::Value & root) {
 	// Parse json
 	Json::Reader reader;
 	if (!reader.parse(buffer, root, false)) {
-		cout << "Failed to parse JSON" << endl << reader.getFormatedErrorMessages()<< endl;
+		dprintf("Failed to parse JSON\n%s\n", reader.getFormatedErrorMessages().c_str());
 		return false;
 	}
 
@@ -157,7 +157,6 @@ bool Client::authentication(std::string username, std::string pass) {
 	}
 
 	// Get offline messages TODO
-	cout << root.toStyledString(); // TODO delete
 
 	return true;
 }
@@ -288,7 +287,6 @@ bool Client::update_profile(std::string name, std::string surname,
 
 	sprintf(buff, "%s %s %s %s %s", CMD_UPDATE_PROFILE, name.c_str(), surname.c_str(),
 					phone.c_str(), hobbies.c_str());
-	cout << "Sending: " << buff << endl;
 	assert(send(server_socket, buff, strlen(buff)+1, 0) >= 0);
 	
 	memset(buff, 0, BUFFER_LENGTH);
@@ -484,14 +482,18 @@ bool Client::send_file(string filename, string username) {
 	char header[BUFFER_LENGTH];
 	struct stat buf;
 	
-	dprintf("processing send_file %s to %s\n", filename.c_str(), username.c_str());
+	dprintf("[SEND FILE] Processing send_file %s to %s\n", filename.c_str(), username.c_str());
 	sockfd = get_socket_of_connected_user(username);
-	if (sockfd == -1)
-		return false;	
+	if (sockfd == -1) {
+		dprintf("[SEND FILE]No socket!\n");
+		return false;
+	}
 		
 	fd_in = open(filename.c_str(), O_RDONLY);
-	if (fd_in < 0)
+	if (fd_in < 0) {
+		dprintf("[SEND FILE]Can't open file!\n");
 		return false;
+	}
 	assert(fstat(fd_in, &buf) == 0);
 	sprintf(header, "%s %s %u ", FILE_TRANSFER, filename.c_str(), buf.st_size);
 	

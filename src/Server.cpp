@@ -107,6 +107,7 @@ bool Server::send_user_ip(int sockfd, std::string username) {
 	//TODO check if source of request is friend with <username>; if not, don't send him connection info
 	newsockfd = get_clientInfo_by_username(username);
 	if (newsockfd == -1) {
+		dprintf("[SERVER] SEND USER IP: %s\n", username.c_str());
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 		return false;	
 	}
@@ -114,6 +115,7 @@ bool Server::send_user_ip(int sockfd, std::string username) {
 	
 	if (ci == NULL || ci->get_port() == -1) {
 		// destination user is not logged in
+		dprintf("[SERVER] SEND USER IP (NOT LOGGED IN): %s\n", username.c_str());
 		assert(send(sockfd, ERR_MSG, strlen(ERR_MSG) + 1, 0) >= 0);
 		return false;	
 	}
