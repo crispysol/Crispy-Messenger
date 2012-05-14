@@ -467,12 +467,17 @@ void clientgtk_create_main_window(GtkWidget * window_top_level) {
 			align = gtk_alignment_new(0, 0.5, 0, 0);
 			gtk_container_add(GTK_CONTAINER(button), align);
 			label = gtk_label_new("");
-			string status;
+			string status = "<big>" + client;
 			if ((*user)->get_status() == "" || (*user)->get_status() == NO_STATUS) {
-				status = ("<big>" + client + "</big>");
 			} else {
-				 status = ("<big>" + client + " (" + (*user)->get_status().substr(0, MAX_PROFILE_CHAR) + "...)</big>");
+				status += " (";
+				if ((*user)->get_status().length() > MAX_PROFILE_CHARS)
+					status += (*user)->get_status().substr(0, MAX_PROFILE_CHARS) + "...";
+				else
+					status += (*user)->get_status();
+				status += ")";
 			}
+			status += "</big>";
 			gtk_label_set_markup(GTK_LABEL(label), status.c_str());
 			gtk_container_add(GTK_CONTAINER(align), label);
 
