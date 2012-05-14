@@ -44,7 +44,12 @@
 #define CMD_SET_STATE			"set_state"
 #define CMD_SET_STATUS			"set_status"
 #define CMD_SEARCH_USER 		"search_user"
+
 #define CMD_FILE_TRANSFER		"send_file"
+
+#define FRIEND_IS_ONLINE		"friend_is_online"
+#define ONLINE_FRIEND_INFO		"online_friend_info"
+
 #define FILE_TRANSFER			"FILE_TRANSFER"
 
 

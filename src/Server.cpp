@@ -179,7 +179,6 @@ map<string, string> Server::get_list_of_friends(string username) {
 		while (res->next()) {
 			sql::SQLString group = res->getString(GROUPS_T_NAME);
 			sql::SQLString friends_list = res->getString(GROUPS_T_FRIENDS_LIST);
-			cout << "[SERVER] list ( " << group << " ) is: " << friends_list << endl << flush;
 			friends.insert(pair<string, string> (string(group), string(friends_list)));
 		}
 		
@@ -291,7 +290,7 @@ bool Server::send_friends_list(int sockfd, string username) {
 			}
 			ss << "{\"name\": \"" << *tok << "\", ";
 			// Add state and status
-			std::map <std::string, int>::iterator cli_sock = clients_to_sockfd.find(username);
+			std::map <std::string, int>::iterator cli_sock = clients_to_sockfd.find(*tok);
 			string state = "offline", status = NO_STATUS;
 			if (cli_sock != clients_to_sockfd.end()) {
 				std::map <int, ClientInfo*>::iterator cli = sockfd_to_clients.find(cli_sock->second);
@@ -307,6 +306,8 @@ bool Server::send_friends_list(int sockfd, string username) {
 		ss << "]}";
 	}
 	ss << endl << "]}" << "\n";
+
+	cout << ss.str();
 
 	// Synchronize server / client
 	char buffer[strlen(SUCCESS_MSG) + 1];

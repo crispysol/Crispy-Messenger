@@ -64,6 +64,26 @@ static void process_server_msg(string buffer, int & fdmax, fd_set * read_fds) {
 		//TODO send to chat window
 		
 	}
+
+	if (buffer.find(FRIEND_IS_ONLINE) == 0) {
+		cout << "[CLIENT] FRIEND ONLINE: " << buffer;
+		int	user_pos = buffer.find(" ") + 1,
+			ip_pos = buffer.find(" ", user_pos) + 1,
+			port_pos = buffer.find(" ", ip_pos) + 1;
+
+			//buffer.substr(user_pos, ip_pos -1 - user_pos),
+			//buffer.substr(ip_pos, port_pos - 1 - ip_pos),
+			//buffer.substr(port_pos);
+	}
+
+	if (buffer.find(ONLINE_FRIEND_INFO) == 0) {
+		cout << "[CLIENT] ONLINE FRIEND INFO: " << buffer;
+		Json::Value root;
+		
+		if (!client->receive_friend_list(root)) {
+			return;
+		}
+	}
 }
 
 /**
