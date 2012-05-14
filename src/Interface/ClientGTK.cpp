@@ -219,9 +219,10 @@ void signal_send_file(GtkWidget * widget, gpointer g_client) {
 	}
 	dprintf("Send file %s to %s\n", filename.c_str(), client);
 
-	// Connect with user TODO
+	// Connect with user
 	current_client->connect_with_user_req(client);
-	while (current_client->get_socket_of_connected_user(client) < 0);
+	sleep(1);
+	//while (current_client->get_socket_of_connected_user(client) < 0);
 
 	// Send file
 	if (!current_client->send_file(filename, client)) {
@@ -442,7 +443,7 @@ static void client_command(string buffer, int sockfd) {
 		out << file;
 		out.close();
 
-		dprintf("RECEIVED FILE: %s", filename.c_str());
+		dprintf("RECEIVED FILE: %s (%s)\n", filename.c_str(), (*(tokens.begin()+1)).c_str());
 
 		free(file);
 		return;
