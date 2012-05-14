@@ -16,11 +16,28 @@
 #include "../Client.h"
 #include "ClientGTK.h"
 #include "GTKFunctions.h"
+#include "regex.h"
 
 // Client info
 extern Client * current_client;
 
 using namespace std;
+
+/**
+ * Test if phone number is correct
+ */
+static bool phone_is_number(string phone) {
+	if (phone.length() <= 10) {
+		return false;
+	}
+	for (string::iterator c = phone.begin(); c != phone.end(); c++) {
+		if (*c < '0' || *c > '9') {
+			return false;
+		}
+	}
+	return true;
+}
+
 
 /**
  * Add a new friend
@@ -46,6 +63,55 @@ void signal_add_friend(struct _general_info * g_info) {
 
 	// Free space
 	free(username);
+	free(g_info);
+
+	// Remake main interface
+	clientgtk_create_main_window(window_top_level);
+}
+
+/**
+ * Create a new group
+ */
+void signal_search_user(struct _general_info * g_info) {
+	GtkWidget * window_top_level = (GtkWidget *) g_info->window_top_level;
+
+	// Save profile information
+	gchar * name = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->profile.name)));
+	gchar * surname = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->profile.surname)));
+	gchar * phone = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->profile.phone)));
+	gchar * email = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->profile.email)));
+
+	// Construct user profile
+	string profile = "";
+	if (!strlen(name)) profile += string(NO_INFORMATION) + " ";
+	else profile += string(name) + " ";
+	if (!strlen(surname)) profile += string(NO_INFORMATION) + " ";
+	else profile += string(surname) + " ";
+	if (!strlen(phone)) profile += string(NO_INFORMATION) + " ";
+	else profile += string(phone) + " ";
+	if (!strlen(email)) profile += string(NO_INFORMATION);
+	else profile += email;
+
+	// Search user
+	string username = current_client->search_user(profile);
+	if (username == NO_USER_FOUND) {
+		clientgtk_create_message_dialog("Invalid search", "Warning", GTK_MESSAGE_WARNING);
+
+		// Free space
+		free(name); free(surname); free(phone); free(email);
+		return;
+	}
+
+	// Display user
+	clientgtk_create_message_dialog(("Username found: " + username).c_str(), "Search user result",
+			GTK_MESSAGE_INFO);
+
+	// Destroy windows
+	gtk_widget_destroy(g_info->window);
+	gtk_widget_destroy(g_info->vbox_align);
+
+	// Free space
+	free(name); free(surname); free(phone); free(email);
 	free(g_info);
 
 	// Remake main interface
@@ -124,15 +190,15 @@ void signal_change_status(struct _general_info * g_info) {
 	// Save friend's username
 	gchar * status = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
 
-	// TODO
-//	if (!current_client->add_user(status)) {
-//		clientgtk_create_message_dialog("Invalid status", "Warning", GTK_MESSAGE_WARNING);
-//
-//		// Free space
-//		free(status);
-//
-//		return;
-//	}
+	// Change status
+	current_client->set_status(status);
+	if (!current_client->send_status(status)) {
+		clientgtk_create_message_dialog("Invalid status", "Warning", GTK_MESSAGE_WARNING);
+
+		// Free space
+		free(status);
+		return;
+	}
 
 	// Destroy windows
 	gtk_widget_destroy(g_info->window);
@@ -152,18 +218,22 @@ void signal_change_status(struct _general_info * g_info) {
 void signal_change_availability(struct _general_info * g_info) {
 	GtkWidget * window_top_level = (GtkWidget *) g_info->window_top_level;
 
-	// Save friend's username
-	gchar * state = strdup(gtk_entry_get_text(GTK_ENTRY(g_info->entry)));
+	// Save availability
+	gchar * state = NULL;
+	if (gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(g_info->entry))) {
+		state = strdup(gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(g_info->entry)));
+	}
 
-	// TODO
-//	if (!current_client->add_user(state)) {
-//		clientgtk_create_message_dialog("Invalid availability", "Warning", GTK_MESSAGE_WARNING);
-//
-//		// Free space
-//		free(state);
-//
-//		return;
-//	}
+	// Send availability
+	current_client->set_state_from_string(state);
+	if (!current_client->send_state(state)) {
+		clientgtk_create_message_dialog("Invalid availability", "Warning", GTK_MESSAGE_WARNING);
+
+		// Free space
+		free(state);
+
+		return;
+	}
 
 	// Destroy windows
 	gtk_widget_destroy(g_info->window);
@@ -188,7 +258,7 @@ void signal_show_profile(struct _general_info * g_info) {
 	gint width = PROFILE_WINDOW_WIDTH, height = PROFILE_WINDOW_HEIGHT;
 
 	// Create new window
-	GtkWidget * window = create_new_window(width, height, (gchar *) "Update profile");
+	GtkWidget * window = create_new_window(width, height, (gchar *) "Show profile");
 
 	// Create vbox and it's alignment
 	GtkWidget * new_vbox_align = gtk_alignment_new(0.5, 0.2, 0, 0);
@@ -241,21 +311,6 @@ void signal_show_profile(struct _general_info * g_info) {
 
 	// Show window
 	gtk_widget_show_all(window);
-}
-
-/**
- * Test if phone number is correct
- */
-static bool phone_is_number(string phone) {
-	if (phone.length() <= 10) {
-		return false;
-	}
-	for (string::iterator c = phone.begin(); c != phone.end(); c++) {
-		if (*c < '0' || *c > '9') {
-			return false;
-		}
-	}
-	return true;
 }
 
 /**

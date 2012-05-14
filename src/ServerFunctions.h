@@ -46,6 +46,9 @@
 #define CMD_SEARCH_USER 		"search_user"
 #define FRIEND_IS_ONLINE		"friend_is_online"
 #define ONLINE_FRIEND_INFO		"online_friend_info"
+#define FILE_TRANSFER			"FILE_TRANSFER"
+
+#define NO_INFORMATION			"none"
 
 #define CONNECTED_MSG			"connected_with"
 #define EXIT_MSG			"exit"
