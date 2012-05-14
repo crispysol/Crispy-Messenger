@@ -235,6 +235,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 				line.substr(msg_pos));
 		return;
 	}
+
 	
 	if (line.find(INFO_CLIENT_PORT) == 0) {
 		int	port_pos = line.find(" ") + 1, port;
@@ -278,6 +279,7 @@ static void client_command(string line, int sockfd, Server *&server) {
 		
 		return;
 	}
+
 }
 
 /**

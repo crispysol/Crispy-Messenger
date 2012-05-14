@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
@@ -212,8 +213,18 @@ static void stdin_command(Client *client, fd_set * read_fds) {
 						);
 		return;
 	}
+	
+	if(line.find(CMD_FILE_TRANSFER) == 0) {
+		int 	filename_pos = line.find(" ") + 1,
+			username_pos = line.find(" ", filename_pos) + 1;
+		//TODO check if connection established between clients
+		client->send_file(line.substr(filename_pos, username_pos - 1 - filename_pos), 
+				line.substr(username_pos));
+			
+		return;
+	}
+	
 	if (line.find(EXIT_MSG) == 0) {
-		//TODO end all connections
 		//end connection to server
 		end_connection(client->get_server_socket(), read_fds);
 		exit(EXIT_SUCCESS);
@@ -248,6 +259,33 @@ static void client_command(string buffer, int sockfd) {
 		// Tell the other end connection is established.
 		assert(send(sockfd, username, strlen(username) + 1, 0) >= 0);
 		
+		return;
+	}
+
+	if (buffer.find(FILE_TRANSFER) == 0) {
+		// send success receiving file header
+		assert(send(sockfd, SUCCESS_MSG, strlen(SUCCESS_MSG) + 1, 0) >= 0);
+		
+		// get size from header
+		vector<string> tokens;
+		tokenize(buffer, tokens, " ");
+		vector<string>::iterator tok = tokens.begin(), tok_end = tokens.end();
+		tok+=2;
+		int size = atoi((*tok).c_str());
+		dprintf("size is %u\n", size);
+		
+		// receive file
+		char *file = (char*)malloc(size);
+		assert(file != NULL);
+		int n = recv(sockfd, file, size, MSG_WAITALL);
+		dprintf("read %i\n", n);
+		
+		// write file
+		ofstream out((*(tokens.begin()+1)).c_str());
+		out << file;
+		out.close();
+		
+		free(file);
 		return;
 	}
 
