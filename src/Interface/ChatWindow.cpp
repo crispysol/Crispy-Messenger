@@ -27,15 +27,6 @@ extern map <string, GtkWidget *> map_chat_text;
 static void send_file(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
 	signal_send_file(widget, g_client);
 }
-///* Show profile */ TODO
-//static void show_profile(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
-//	signal_show_profile(widget, g_client);
-//}
-///* Show profile */
-//static void change_group(GtkWidget * widget, GdkEventButton * event, gpointer g_client) {
-//	signal_change_group(widget, g_client);
-//}
-
 
 /**
  * Create buttons for a chat window
@@ -47,10 +38,6 @@ static void create_chat_window_buttons(GtkWidget * vbox, gpointer g_client) {
 
 	// Create send button
 	add_button_to_box(hbox, "Send file", TRUE, send_file, g_client);
-//	// Create show profile button TODO
-//	add_button_to_box(hbox, "Show profile", FALSE, show_profile, g_client);
-//	// Create change group button
-//	add_button_to_box(hbox, "Change group", FALSE, change_group, g_client);
 
 	// Show all widgets
 	gtk_widget_show_all(hbox);
@@ -60,13 +47,11 @@ static void create_chat_window_buttons(GtkWidget * vbox, gpointer g_client) {
  * Destroy a chat window
  */
 inline static void destroy_chat_window(GtkWidget * chat_window, struct _general_info * ng_info) {
-//	gdk_threads_enter();
 	map_chat_windows.erase(ng_info->friend_username);
 	map_chat_text.erase(ng_info->friend_username);
 	gtk_widget_destroy(chat_window);
 	free(ng_info->friend_username);
 	free(ng_info);
-//	gdk_threads_leave();
 }
 
 /**
@@ -94,7 +79,7 @@ void clientgtk_create_chat_window(GtkWidget * widget, gpointer g_client) {
 	gtk_widget_show(conversation_chat);
 
 	// Create buttons
-	create_chat_window_buttons(chat_vbox, g_client);
+	create_chat_window_buttons(chat_vbox, friend_username);
 
 	// Create text view used for input
 	GtkWidget * entry_chat = scrolled_chat_text_view(chat_vbox, FALSE);
