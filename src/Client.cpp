@@ -2,7 +2,7 @@
  * client.cpp
  *
  *  Created on: Apr 8, 2012
- *      Author: andreea, mihail, radu
+ *      Author: andreea, mihail, radu, liviu
  */
 
 #include <iostream>
@@ -12,8 +12,15 @@
 
 #include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
+
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
 #include <sys/socket.h>
+#include <sys/sendfile.h>
 
 #include "ServerFunctions.h"
 #include "Client.h"
@@ -466,4 +473,42 @@ std::string Client::search_user(std::string profile){
 		return NO_USER_FOUND;
 
 	return msg;
+}
+
+/**
+ * Send file <filename> to user <username> in three steps: first send a header with file's name and size, wait for 
+ * confirmation and then send the file.
+ */
+bool Client::send_file(string filename, string username) {
+	int fd_in, sockfd, optval;
+	char header[BUFFER_LENGTH];
+	struct stat buf;
+	
+	dprintf("processing send_file %s to %s\n", filename.c_str(), username.c_str());
+	sockfd = get_socket_of_connected_user(username);
+	if (sockfd == -1)
+		return false;	
+		
+	fd_in = open(filename.c_str(), O_RDONLY);
+	if (fd_in < 0)
+		return false;
+	assert(fstat(fd_in, &buf) == 0);
+	sprintf(header, "%s %s %u ", FILE_TRANSFER, filename.c_str(), buf.st_size);
+	
+	/* don't send out partial frames */		
+	optval = 1;	
+//	assert(setsockopt(sockfd, IPPROTO_TCP, TCP_CORK, &optval, sizeof(optval)) == 0);
+	
+	// send header and then file
+	assert(send(sockfd, header, strlen(header) + 1, 0) >= 0);
+	assert(recv(sockfd, header, strlen(header), 0)>=0);
+	assert(sendfile(sockfd, fd_in, NULL, buf.st_size) > -1); 
+
+	/* restore send out partial frames */
+	optval ^= optval;
+//	assert(setsockopt(sockfd, IPPROTO_TCP, TCP_CORK, &optval, sizeof(optval)) == 0);
+
+	close(fd_in);
+		
+	return true;
 }

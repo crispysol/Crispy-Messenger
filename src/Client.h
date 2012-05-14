@@ -85,7 +85,13 @@ public:
 	 * Communication client-client
 	 */
 	bool send_message(std::string username_dst, std::string message);
-	//TODO not needed recv_message(int sockfd, std::string message); not needed
+	/**
+	 * Send file <filename> to user <username> in three steps: first send a header with file's name and size, wait 
+	 * for confirmation and then send the file.
+	 *
+	 * Note: available only after connection of current client with client <username>.
+	 */
+	bool send_file(std::string filename, std::string username);
 };
 
 
