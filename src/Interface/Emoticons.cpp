@@ -141,5 +141,11 @@ void emoticons_print_text(GtkWidget * conversation_chat, vector <string> strs,
 		}
 		n++;
 	}
+
+	// Show text in visible area
+	buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(conversation_chat));
+	cursor = gtk_text_buffer_get_insert(buffer);
+	gtk_text_buffer_get_iter_at_mark(buffer, &iter, cursor);
+	gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(conversation_chat), &iter, 0, FALSE, 0, 0);
 }
 

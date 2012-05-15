@@ -186,10 +186,10 @@ void signal_check_recovery(struct _general_info * g_info) {
 
 	// Check if there are any errors
 	if (!error) {
-		// Recover account information TODO must retrieve answer too
-		// TODO function does not exist, must be created in Client.h !!!
+		// Recover account information
+		// TODO function in Client.h/cpp
 
-		// Show information about recovery // TODO check answer from TODO to see if everything is ok
+		// Show information about recovery
 		clientgtk_create_message_dialog("Account information recovered", "Recovery information",
 				GTK_MESSAGE_INFO);
 
@@ -239,6 +239,31 @@ void signal_send_file(GtkWidget * widget, gpointer g_client) {
 }
 
 /**
+ * Logout
+ */
+void signal_logout(GtkWidget * widget, gpointer info) {
+	struct _general_info * g_info = (struct _general_info *) info;
+
+	// Destroy old interface
+	gtk_widget_destroy(g_info->vbox_align);
+
+	// Destroy all chat windows
+	map <string, GtkWidget *>::iterator it = map_chat_windows.begin(),
+			it_end = map_chat_windows.end();
+	for (; it != it_end; it++) {
+		gtk_widget_destroy(it->second);
+	}
+
+	// Create login interface
+	clientgtk_create_login_window(g_info->window_top_level);
+
+	// TODO logout from server
+
+	// Free space
+	free(g_info);
+}
+
+/**
  * Send text to friend and save it in conversation text view
  */
 gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer info) {
@@ -275,31 +300,6 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer 
 }
 
 /**
- * Logout
- */
-void signal_logout(GtkWidget * widget, gpointer info) {
-	struct _general_info * g_info = (struct _general_info *) info;
-
-	// Destroy old interface
-	gtk_widget_destroy(g_info->vbox_align);
-
-	// Destroy all chat windows
-	map <string, GtkWidget *>::iterator it = map_chat_windows.begin(),
-			it_end = map_chat_windows.end();
-	for (; it != it_end; it++) {
-		gtk_widget_destroy(it->second);
-	}
-
-	// Create login interface
-	clientgtk_create_login_window(g_info->window_top_level);
-
-	// TODO logout from server
-
-	// Free space
-	free(g_info);
-}
-
-/**
  * Receive a message
  */
 void receive_msg(string friend_username, string message) {
@@ -312,8 +312,7 @@ void receive_msg(string friend_username, string message) {
 
 	// Set text to conversation box
 	GtkWidget * conversation_chat = it->second;
-	string username = current_client->get_username();
-	string text = username + ": " + message + "\n";
+	string text = friend_username + ": " + message + "\n";
 
 	// Split text based on emoticons
 	vector <string> strs = emoticons_split_text(text, emoticons);
@@ -556,7 +555,7 @@ int main(int argc, char *argv[]) {
 	GtkWidget * window_top_level = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window_top_level), WINDOW_TITLE);
 	gtk_window_set_default_size(GTK_WINDOW(window_top_level), WINDOW_WIDTH, WINDOW_HEIGHT);
-	//gtk_window_set_position(GTK_WINDOW(window_top_level), GTK_WIN_POS_CENTER); TODO uncomment
+	gtk_window_set_position(GTK_WINDOW(window_top_level), GTK_WIN_POS_CENTER);
 
 	// Set main window bg color
 	GdkRGBA window_color;
