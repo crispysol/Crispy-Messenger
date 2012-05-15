@@ -13,17 +13,19 @@
 #include <sstream>
 #include <fstream>
 
-#include <gtk/gtk.h>
-#include <gdk/gdkkeysyms-compat.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <pthread.h>
 #include <regex.h>
 
+#include <gtk/gtk.h>
+#include <gdk/gdkkeysyms-compat.h>
+
 #include "../ServerFunctions.h"
 #include "../Client.h"
 #include "ClientGTK.h"
+#include "Emoticons.h"
 
 // Defines
 #define DEFAULT_IP		"127.0.0.1"
@@ -53,6 +55,9 @@ map <string, GtkWidget *> map_chat_text;
 // Gtk widgets
 GtkWidget * main_window_top_level;
 GtkWidget * main_window_vbox;
+
+// Emoticons map
+map <string, string> emoticons;
 
 /**
  * Check login values and executte create main interface if everything is ok
@@ -222,7 +227,7 @@ void signal_send_file(GtkWidget * widget, gpointer g_client) {
 	// Connect with user
 	current_client->connect_with_user_req(client);
 	sleep(1);
-	//while (current_client->get_socket_of_connected_user(client) < 0);
+	//while (current_client->get_socket_of_connected_user(client) < 0); TODO
 
 	// Send file
 	if (!current_client->send_file(filename, client)) {
@@ -246,25 +251,19 @@ gboolean signal_send_text(GtkWidget * entry_chat, GdkEventKey * event, gpointer 
 		GtkTextIter start, end;
 		gtk_text_buffer_get_bounds(buffer1, &start, &end);
 		gchar * new_text = gtk_text_buffer_get_text(buffer1, &start, &end, FALSE);
-
-		// Set text to conversation box
-		GtkTextBuffer * buffer2 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(conversation_chat));
-		gtk_text_buffer_get_bounds(buffer2, &start, &end);
-		gchar * old_text = gtk_text_buffer_get_text(buffer2, &start, &end, FALSE);
-		string text;
 		string username = current_client->get_username();
-		if (strcmp(old_text, "") == 0) {
-			text = username + ": " + string(new_text);
-		} else {
-			text = string(old_text) + "\n" + username + ": " + string(new_text);
-		}
-		gtk_text_buffer_set_text(buffer2, text.c_str(), -1);
+		string text = username + ": " + string(new_text) + "\n";
+
+		// Split text based on emoticons
+		vector <string> strs = emoticons_split_text(text, emoticons);
+
+		// Print message and emoticons
+		emoticons_print_text(conversation_chat, strs, emoticons);
 
 		// Send message to friend
 		current_client->send_message(g_info->friend_username, new_text);
 
 		// Free space
-		free(old_text);
 		free(new_text);
 
 		// Delete all text from input
@@ -313,22 +312,15 @@ void receive_msg(string friend_username, string message) {
 
 	// Set text to conversation box
 	GtkWidget * conversation_chat = it->second;
-	GtkTextIter start, end;
-	GtkTextBuffer * buffer2 = gtk_text_view_get_buffer(GTK_TEXT_VIEW(conversation_chat));
-	gtk_text_buffer_get_bounds(buffer2, &start, &end);
-	gchar * old_text = gtk_text_buffer_get_text(buffer2, &start, &end, FALSE);
-	string text;
 	string username = current_client->get_username();
-	if (strcmp(old_text, "") == 0) {
-		text = friend_username + ": " + message;
-	} else {
-		text = string(old_text) + "\n" + friend_username + ": " + message;
-	}
-	gtk_text_buffer_set_text(buffer2, text.c_str(), -1);
-	gdk_threads_leave();
+	string text = username + ": " + message + "\n";
 
-	// Free space
-	free(old_text);
+	// Split text based on emoticons
+	vector <string> strs = emoticons_split_text(text, emoticons);
+
+	// Print message and emoticons
+	emoticons_print_text(conversation_chat, strs, emoticons);
+	gdk_threads_leave();
 }
 
 /**
@@ -424,7 +416,7 @@ static void client_command(string buffer, int sockfd) {
 		// get size from header
 		vector<string> tokens;
 		tokenize(buffer, tokens, " ");
-		vector<string>::iterator tok = tokens.begin(), tok_end = tokens.end();
+		vector<string>::iterator tok = tokens.begin();
 		tok+=2;
 		int size = atoi((*tok).c_str());
 		dprintf("size is %u\n", size);
@@ -550,6 +542,9 @@ int main(int argc, char *argv[]) {
 
 	// Create current client
 	current_client = new Client(socket_server);
+
+	// Create emoticons
+	emoticons = emoticons_create_map(string(EMOTICONS_FOLDER) + string(EMOTICONS_FILE));
 
 	// Init GTK
 	g_thread_init(NULL);

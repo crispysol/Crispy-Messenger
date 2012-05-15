@@ -18,7 +18,7 @@ ServerMain.o: ServerMain.cpp
 Server.o: Server.cpp
 
 # Interface
-ClientGTK: User.o Profile.o Client.o ClientGTK.o LoginWindow.o MainWindow.o ChatWindow.o ServerFunctions.o GTKFunctions.o Signal.o
+ClientGTK: User.o Profile.o Client.o ClientGTK.o LoginWindow.o MainWindow.o ChatWindow.o ServerFunctions.o GTKFunctions.o Signal.o Emoticons.o
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -l json_linux-gcc-4.6.1_libmt -o $@ `pkg-config --libs gtk+-3.0`
 ClientGTK.o: Interface/ClientGTK.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) $(CPPFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
@@ -31,6 +31,8 @@ ChatWindow.o: Interface/ChatWindow.cpp
 GTKFunctions.o: Interface/GTKFunctions.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
 Signal.o: Interface/Signal.cpp
+	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
+Emoticons.o: Interface/Emoticons.cpp
 	$(CC) `pkg-config --cflags gtk+-3.0` $^ $(CFLAGS) -c -o $@ `pkg-config --libs gtk+-3.0`
 	
 # Database creation		
